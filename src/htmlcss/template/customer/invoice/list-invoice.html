@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Hóa đơn</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/main_dashboard.css">
+
+  <style>
+    :root {
+      --success: #16a34a;
+      --pending: #f59e0b;
+      --danger: #dc2626;
+      --border: #e5e7eb;
+      --gray: #6b7280;
+    }
+
+    .invoice-wrapper {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 28px 36px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+    }
+
+    .filter-tab {
+      border: none;
+      background: transparent;
+      color: var(--gray);
+      font-weight: 500;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .filter-tab:hover { background: #f3f4f6; color: #111; }
+    .filter-tab.active { background: var(--primary); color: #fff; }
+
+    .invoice-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .invoice-item:hover { background: #fafafa; }
+
+    .invoice-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .invoice-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255,122,0,0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .invoice-info h6 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #111;
+    }
+
+    .invoice-info p {
+      margin: 0;
+      color: var(--gray);
+      font-size: 13px;
+    }
+
+    .invoice-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: right;
+    }
+
+    .invoice-amount {
+      font-weight: 600;
+      color: #111;
+    }
+
+    .badge-status {
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-paid {
+      background: rgba(22,163,74,0.1);
+      color: var(--success);
+    }
+
+    .status-pending {
+      background: rgba(245,158,11,0.1);
+      color: var(--pending);
+    }
+
+    /* Modal styling */
+    .modal-content {
+      border-radius: 14px;
+      border: none;
+    }
+
+    .modal-header {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-body {
+      font-size: 14px;
+      color: #111;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+
+    .detail-label {
+      color: var(--gray);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+  <a href="/home.html" class="logo text-decoration-none d-flex align-items-center">
+    <span class="orange">Garage</span><span class="dark">Pro</span>
+  </a>
+</div>
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Nguyễn Văn A</h6><small>Khách hàng</small>
+      </div>
+    </div>
+    <ul class="nav-menu">
+      <li><a href="/template/customer/dashboard-customer.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/customer/my-vehicle/list-add-vehicle.html" class="nav-link"><i class="fas fa-car"></i> Xe của tôi</a></li>
+      <li><a href="/template/customer/serviceticket/list-service-ticket.html" class="nav-link"><i class="fas fa-wrench"></i> Lịch sử sửa chữa</a></li>
+      <li><a href="#" class="nav-link active"><i class="fas fa-file-invoice"></i> Hóa đơn</a></li>
+      <li><a href="/template/customer/contact/contact-form.html" class="nav-link"><i class="fas fa-phone"></i> Liên hệ mua xe</a></li>
+      <li><a href="/template/customer/information/profile.html" class="nav-link"><i class="fas fa-user"></i> Hồ sơ</a></li>
+    </ul>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+  </aside>
+
+  <!-- HEADER -->
+  <header class="main-header d-flex align-items-center justify-content-between px-4 py-2 shadow-sm bg-white">
+    <h4 class="fw-bold mb-0 text-dark">Hóa đơn của bạn 💳</h4>
+    <div class="dropdown position-relative">
+      <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown">
+        <i class="fas fa-bell"></i><span class="notification-badge">3</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0">
+        <li class="dropdown-header py-3 px-3 bg-light fw-semibold text-dark">Thông báo gần đây</li>
+        <li><a href="#" class="dropdown-item small text-muted">#INV002 chờ thanh toán</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+      <nav class="breadcrumb mb-0">
+        <a href="#" class="text-primary text-decoration-none">Dashboard</a>
+        <span class="mx-2 text-muted">/</span>
+        <span class="text-muted">Hóa đơn</span>
+      </nav>
+    </div>
+
+    <div class="invoice-wrapper">
+      <div class="invoice-header">
+        <h5>Danh sách hóa đơn</h5>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterInvoices('all', event)">Tất cả</button>
+          <button class="filter-tab" onclick="filterInvoices('paid', event)">Đã thanh toán</button>
+          <button class="filter-tab" onclick="filterInvoices('pending', event)">Chờ thanh toán</button>
+        </div>
+      </div>
+
+      <div id="invoiceContainer">
+        <div class="invoice-item" data-status="paid" onclick="showInvoiceDetail('INV001')">
+          <div class="invoice-left">
+            <div class="invoice-icon"><i class="fas fa-file-invoice"></i></div>
+            <div class="invoice-info">
+              <h6>#INV001</h6>
+              <p>05/10/2025 • Toyota Vios</p>
+            </div>
+          </div>
+          <div class="invoice-right">
+            <div class="invoice-amount">3.500.000đ</div>
+            <span class="badge-status status-paid">Đã thanh toán</span>
+          </div>
+        </div>
+
+        <div class="invoice-item" data-status="pending" onclick="showInvoiceDetail('INV002')">
+          <div class="invoice-left">
+            <div class="invoice-icon"><i class="fas fa-file-invoice"></i></div>
+            <div class="invoice-info">
+              <h6>#INV002</h6>
+              <p>06/10/2025 • Hyundai Accent</p>
+            </div>
+          </div>
+          <div class="invoice-right">
+            <div class="invoice-amount">2.800.000đ</div>
+            <span class="badge-status status-pending">Chờ thanh toán</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<!-- MODAL: Invoice Detail -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 bg-light px-4 py-3">
+        <h5 class="fw-bold mb-0">Hóa Đơn Thanh Toán</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body px-4 py-3">
+        <div class="text-center mb-3">
+          <h4 class="fw-bold">GaragePro</h4>
+          <p class="text-muted mb-0">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6 class="fw-bold mb-1">GaragePro Hòa Lạc</h6>
+            <p class="mb-1 small text-muted">Địa chỉ: FPT University, Khu CNC Hòa Lạc</p>
+            <p class="mb-1 small text-muted">SĐT: (024) 1234-5678</p>
+            <p class="mb-0 small text-muted">Email: support@garagepro.vn</p>
+          </div>
+
+          <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <h6 class="fw-bold mb-1">Khách hàng</h6>
+            <p class="mb-0 customer-name">Nguyễn Văn A</p>
+            <p class="mb-0 small text-muted customer-address">Hà Đông, Hà Nội</p>
+            <p class="mb-0 small text-muted customer-phone">0912 345 678</p>
+            <p class="mb-0 small text-muted customer-email">nguyenvana@example.com</p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <p class="mb-1"><strong>Mã hóa đơn:</strong> <span class="invoice-id">#INV001</span></p>
+            <p class="mb-1"><strong>Ngày tạo:</strong> <span class="invoice-date">05/10/2025</span></p>
+            <p class="mb-1"><strong>Phương thức thanh toán:</strong> <span class="invoice-method">Chuyển khoản</span></p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="mb-1"><strong>Trạng thái:</strong> <span class="invoice-status text-success">Đã thanh toán</span></p>
+          </div>
+        </div>
+
+        <div class="table-responsive mb-3">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Sản phẩm / Dịch vụ</th>
+                <th class="text-center" style="width: 120px;">Số lượng</th>
+                <th class="text-end" style="width: 150px;">Đơn giá (VNĐ)</th>
+                <th class="text-end" style="width: 150px;">Thành tiền (VNĐ)</th>
+              </tr>
+            </thead>
+            <tbody class="service-body"></tbody>
+          </table>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <p class="small text-muted">
+              <strong>Ghi chú:</strong> Dịch vụ có bảo hành 3 tháng.
+            </p>
+          </div>
+          <div class="col-md-6">
+            <table class="table table-borderless text-end">
+              <tr><td class="text-muted">Tổng phụ:</td><td class="subtotal">0 VNĐ</td></tr>
+              <tr><td class="text-muted">VAT (10%):</td><td class="vat">0 VNĐ</td></tr>
+              <tr class="border-top"><td><strong>Thành tiền:</strong></td><td><strong class="text-primary total">0 VNĐ</strong></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">
+          <i class="fas fa-print me-2"></i>In hóa đơn
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // 🧭 Đăng xuất
+  function logout() {
+    if (confirm("Bạn có chắc muốn đăng xuất?")) {
+      window.location.href = "/template/auth/login.html";
+    }
+  }
+
+  // 🧩 Lọc danh sách hóa đơn (Tất cả / Đã thanh toán / Chờ thanh toán)
+  function filterInvoices(status, event) {
+    document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.invoice-item').forEach(item => {
+      const match = status === 'all' || item.dataset.status === status;
+      item.style.display = match ? '' : 'none';
+    });
+  }
+
+  // 💾 Dữ liệu demo (sau này có thể thay bằng API fetch)
+  const invoices = {
+    "INV001": {
+      id: "INV001",
+      customer: "Nguyễn Văn A",
+      address: "Hà Đông, Hà Nội",
+      phone: "0912 345 678",
+      email: "nguyenvana@example.com",
+      date: "05/10/2025",
+      method: "Chuyển khoản",
+      status: "Đã thanh toán",
+      items: [
+        { name: "Thay dầu động cơ", qty: 1, price: 800000 },
+        { name: "Thay lọc gió", qty: 1, price: 350000 },
+        { name: "Bảo dưỡng phanh", qty: 1, price: 1200000 }
+      ]
+    },
+    "INV002": {
+      id: "INV002",
+      customer: "Trần Bảo Minh",
+      address: "Cầu Giấy, Hà Nội",
+      phone: "0987 111 222",
+      email: "baominh@example.com",
+      date: "06/10/2025",
+      method: "Tiền mặt",
+      status: "Chờ thanh toán",
+      items: [
+        { name: "Thay nước làm mát", qty: 1, price: 600000 },
+        { name: "Rửa xe toàn phần", qty: 1, price: 200000 }
+      ]
+    }
+  };
+
+  // 💳 Hiển thị chi tiết hóa đơn trong modal
+  function showInvoiceDetail(code) {
+    const data = invoices[code];
+    if (!data) {
+      alert("Không tìm thấy hóa đơn!");
+      return;
+    }
+
+    // Gán dữ liệu khách hàng
+    document.querySelector("#invoiceModal .customer-name").textContent = data.customer;
+    document.querySelector("#invoiceModal .customer-address").textContent = data.address;
+    document.querySelector("#invoiceModal .customer-phone").textContent = data.phone;
+    document.querySelector("#invoiceModal .customer-email").textContent = data.email;
+    document.querySelector("#invoiceModal .invoice-id").textContent = "#" + data.id;
+    document.querySelector("#invoiceModal .invoice-date").textContent = data.date;
+    document.querySelector("#invoiceModal .invoice-method").textContent = data.method;
+
+    const statusElem = document.querySelector("#invoiceModal .invoice-status");
+    statusElem.textContent = data.status;
+    statusElem.className = "invoice-status " + (data.status.includes("Chờ") ? "text-warning" : "text-success");
+
+    // Gán dữ liệu dịch vụ
+    const tbody = document.querySelector("#invoiceModal .service-body");
+    tbody.innerHTML = "";
+    let subtotal = 0;
+
+    data.items.forEach(item => {
+      const total = item.qty * item.price;
+      subtotal += total;
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.name}</td>
+          <td class="text-center">${item.qty}</td>
+          <td class="text-end">${item.price.toLocaleString('vi-VN')}</td>
+          <td class="text-end">${total.toLocaleString('vi-VN')}</td>
+        </tr>
+      `;
+    });
+
+    const vat = subtotal * 0.1;
+    const total = subtotal + vat;
+
+    document.querySelector("#invoiceModal .subtotal").textContent = subtotal.toLocaleString('vi-VN') + " VNĐ";
+    document.querySelector("#invoiceModal .vat").textContent = vat.toLocaleString('vi-VN') + " VNĐ";
+    document.querySelector("#invoiceModal .total").textContent = total.toLocaleString('vi-VN') + " VNĐ";
+
+    // Hiển thị modal
+    const modal = new bootstrap.Modal(document.getElementById("invoiceModal"));
+    modal.show();
+  }
+
+  // 🧭 Cập nhật active menu sidebar
+  document.addEventListener("DOMContentLoaded", function () {
+    const path = window.location.pathname;
+    document.querySelectorAll(".nav-menu .nav-link").forEach(link => {
+      const linkPath = new URL(link.href).pathname;
+      link.classList.toggle("active", path.endsWith(linkPath));
+    });
+  });
+</script>
+
+</body>
+</html>

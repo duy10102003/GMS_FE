@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lịch sử sửa chữa - GaragePro</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/static/css/main_dashboard.css" />
+  <link rel="stylesheet" href="/static/css/customer/serviceticket/list-service-ticket.css" />
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+  <a href="/home.html" class="logo text-decoration-none d-flex align-items-center">
+    <span class="orange">Garage</span><span class="dark">Pro</span>
+  </a>
+</div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=FF7A00&color=fff" alt="Avatar" />
+      <div class="user-info">
+        <h6>Nguyễn Văn A</h6>
+        <small>Khách hàng</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/customer/dashboard-customer.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/customer/my-vehicle/list-add-vehicle.html" class="nav-link"><i class="fas fa-car"></i> Xe của tôi</a></li>
+      <li><a href="#" class="nav-link active"><i class="fas fa-wrench"></i> Lịch sử sửa chữa</a></li>
+      <li><a href="/template/customer/invoice/list-invoice.html" class="nav-link"><i class="fas fa-file-invoice"></i> Hóa đơn</a></li>
+      <li><a href="/template/customer/contact/contact-form.html" class="nav-link"><i class="fas fa-phone"></i> Liên hệ mua xe</a></li>
+      <li><a href="/template/customer/information/profile.html" class="nav-link"><i class="fas fa-user"></i> Hồ sơ</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <h4 class="fw-bold mb-0">Lịch sử sửa chữa 🔧</h4>
+    
+    <!-- Thông báo -->
+      <div class="dropdown me-3 position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge">3</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0" aria-labelledby="notifDropdown">
+          <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">Thông báo gần đây</li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-primary text-white me-3"><i class="fas fa-car"></i></div>
+              <div>
+                <strong>Xe của bạn đã sẵn sàng!</strong>
+                <div class="small text-muted">Dịch vụ bảo dưỡng định kỳ đã hoàn tất.</div>
+                <div class="notif-time">5 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-warning text-white me-3"><i class="fas fa-wrench"></i></div>
+              <div>
+                <strong>Phiếu dịch vụ mới</strong>
+                <div class="small text-muted">#SV002 đang được xử lý.</div>
+                <div class="notif-time">30 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-success text-white me-3"><i class="fas fa-receipt"></i></div>
+              <div>
+                <strong>Hóa đơn đã thanh toán</strong>
+                <div class="small text-muted">Cảm ơn bạn đã sử dụng GaragePro.</div>
+                <div class="notif-time">1 giờ trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a href="#" class="dropdown-item text-center text-primary fw-semibold view-all">Xem tất cả thông báo</a></li>
+        </ul>
+      </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Search & Filter -->
+<div class="search-filter-section">
+  <div class="search-box">
+    <i class="fas fa-search"></i>
+    <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã phiếu, xe hoặc dịch vụ...">
+  </div>
+  <div class="filter-tags">
+    <div class="filter-tag active" onclick="filterStatus('all', event)">
+  <i class="fas fa-list"></i> Tất cả
+</div>
+<div class="filter-tag" onclick="filterStatus('waiting', event)">
+  <i class="fas fa-hourglass-half"></i> Chờ xác nhận
+</div>
+<div class="filter-tag" onclick="filterStatus('pending', event)">
+  <i class="fas fa-clock"></i> Đang xử lý
+</div>
+<div class="filter-tag" onclick="filterStatus('complete', event)">
+  <i class="fas fa-check-circle"></i> Hoàn tất
+</div>
+<div class="filter-tag" onclick="filterStatus('cancel', event)">
+  <i class="fas fa-times-circle"></i> Đã hủy
+</div>
+
+  </div>
+</div>
+
+
+    <!-- Service Tickets Grid -->
+    <div class="tickets-grid" id="ticketsGrid">
+
+      <!-- 🆕 Phiếu mới tạo (chờ confirm) -->
+      <div class="ticket-card" id="ticketNew" data-status="waiting">
+        <div class="ticket-header">
+          <div class="ticket-id">
+            <i class="fas fa-ticket"></i> SV007
+          </div>
+          <span class="badge-status status-waiting">Chờ xác nhận</span>
+        </div>
+
+        <div class="ticket-vehicle">
+          <div class="vehicle-icon">
+            <i class="fas fa-car"></i>
+          </div>
+          <div class="vehicle-info">
+            <h6>Ford Ranger 2024</h6>
+            <p><i class="fas fa-wrench"></i> Bảo dưỡng toàn bộ</p>
+          </div>
+        </div>
+
+        <div class="ticket-details">
+          <div class="detail-item">
+            <i class="fas fa-calendar"></i>
+            <span class="label">Ngày tạo:</span>
+            <span class="value">08/10/2025</span>
+          </div>
+        </div>
+
+        <div class="ticket-footer">
+          <div class="ticket-price">3.500.000đ</div>
+          <div class="d-flex gap-2">
+            <button class="btn-confirm" onclick="confirmTicket(event)">Xác nhận</button>
+            <button class="btn-cancel" onclick="cancelTicket(event)">Hủy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Các phiếu khác -->
+      <div class="ticket-card" data-status="pending" onclick="viewDetail('SV001')">
+        <div class="ticket-header">
+          <div class="ticket-id"><i class="fas fa-ticket"></i> SV001</div>
+          <span class="badge-status status-pending">Đang xử lý</span>
+        </div>
+        <div class="ticket-vehicle">
+          <div class="vehicle-icon"><i class="fas fa-car"></i></div>
+          <div class="vehicle-info">
+            <h6>Toyota Vios 2022</h6>
+            <p><i class="fas fa-wrench"></i> Thay nhớt + kiểm tra phanh</p>
+          </div>
+        </div>
+        <div class="ticket-footer">
+          <div class="ticket-price">350.000đ</div>
+          <button class="btn-view-detail">Xem chi tiết <i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <div class="ticket-card" data-status="complete" onclick="viewDetail('SV002')">
+        <div class="ticket-header">
+          <div class="ticket-id"><i class="fas fa-ticket"></i> SV002</div>
+          <span class="badge-status status-complete">Hoàn tất</span>
+        </div>
+        <div class="ticket-vehicle">
+          <div class="vehicle-icon"><i class="fas fa-car"></i></div>
+          <div class="vehicle-info">
+            <h6>Hyundai Accent 2023</h6>
+            <p><i class="fas fa-wrench"></i> Thay lốp</p>
+          </div>
+        </div>
+        <div class="ticket-footer">
+          <div class="ticket-price">1.200.000đ</div>
+          <button class="btn-view-detail">Xem chi tiết <i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function logout() {
+    if (confirm("Bạn có chắc muốn đăng xuất?")) {
+      window.location.href = "/template/auth/login.html";
+    }
+  }
+
+  function viewDetail(ticketId) {
+    window.location.href = "view-service-ticket-detail.html?id=" + ticketId;
+  }
+
+  // ✅ Khi khách xác nhận phiếu
+  function confirmTicket(event) {
+    event.stopPropagation();
+    if (!confirm("Xác nhận phiếu dịch vụ này?")) return;
+
+    const card = event.target.closest(".ticket-card");
+    const badge = card.querySelector(".badge-status");
+    badge.textContent = "Đang xử lý";
+    badge.className = "badge-status status-pending";
+    card.setAttribute("data-status", "pending");
+
+    card.querySelector(".btn-confirm")?.remove();
+    card.querySelector(".btn-cancel")?.remove();
+
+    alert("✅ Phiếu dịch vụ đã được xác nhận!");
+    setTimeout(() => {
+      window.location.href = "view-service-ticket-detail.html?id=SV007";
+    }, 800);
+  }
+
+  // ❌ Khi khách hủy phiếu
+  function cancelTicket(event) {
+    event.stopPropagation();
+    if (!confirm("Bạn có chắc muốn hủy phiếu dịch vụ này không?")) return;
+
+    const card = event.target.closest(".ticket-card");
+    const badge = card.querySelector(".badge-status");
+    badge.textContent = "Đã hủy";
+    badge.className = "badge-status status-cancel";
+    card.setAttribute("data-status", "cancel");
+
+    card.querySelector(".btn-confirm")?.remove();
+    card.querySelector(".btn-cancel")?.remove();
+
+    alert("❌ Phiếu dịch vụ đã bị hủy.");
+
+    // 👉 Tự động chuyển sang tab "Đã hủy"
+    const cancelTag = document.querySelector('.filter-tag[onclick*="cancel"]');
+    if (cancelTag) {
+      cancelTag.click();
+    }
+  }
+
+  // 🔍 Search filter
+  document.getElementById("searchInput").addEventListener("input", function () {
+    const filter = this.value.toLowerCase();
+    const cards = document.querySelectorAll(".ticket-card");
+    let visibleCount = 0;
+
+    cards.forEach((card) => {
+      const text = card.textContent.toLowerCase();
+      if (text.includes(filter)) {
+        card.style.display = "";
+        visibleCount++;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    showEmptyState(visibleCount === 0);
+  });
+
+  // 🟠 Lọc theo trạng thái
+  let currentFilter = "all";
+  function filterStatus(status, event) {
+    currentFilter = status;
+    const cards = document.querySelectorAll(".ticket-card");
+    const tags = document.querySelectorAll(".filter-tag");
+    let visibleCount = 0;
+
+    tags.forEach((tag) => tag.classList.remove("active"));
+
+    const tagClicked = event?.currentTarget || event?.target?.closest(".filter-tag");
+    if (tagClicked) tagClicked.classList.add("active");
+
+    cards.forEach((card) => {
+      const cardStatus = card.getAttribute("data-status");
+      if (status === "all" || cardStatus === status) {
+        card.style.display = "";
+        visibleCount++;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    showEmptyState(visibleCount === 0);
+  }
+
+  // 📨 Trạng thái rỗng
+  function showEmptyState(show) {
+    let emptyState = document.getElementById("emptyState");
+    if (show && !emptyState) {
+      emptyState = document.createElement("div");
+      emptyState.id = "emptyState";
+      emptyState.className = "empty-state";
+      emptyState.innerHTML = `
+        <i class="fas fa-inbox"></i>
+        <h5>Không tìm thấy phiếu dịch vụ</h5>
+        <p>Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc</p>`;
+      document.getElementById("ticketsGrid").appendChild(emptyState);
+    } else if (!show && emptyState) {
+      emptyState.remove();
+    }
+  }
+</script>
+
+</body>
+</html>

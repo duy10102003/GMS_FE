@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Quản lý phụ tùng</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/main_dashboard.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+Khoa&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Nguyễn Văn Khoa</h6>
+        <small>Quản lý</small>
+      </div>
+    </div>
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-chart-pie"></i> Báo cáo tổng hợp</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-users"></i> Nhân sự</a></li>
+      <li>
+        <a href="#" class="nav-link"><i class="fas fa-warehouse"></i> Kho phụ tùng</a>
+        <ul class="sub-menu">
+          <li><a href="/template/manager/inventory/manage-parts.html" class="nav-link"><i class="fas fa-cogs"></i> Quản lý phụ tùng</a></li>
+          <li><a href="/template/manager/inventory/low-stock.html" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Cảnh báo từ Staff</a></li>
+          <li><a href="/template/manager/inventory/restock.html" class="nav-link"><i class="fas fa-shopping-cart"></i> Nhập kho</a></li>
+        </ul>
+      </li>
+      <li><a href="#" class="nav-link"><i class="fas fa-dollar-sign"></i> Doanh thu</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-cog"></i> Cài đặt hệ thống</a></li>
+    </ul>
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm kiếm phụ tùng...">
+    </div>
+    <div class="d-flex align-items-center">
+      <div class="dropdown me-3 position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge">3</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0" aria-labelledby="notifDropdown">
+          <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">
+            Thông báo kho
+          </li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-warning text-white me-3"><i class="fas fa-box"></i></div>
+              <div>
+                <strong>Lọc nhớt sắp hết</strong>
+                <div class="small text-muted">Còn 5 cái trong kho.</div>
+                <div class="notif-time">10 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-success text-white me-3"><i class="fas fa-check"></i></div>
+              <div>
+                <strong>Nhập kho thành công</strong>
+                <div class="small text-muted">100 bugi mới.</div>
+                <div class="notif-time">1 giờ trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a href="#" class="dropdown-item text-center text-primary fw-semibold view-all">Xem tất cả</a></li>
+        </ul>
+      </div>
+      <div class="dropdown user-menu">
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+           id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=K&background=FF7A00&color=fff"
+               alt="Avatar" class="rounded-circle me-2" width="40" height="40">
+          <span class="fw-semibold text-dark d-none d-md-inline">Nguyễn Văn Khoa</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2 text-primary"></i> Hồ sơ cá nhân</a></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2 text-secondary"></i> Cài đặt</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="page-title mb-0">Quản lý phụ tùng 🛠️</h1>
+      <nav class="breadcrumb mb-0">
+        <span><a href="#" class="text-primary text-decoration-none">Dashboard</a></span>
+        <span class="mx-2 text-muted">/</span>
+        <a href="/inventory/manage-parts.html" class="text-muted breadcrumb-link">Quản lý phụ tùng</a>
+      </nav>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">
+        <h5>Danh sách phụ tùng</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPartModal">
+          <i class="fas fa-plus"></i> Thêm phụ tùng
+        </button>
+      </div>
+
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Mã phụ tùng</th>
+            <th>Tên phụ tùng</th>
+            <th>Số lượng</th>
+            <th>Giá (VND)</th>
+            <th>Ngưỡng cảnh báo</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PT001</td>
+            <td>Lọc nhớt</td>
+            <td>10</td>
+            <td>150,000</td>
+            <td>5</td>
+            <td>
+              <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editPartModal"
+                      onclick="loadPartData('PT001', 'Lọc nhớt', 10, 150000, 5)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deletePart('PT001')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>PT002</td>
+            <td>Bugi</td>
+            <td>50</td>
+            <td>80,000</td>
+            <td>10</td>
+            <td>
+              <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editPartModal"
+                      onclick="loadPartData('PT002', 'Bugi', 50, 80000, 10)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deletePart('PT002')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>PT003</td>
+            <td>Dầu 5W30</td>
+            <td>5</td>
+            <td>500,000</td>
+            <td>3</td>
+            <td>
+              <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editPartModal"
+                      onclick="loadPartData('PT003', 'Dầu 5W30', 5, 500000, 3)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deletePart('PT003')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal Thêm phụ tùng -->
+    <div class="modal fade" id="addPartModal" tabindex="-1" aria-labelledby="addPartModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addPartModalLabel">Thêm phụ tùng mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addPartForm">
+              <div class="mb-3">
+                <label for="partCode" class="form-label">Mã phụ tùng</label>
+                <input type="text" class="form-control" id="partCode" value="Auto-generated" disabled>
+              </div>
+              <div class="mb-3">
+                <label for="partName" class="form-label">Tên phụ tùng</label>
+                <input type="text" class="form-control" id="partName" required>
+              </div>
+              <div class="mb-3">
+                <label for="partQuantity" class="form-label">Số lượng</label>
+                <input type="number" class="form-control" id="partQuantity" required min="0">
+              </div>
+              <div class="mb-3">
+                <label for="partPrice" class="form-label">Giá (VND)</label>
+                <input type="number" class="form-control" id="partPrice" required min="0">
+              </div>
+              <div class="mb-3">
+                <label for="partThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                <input type="number" class="form-control" id="partThreshold" required min="0">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="addPart()">Lưu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Chỉnh sửa phụ tùng -->
+    <div class="modal fade" id="editPartModal" tabindex="-1" aria-labelledby="editPartModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editPartModalLabel">Chỉnh sửa phụ tùng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editPartForm">
+              <div class="mb-3">
+                <label for="editPartCode" class="form-label">Mã phụ tùng</label>
+                <input type="text" class="form-control" id="editPartCode" disabled>
+              </div>
+              <div class="mb-3">
+                <label for="editPartName" class="form-label">Tên phụ tùng</label>
+                <input type="text" class="form-control" id="editPartName" required>
+              </div>
+              <div class="mb-3">
+                <label for="editPartQuantity" class="form-label">Số lượng</label>
+                <input type="number" class="form-control" id="editPartQuantity" required min="0">
+              </div>
+              <div class="mb-3">
+                <label for="editPartPrice" class="form-label">Giá (VND)</label>
+                <input type="number" class="form-control" id="editPartPrice" required min="0">
+              </div>
+              <div class="mb-3">
+                <label for="editPartThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                <input type="number" class="form-control" id="editPartThreshold" required min="0">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="updatePart()">Cập nhật</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function logout() {
+      if (confirm('Đăng xuất khỏi hệ thống quản lý?')) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          alert('Đã đăng xuất thành công!');
+          window.location.href = "login.html";
+        }, 500);
+      }
+    }
+
+    function addPart() {
+      alert('Phụ tùng đã được thêm!');
+      document.getElementById('addPartForm').reset();
+      document.querySelector('#addPartModal .btn-close').click();
+    }
+
+    function loadPartData(code, name, quantity, price, threshold) {
+      document.getElementById('editPartCode').value = code;
+      document.getElementById('editPartName').value = name;
+      document.getElementById('editPartQuantity').value = quantity;
+      document.getElementById('editPartPrice').value = price;
+      document.getElementById('editPartThreshold').value = threshold;
+    }
+
+    function updatePart() {
+      alert('Phụ tùng đã được cập nhật!');
+      document.querySelector('#editPartModal .btn-close').click();
+    }
+
+    function deletePart(partCode) {
+      if (confirm(`Xóa phụ tùng ${partCode}?`)) {
+        alert(`Phụ tùng ${partCode} đã được xóa!`);
+      }
+    }
+  </script>
+</body>
+</html>

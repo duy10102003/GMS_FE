@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --primary-dark: #E56E00;
+      --light: #F8F9FA;
+      --dark: #2C3A47;
+      --sidebar-width: 260px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: var(--light);
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      left: 0; top: 0;
+      background: #fff;
+      border-right: 1px solid #e0e0e0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+      z-index: 1000;
+    }
+    .sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70px;
+  border-bottom: 1px solid #eee;
+}
+    .logo { font-size: 1.5rem; font-weight: 700; text-align: center; }
+    .logo .orange { color: var(--primary); } .logo .dark { color: var(--dark); }
+
+    .user-profile {
+      display: flex; align-items: center; padding: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+    }
+    .user-profile img {
+      width: 50px; height: 50px; border-radius: 50%; margin-right: 12px;
+    }
+
+    .nav-menu { padding: 15px 0; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center;
+      padding: 12px 15px;
+      text-decoration: none;
+      color: var(--dark);
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+    .nav-link i { width: 24px; margin-right: 10px; }
+    .nav-link:hover { background: rgba(255, 122, 0, 0.1); color: var(--primary); }
+    .nav-link.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+    }
+
+    /* Header */
+    .main-header {
+      position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+      height: 70px;
+      background: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      z-index: 999;
+    }
+
+    /* Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      margin-top: 70px;
+      padding: 30px;
+      min-height: calc(100vh - 70px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=User&background=FF7A00&color=fff" alt="Avatar">
+      <div>
+        <h6 id="userName">User Name</h6>
+        <small id="userRole">Role</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="dashboard-customer.html" class="nav-link"><i class="fas fa-gauge"></i> Khách hàng</a></li>
+      <li><a href="dashboard-staff.html" class="nav-link"><i class="fas fa-user-tie"></i> Nhân viên lễ tân</a></li>
+      <li><a href="dashboard-mechanic.html" class="nav-link"><i class="fas fa-wrench"></i> Thợ sửa chữa</a></li>
+      <li><a href="dashboard-sale.html" class="nav-link"><i class="fas fa-car-side"></i> Nhân viên Sale</a></li>
+      <li><a href="dashboard-manager.html" class="nav-link"><i class="fas fa-chart-pie"></i> Quản lý</a></li>
+      <li><a href="dashboard-admin.html" class="nav-link"><i class="fas fa-user-shield"></i> Quản trị viên</a></li>
+    </ul>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <h4 id="pageTitle">GaragePro Dashboard</h4>
+    <div class="header-actions">
+      <i class="fas fa-bell"></i>
+      <img src="https://ui-avatars.com/api/?name=GP&background=FF7A00&color=fff" alt="Avatar" style="width:40px;height:40px;border-radius:50%">
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h2>Chọn vai trò để xem dashboard tương ứng 🚗</h2>
+  </main>
+
+</body>
+</html>

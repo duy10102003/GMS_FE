@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GaragePro - Xe của tôi</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/static/css/main_dashboard.css" />
+
+  <style>
+    /* ====== MÀU CHỦ ĐẠO ====== */
+    :root {
+      --gp-orange: #ff7a00;
+      --gp-orange-dark: #e86c00;
+      --gp-bg-light: #fafafa;
+    }
+
+    body {
+      background-color: var(--gp-bg-light);
+    }
+
+    /* ====== BUTTON CAM ====== */
+    .btn-primary-orange {
+      background-color: var(--gp-orange);
+      border: 1px solid var(--gp-orange);
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+    .btn-primary-orange:hover {
+      background-color: var(--gp-orange-dark);
+      border-color: var(--gp-orange-dark);
+      box-shadow: 0 0 10px rgba(255, 122, 0, 0.4);
+    }
+
+    /* ====== VEHICLE CARD ====== */
+    .vehicle-card {
+      border-radius: 16px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .vehicle-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .vehicle-image {
+      height: 180px;
+      background-size: cover;
+      background-position: center;
+    }
+    .vehicle-info h5 {
+      font-weight: 700;
+    }
+
+    /* ====== MODAL ====== */
+    .modal-content {
+      animation: fadeSlide 0.4s ease;
+      border-radius: 16px;
+      border: none;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      background: linear-gradient(135deg, var(--gp-orange), #ff9e42);
+      color: white;
+    }
+
+    .form-control {
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+    .form-control:focus {
+      border-color: var(--gp-orange);
+      box-shadow: 0 0 0 0.2rem rgba(255,122,0,0.25);
+    }
+
+    /* ====== XEM THÊM ====== */
+    #showMoreBtn {
+      transition: 0.3s ease;
+    }
+    #showMoreBtn:hover {
+      background-color: var(--gp-orange);
+      border-color: var(--gp-orange);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255,122,0,0.3);
+    }
+
+    /* ====== HÌNH PREVIEW TRONG MODAL ADD ====== */
+    .preview-box {
+      height: 150px;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background-color: #f8f8f8;
+      transition: border-color 0.3s ease;
+    }
+    .preview-box:hover {
+      border-color: var(--gp-orange);
+    }
+    .preview-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+  <a href="/home.html" class="logo text-decoration-none d-flex align-items-center">
+    <span class="orange">Garage</span><span class="dark">Pro</span>
+  </a>
+</div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=FF7A00&color=fff" alt="Avatar" />
+      <div class="user-info">
+        <h6>Nguyễn Văn A</h6>
+        <small>Khách hàng</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/customer/dashboard-customer.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/customer/my-vehicle/list-add-vehicle.html" class="nav-link active"><i class="fas fa-car"></i> Xe của tôi</a></li>
+      <li><a href="/template/customer/serviceticket/list-service-ticket.html" class="nav-link"><i class="fas fa-wrench"></i> Lịch sử sửa chữa</a></li>
+      <li><a href="/template/customer/invoice/list-invoice.html" class="nav-link"><i class="fas fa-file-invoice"></i> Hóa đơn</a></li>
+      <li><a href="/template/customer/contact/contact-form.html" class="nav-link"><i class="fas fa-phone"></i> Liên hệ mua xe</a></li>
+      <li><a href="/template/customer/information/profile.html" class="nav-link"><i class="fas fa-user"></i> Hồ sơ</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- ====== HEADER ====== -->
+  <header class="main-header">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm kiếm xe của bạn..." />
+    </div>
+
+    <!-- Thông báo -->
+      <div class="dropdown me-3 position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge">3</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0" aria-labelledby="notifDropdown">
+          <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">Thông báo gần đây</li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-primary text-white me-3"><i class="fas fa-car"></i></div>
+              <div>
+                <strong>Xe của bạn đã sẵn sàng!</strong>
+                <div class="small text-muted">Dịch vụ bảo dưỡng định kỳ đã hoàn tất.</div>
+                <div class="notif-time">5 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-warning text-white me-3"><i class="fas fa-wrench"></i></div>
+              <div>
+                <strong>Phiếu dịch vụ mới</strong>
+                <div class="small text-muted">#SV002 đang được xử lý.</div>
+                <div class="notif-time">30 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-success text-white me-3"><i class="fas fa-receipt"></i></div>
+              <div>
+                <strong>Hóa đơn đã thanh toán</strong>
+                <div class="small text-muted">Cảm ơn bạn đã sử dụng GaragePro.</div>
+                <div class="notif-time">1 giờ trước</div>
+              </div>
+            </div>
+          </a></li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a href="#" class="dropdown-item text-center text-primary fw-semibold view-all">Xem tất cả thông báo</a></li>
+        </ul>
+      </div>
+  </header>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="page-title mb-0">Xe của tôi 🚗</h1>
+      <nav class="breadcrumb mb-0">
+        <a href="/template/customer/dashboard-customer.html" class="text-primary text-decoration-none">Dashboard</a>
+        <span class="mx-2 text-muted">/</span>
+        <span class="text-muted">Xe của tôi</span>
+      </nav>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h5 class="fw-semibold mb-0">Danh sách xe đang sở hữu</h5>
+        <button class="btn btn-primary-orange" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+          <i class="fas fa-plus me-2"></i> Thêm xe mới
+        </button>
+      </div>
+
+      <div id="vehicleList" class="row g-4 mt-2">
+        <div class="col-md-4">
+          <div class="vehicle-card shadow-sm" data-bs-toggle="modal" data-bs-target="#vehicleDetailModal">
+            <div class="vehicle-image" style="background-image: url('https://cdn.pixabay.com/photo/2015/01/19/13/51/car-604019_960_720.jpg');"></div>
+            <div class="vehicle-info p-3">
+              <h5 class="fw-bold mb-1">Toyota Vios 2022</h5>
+              <p class="text-muted mb-2"><i class="fas fa-car me-2 text-primary"></i>Biển số: <strong>30A-12345</strong></p>
+              <p class="mb-2"><i class="fas fa-calendar me-2 text-warning"></i>Năm SX: 2022</p>
+              <p class="mb-3"><i class="fas fa-cog me-2 text-secondary"></i>Tình trạng: Đang sử dụng</p>
+              <span class="badge bg-success-subtle text-success fw-semibold px-3 py-2 rounded-pill">Đã xác thực</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ====== MODAL CHI TIẾT XE ====== -->
+  <div class="modal fade" id="vehicleDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title"><i class="fas fa-car me-2 text-warning"></i>Chi tiết xe</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row">
+            <div class="col-md-5">
+              <img src="https://cdn.pixabay.com/photo/2015/01/19/13/51/car-604019_960_720.jpg" alt="Xe" class="img-fluid rounded-3 shadow-sm" />
+            </div>
+            <div class="col-md-7">
+              <h4 class="fw-bold mb-3 text-dark">Toyota Vios 2022</h4>
+              <ul class="list-unstyled">
+                <li class="mb-2"><i class="fas fa-id-card me-2 text-primary"></i><strong>Biển số:</strong> 30A-12345</li>
+                <li class="mb-2"><i class="fas fa-calendar-alt me-2 text-warning"></i><strong>Năm sản xuất:</strong> 2022</li>
+                <li class="mb-2"><i class="fas fa-palette me-2 text-danger"></i><strong>Màu xe:</strong> Trắng ngọc trai</li>
+                <li class="mb-2"><i class="fas fa-cogs me-2 text-secondary"></i><strong>Tình trạng:</strong> Đang sử dụng</li>
+                <li class="mb-2"><i class="fas fa-check-circle me-2 text-success"></i><strong>Xác thực:</strong> Đã xác thực</li>
+              </ul>
+              <div class="mt-4">
+                <button class="btn btn-outline-primary me-2"><i class="fas fa-history me-1"></i> Lịch sử sửa chữa</button>
+                <button class="btn btn-primary-orange"><i class="fas fa-file-invoice me-1"></i> Xem hóa đơn</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 bg-light">
+          <small class="text-muted">Ngày thêm mới: 05/10/2025</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MODAL: ADD VEHICLE ====== -->
+  <div class="modal fade" id="addVehicleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm xe mới</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="addVehicleForm">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Biển số</label>
+                <input type="text" id="licensePlate" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Hãng xe</label>
+                <input type="text" id="brand" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Mẫu xe</label>
+                <input type="text" id="model" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Năm sản xuất</label>
+                <input type="number" id="year" class="form-control" min="1990" max="2025" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Màu xe</label>
+                <input type="text" id="color" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Ảnh xe</label>
+                <div class="preview-box" id="imagePreview"><span class="text-muted">Chưa chọn ảnh</span></div>
+                <input type="file" id="imageUpload" class="form-control mt-2" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-primary-orange">Lưu xe</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== SCRIPT ====== -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Logout
+    function logout() {
+      if (confirm("Bạn có chắc muốn đăng xuất?")) {
+        document.body.style.opacity = "0";
+        setTimeout(() => {
+          alert("Đã đăng xuất thành công!");
+          window.location.href = "/template/auth/login.html";
+        }, 500);
+      }
+    }
+
+    // Preview ảnh xe
+    const imgInput = document.getElementById("imageUpload");
+    const previewBox = document.getElementById("imagePreview");
+    imgInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          previewBox.innerHTML = `<img src="${ev.target.result}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+      } else previewBox.innerHTML = "<span class='text-muted'>Chưa chọn ảnh</span>";
+    });
+
+    // Thêm xe mới
+    document.getElementById("addVehicleForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const plate = document.getElementById("licensePlate").value;
+      const brand = document.getElementById("brand").value;
+      const model = document.getElementById("model").value;
+      const year = document.getElementById("year").value;
+      const color = document.getElementById("color").value;
+      const image = imgInput.files[0] ? URL.createObjectURL(imgInput.files[0]) :
+        "https://cdn.pixabay.com/photo/2015/01/19/13/51/car-604019_960_720.jpg";
+
+      const newCar = `
+        <div class="col-md-4">
+          <div class="vehicle-card shadow-sm" data-bs-toggle="modal" data-bs-target="#vehicleDetailModal" style="animation: fadeSlide 0.4s ease;">
+            <div class="vehicle-image" style="background-image: url('${image}')"></div>
+            <div class="vehicle-info p-3">
+              <h5 class="fw-bold mb-1">${brand} ${model} ${year}</h5>
+              <p class="text-muted mb-2"><i class="fas fa-car me-2 text-primary"></i>Biển số: <strong>${plate}</strong></p>
+              <p class="mb-2"><i class="fas fa-palette me-2 text-danger"></i>Màu: ${color || "Chưa rõ"}</p>
+              <span class="badge bg-warning-subtle text-warning fw-semibold px-3 py-2 rounded-pill">Chờ xác thực</span>
+            </div>
+          </div>
+        </div>`;
+
+      document.getElementById("vehicleList").insertAdjacentHTML("beforeend", newCar);
+      const modal = bootstrap.Modal.getInstance(document.getElementById("addVehicleModal"));
+      modal.hide();
+      e.target.reset();
+      previewBox.innerHTML = "<span class='text-muted'>Chưa chọn ảnh</span>";
+      alert(`✅ Xe ${plate} đã được thêm thành công!`);
+    });
+  </script>
+</body>
+</html>

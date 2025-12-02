@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaragePro - Dashboard Nhân viên</title>
+
+    <!-- Bootstrap & Icons -->
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}"/>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/staff/staff-dashboard.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <span class="orange">Garage</span><span class="dark">Pro</span>
+        </div>
+    </div>
+
+    <div class="user-profile" th:with="staffName=${staffName ?: 'Nhân viên'}, staffId=${staffId ?: 0}">
+        <img th:src="@{'https://ui-avatars.com/api/?name=' + ${staffName ?: 'Nhân viên'} + '&background=FF7A00&color=fff'}"
+             alt="Avatar">
+        <div class="user-info">
+            <h6 th:text="${staffName}">Trần Thị B</h6>
+            <small>Nhân viên lễ tân</small>
+            <small class="text-light" th:text="'ID: ' + ${staffId}">ID: 0</small>
+        </div>
+    </div>
+
+    <ul class="nav-menu">
+        <li><a href="/dashboard-staff.html" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a></li>
+        <li><a href="/payment" class="nav-link"><i class="fas fa-credit-card"></i> Thanh toán</a></li>
+        <li><a href="/inventory-alert" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Cảnh báo kho</a></li>
+    </ul>
+
+    <button class="logout-btn" type="button" onclick="logout(event)">
+        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+</aside>
+
+<!-- Header -->
+<header class="main-header d-flex align-items-center justify-content-between">
+    <h1 class="page-title">Dashboard Nhân viên 📋</h1>
+
+    <div class="dropdown position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">4</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="min-width: 320px; border-radius: 16px;">
+            <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold">
+                Thông báo hôm nay
+            </li>
+            <li><a href="#" class="dropdown-item py-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div style="width:40px;height:40px;background:rgba(247,183,49,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#f7b731;">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <div>
+                        <strong>Phiếu mới #SV009</strong>
+                        <div class="small text-muted">Khách hàng: Lê Văn C</div>
+                        <div class="small text-muted">Vừa xong</div>
+                    </div>
+                </div>
+            </a></li>
+            <li><a href="#" class="dropdown-item py-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div style="width:40px;height:40px;background:rgba(16,172,132,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#10ac84;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <strong>Hoàn tất thanh toán</strong>
+                        <div class="small text-muted">Phiếu #SV007</div>
+                        <div class="small text-muted">10 phút trước</div>
+                    </div>
+                </div>
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a href="#" class="dropdown-item text-center text-primary fw-semibold py-3">Xem tất cả</a></li>
+        </ul>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <nav class="breadcrumb mb-0">
+            <span><a href="#" class="text-primary text-decoration-none">Staff</a></span>
+            <span class="mx-2 text-muted">/</span>
+            <span class="text-muted">Tổng quan</span>
+        </nav>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid fade-in">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <h6>Phiếu chờ xử lý</h6>
+            <div class="value">8</div>
+            <div class="change negative"><i class="fas fa-arrow-up"></i> +2 hôm nay</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h6>Hoàn thành hôm nay</h6>
+            <div class="value">12</div>
+            <div class="change positive"><i class="fas fa-arrow-up"></i> +4 so với hôm qua</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-box"></i>
+            </div>
+            <h6>Cảnh báo phụ tùng</h6>
+            <div class="value">3</div>
+            <div class="change negative"><i class="fas fa-exclamation-triangle"></i> Cần nhập kho</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <h6>Doanh thu hôm nay</h6>
+            <div class="value">15.8M</div>
+            <div class="change positive"><i class="fas fa-chart-line"></i> +12%</div>
+        </div>
+    </div>
+
+    <!-- Service Management Card -->
+    <div class="content-card fade-in" id="serviceCard">
+        <div class="content-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5><i class="fas fa-clipboard-list me-2"></i>Quản lý phiếu dịch vụ</h5>
+            <button class="btn btn-primary" onclick="openCreateTicket()">
+                <i class="fas fa-plus"></i> Tạo phiếu mới
+            </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm theo mã phiếu, khách hàng, biển số..." id="searchInput" oninput="searchTickets()">
+            </div>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-secondary dropdown-toggle px-4 py-2" type="button" id="statusFilterBtn" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-2"></i>Tất cả trạng thái
+                </button>
+                <ul class="dropdown-menu shadow-lg border-0 p-2" style="min-width: 220px;">
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('')">
+                        <i class="fas fa-circle text-secondary me-2" style="font-size:8px;"></i> Tất cả trạng thái
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('New')">
+                        <span class="status-badge new me-2"><i class="fas fa-file"></i></span> Mới
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('Approved')">
+                        <span class="status-badge approved me-2"><i class="fas fa-check"></i></span> Đã duyệt
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('Assigned')">
+                        <span class="status-badge assigned me-2"><i class="fas fa-user-check"></i></span> Đã phân công
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('In Progress')">
+                        <span class="status-badge in-progress me-2"><i class="fas fa-cog fa-spin"></i></span> Đang xử lý
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('Completed')">
+                        <span class="status-badge completed me-2"><i class="fas fa-check-circle"></i></span> Hoàn tất
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('Invoiced')">
+                        <span class="status-badge invoiced me-2"><i class="fas fa-file-invoice"></i></span> Đã tạo hóa đơn
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('Paid')">
+                        <span class="status-badge paid me-2"><i class="fas fa-check-double"></i></span> Đã thanh toán
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3 rounded" href="#" onclick="filterStatus('Cancelled')">
+                        <span class="status-badge cancelled me-2"><i class="fas fa-times-circle"></i></span> Đã hủy
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                <tr>
+                    <th>Mã phiếu</th>
+                    <th>Khách hàng</th>
+                    <th>Biển số</th>
+                    <th>Dịch vụ</th>
+                    <th>Thợ phụ trách</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                    <th>Phụ trợ</th>
+                </tr>
+                </thead>
+                <tbody id="serviceTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav>
+            <ul class="pagination" id="pagination"></ul>
+        </nav>
+    </div>
+</main>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Modal: Create Ticket -->
+<div class="modal fade" id="createTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content p-4 shadow-lg border-0 rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-file-medical me-2 text-primary"></i>
+                    Tạo phiếu dịch vụ mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body mt-2">
+                <form id="createTicketForm" onsubmit="handleCreateTicket(event)">
+                    <div class="row g-3">
+
+                        <!-- ========== THÔNG TIN KHÁCH HÀNG ========== -->
+                        <div class="col-12">
+                            <h6 class="section-title"><i class="fas fa-user me-2"></i>Thông tin khách hàng</h6>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Họ tên *</label>
+                            <input type="text" class="form-control" id="customerName" required placeholder="Nguyễn Văn A">
+                        </div>
+
+                        <!--                        <div class="col-md-4">-->
+                        <!--                            <label class="form-label">Số điện thoại *</label>-->
+                        <!--                            <input type="tel" class="form-control" id="customerPhone" required placeholder="0912345678">-->
+                        <!--                        </div>-->
+
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="customerEmail" placeholder="example@email.com">
+                        </div>
+
+                        <!-- ========== THÔNG TIN XE ========== -->
+                        <div class="col-12 mt-4">
+                            <h6 class="section-title"><i class="fas fa-car me-2"></i>Thông tin xe</h6>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Biển số *</label>
+                            <!-- Đã có trong form -->
+                            <input type="text" class="form-control" id="plateNumber" required placeholder="30H-12345" onblur="fetchVehicleInfo(this.value)">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Hãng xe (Brand)</label>
+                            <select class="form-select" id="carBrand" required>
+                                <option value="">-- Chọn hãng --</option>
+                                <option value="Toyota">Toyota</option>
+                                <option value="Mazda">Mazda</option>
+                                <option value="Hyundai">Hyundai</option>
+                                <option value="Honda">Honda</option>
+                                <option value="Kia">Kia</option>
+                                <option value="VinFast">VinFast</option>
+                                <option value="Mitsubishi">Mitsubishi</option>
+                                <option value="Ford">Ford</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 position-relative">
+                            <label class="form-label">Model xe</label>
+                            <input type="text" class="form-control" id="carModelInput" placeholder="Nhập model xe..." autocomplete="off" required>
+                            <ul id="modelSuggestions"
+                                class="list-group position-absolute w-100 shadow"
+                                style="z-index:1000; display:none; max-height:180px; overflow-y:auto;"></ul>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Năm sản xuất</label>
+                            <select class="form-select" id="carYear" required>
+                                <option value="">-- Chọn năm --</option>
+                                <script>
+                                    const yearNow = new Date().getFullYear();
+                                    for (let y = yearNow; y >= 1990; y--) {
+                                        document.write(`<option value="${y}">${y}</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Số km hiện tại</label>
+                            <input type="number" class="form-control" id="currentKm" placeholder="Ví dụ: 45250">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Màu xe</label>
+                            <select class="form-select" id="carColor">
+                                <option value="">-- Chọn màu --</option>
+                                <option value="Trắng">Trắng</option>
+                                <option value="Đen">Đen</option>
+                                <option value="Xám">Xám</option>
+                                <option value="Đỏ">Đỏ</option>
+                                <option value="Xanh">Xanh</option>
+                                <option value="Bạc">Bạc</option>
+                            </select>
+                        </div>
+
+
+                        <div class="col-md-3">
+                            <label class="form-label">Loại nhiên liệu</label>
+                            <select class="form-select" id="fuelType">
+                                <option value="">-- Chọn loại --</option>
+                                <option value="Xăng">Xăng</option>
+                                <option value="Dầu">Dầu</option>
+                                <option value="Điện">Điện</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="carCondition" class="form-label">Tình trạng xe khi nhận</label>
+                            <select id="carCondition" class="form-select">
+                                <option value="">-- Chọn tình trạng --</option>
+                                <option value="normal">Bình thường</option>
+                                <option value="minor-scratch">Trầy nhẹ</option>
+                                <option value="damaged">Hư hỏng</option>
+                                <option value="dirty">Bẩn / Cần vệ sinh</option>
+                                <option value="other">Khác...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Loại sử dụng</label>
+                            <select class="form-select" id="usageType">
+                                <option value="PERSONAL">Cá nhân</option>
+                                <option value="SERVICE">Dịch vụ</option>
+                                <option value="TAXI">Taxi</option>
+                                <option value="RENTAL">Cho thuê</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Ngày nhận xe</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="receivedDate">
+                                <button class="btn btn-outline-secondary" type="button" id="btnSetNow">Bây giờ</button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Kỹ thuật viên tiếp nhận</label>
+                            <input type="text" class="form-control" id="receiverTech" readonly placeholder="(tự động)">
+                            <input type="hidden" id="receiverTechId" name="receiverTechId">
+                        </div>
+
+                        <!-- ========== DỊCH VỤ YÊU CẦU + GHI CHÚ ========== -->
+                        <div class="col-12 mt-4">
+                            <div class="row">
+                                <div class="col-lg-8 col-md-7">
+                                    <h6 class="section-title"><i class="fas fa-wrench me-2"></i>Dịch vụ yêu cầu</h6>
+                                    <div class="mb-3 position-relative">
+                                        <input type="text" id="serviceSearch" class="form-control" placeholder="Nhập tên dịch vụ...">
+                                        <ul id="serviceSuggestions"
+                                            class="list-group position-absolute w-100 shadow"
+                                            style="z-index:1000; display:none;"></ul>
+                                    </div>
+                                    <div id="selectedServiceList" class="mt-3"></div>
+                                    <input type="hidden" id="selectedServicesJson" name="selectedServicesJson">
+                                </div>
+
+                                <div class="col-lg-4 col-md-5 mt-4 mt-md-0">
+                                    <h6 class="section-title"><i class="fas fa-clipboard-list me-2"></i>Ghi chú thêm</h6>
+                                    <textarea class="form-control" id="notes" rows="5" placeholder="Nhập ghi chú..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-check me-2"></i>Tạo phiếu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: View Ticket Detail -->
+<div class="modal fade" id="viewTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-eye me-2 text-primary"></i>Chi tiết phiếu dịch vụ</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="ticketDetailContent">
+                <!-- Nội dung chi tiết render bằng JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Assign Mechanic -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-cog me-2"></i>Phân công thợ sửa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="text-muted mb-4">
+                    Chọn thợ phụ trách phiếu <strong id="assignTicketCode"></strong>
+                </p>
+
+                <!-- ✅ Grid thợ sửa -->
+                <div class="mechanic-grid" id="mechanicGrid"></div>
+
+                <!-- ✅ Phân trang thợ -->
+                <div class="mechanic-pagination" id="mechanicPagination"></div>
+
+                <!-- ✅ Nút hành động -->
+                <div class="text-end mt-4">
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary"
+                            style="background:#e76f00;border:none;"
+                            onclick="confirmAssignment()"
+                            id="confirmAssignBtn"
+                            disabled>
+                        <i class="fas fa-check me-2"></i>Xác nhận phân công
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Yêu cầu bổ sung dịch vụ -->
+<div class="modal fade" id="addServiceRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4 p-3">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>Yêu cầu bổ sung dịch vụ
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body mt-2">
+                <form id="addServiceRequestForm" onsubmit="submitAddServiceRequest(event)">
+                    <input type="hidden" id="amendTicketId">
+                    <div class="mb-3">
+                        <label class="form-label">Dịch vụ muốn thêm *</label>
+                        <select id="amendServiceSelect" class="form-select" required>
+                            <option value="">-- Chọn dịch vụ --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lý do đề xuất</label>
+                        <textarea id="amendReason" class="form-control" rows="3" placeholder="Ví dụ: Khách muốn thay dầu thêm..."></textarea>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirm Complete -->
+<div class="modal fade" id="confirmCompleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="confirm-dialog">
+                    <div class="confirm-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5 class="confirm-title">Xác nhận hoàn thành</h5>
+                    <p class="confirm-message">Bạn chắc chắn phiếu <strong id="completeTicketCode"></strong> đã hoàn tất sửa chữa?</p>
+                    <div class="confirm-actions">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" onclick="confirmComplete()">
+                            <i class="fas fa-check me-2"></i>Xác nhận
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+    // ===========================
+    // DỮ LIỆU TỪ BACKEND (THYMELEAF)
+    // ===========================
+    const BACKEND_TICKETS = /*[[${tickets}]]*/ [];
+    console.log('Dữ liệu từ Backend:', BACKEND_TICKETS);
+
+    // ===========================
+    // DỮ LIỆU MẪU (nếu backend rỗng)
+    // ===========================
+    const mechanics = [
+        { id: 1, name: 'Nguyễn Văn Thợ', tickets: 0, status: 'available' },
+        { id: 2, name: 'Trần Công Sửa', tickets: 0, status: 'available' },
+        { id: 3, name: 'Lê Kỹ Thuật', tickets: 0, status: 'available' },
+        { id: 4, name: 'Phạm Văn Chuyên', tickets: 0, status: 'available' },
+        { id: 5, name: 'Hoàng Thanh Long', tickets: 0, status: 'available' },
+        { id: 6, name: 'Đỗ Minh Tuấn', tickets: 0, status: 'available' },
+        { id: 7, name: 'Nguyễn Đức Cơ', tickets: 0, status: 'available' },
+        { id: 8, name: 'Trần Hữu Hào', tickets: 0, status: 'available' },
+        { id: 9, name: 'Lưu Quang Minh', tickets: 0, status: 'available' }
+    ];
+
+    // ===========================
+    // BIẾN TOÀN CỤC
+    // ===========================
+    let serviceOrders = [];
+    let filteredOrders = [];
+    let currentPage = 1;
+    const limit = 5;
+    let selectedOrder = null;
+    let selectedMechanic = null;
+    let mechanicPage = 1;
+    const perPage = 6;
+
+    let assignModalInstance = null;
+    let completeModalInstance = null;
+    let createTicketModalInstance = null;
+    let viewTicketModalInstance = null;
+    let addServiceRequestModalInstance = null;
+
+    // ===========================
+    // KHỞI TẠO DỮ LIỆU
+    // ===========================
+    function initializeData() {
+        if (!BACKEND_TICKETS || BACKEND_TICKETS.length === 0) {
+            console.warn('Không có dữ liệu từ backend');
+            showEmptyState();
+            return;
+        }
+
+        serviceOrders = BACKEND_TICKETS.map(ticket => {
+            const mechanic = ticket.mechanicId ? mechanics.find(m => m.id === ticket.mechanicId) : null;
+            if (mechanic) {
+                mechanic.tickets = (mechanic.tickets || 0) + 1;
+                mechanic.status = 'busy';
+            }
+
+            return {
+                code: ticket.ticketCode?.replace('#', '') || 'N/A',
+                customer: ticket.customerName || 'Khách lẻ',
+                phone: ticket.customerPhone || 'N/A',
+                plate: ticket.licensePlate || 'N/A',
+                service: ticket.serviceName || 'Bảo dưỡng',
+                mechanic: mechanic,
+                status: mapStatus(ticket.status),
+                createdAt: ticket.createdAt
+            };
+        });
+
+        filteredOrders = [...serviceOrders];
+        renderTable();
+        updateStatistics();
+    }
+
+    function mapStatus(status) {
+        const map = {
+            'PENDING': 'New',
+            'APPROVED': 'Approved',
+            'ASSIGNED': 'Assigned',
+            'IN_PROGRESS': 'In Progress',
+            'COMPLETED': 'Completed',
+            'INVOICED': 'Invoiced',
+            'PAID': 'Paid',
+            'CANCELLED': 'Cancelled'
+        };
+        return map[status] || 'New';
+    }
+
+    // ===========================
+    // RENDER BẢNG
+    // ===========================
+    function renderTable() {
+        const tbody = document.getElementById('serviceTableBody');
+        const start = (currentPage - 1) * limit;
+        const end = start + limit;
+        const visible = filteredOrders.slice(start, end);
+
+        if (visible.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">Không có phiếu nào</td></tr>`;
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+
+        tbody.innerHTML = visible.map(order => `
+            <tr class="fade-in">
+                <td><strong style="color: var(--primary);">#${order.code}</strong></td>
+                <td>
+                    <div style="font-weight: 600; color: var(--dark);">${order.customer}</div>
+                    <div style="font-size: 12px; color: #6c757d;">${order.phone}</div>
+                </td>
+                <td><span style="font-weight: 600; color: var(--info);">${order.plate}</span></td>
+                <td>${order.service}</td>
+                <td>${renderMechanic(order.mechanic)}</td>
+                <td>${renderStatus(order.status)}</td>
+                <td>${renderActions(order)}</td>
+                <td>${renderAuxiliary(order)}</td>
+            </tr>
+        `).join('');
+
+        renderPagination();
+    }
+
+    function renderMechanic(mechanic) {
+        if (!mechanic) return '<span style="color: #adb5bd; font-size: 13px;">Chưa phân công</span>';
+        const statusIcon = mechanic.status === 'available' ? 'Rảnh' : 'Đang làm';
+        return `
+            <div class="mechanic-info">
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(mechanic.name)}&background=FF7A00&color=fff" class="mechanic-avatar" alt="${mechanic.name}">
+                <div>
+                    <div class="mechanic-name">${mechanic.name}</div>
+                    <div class="mechanic-status">${statusIcon} ${mechanic.tickets} phiếu</div>
+                </div>
+            </div>`;
+    }
+
+    function renderStatus(status) {
+        const map = {
+            'New':       { class: 'new',       icon: 'fa-file',           text: 'Mới' },
+            'Approved':  { class: 'approved',  icon: 'fa-check',          text: 'Đã duyệt' },
+            'Assigned':  { class: 'assigned',  icon: 'fa-user-check',     text: 'Đã phân công' },
+            'In Progress': { class: 'in-progress', icon: 'fa-cog fa-spin', text: 'Đang xử lý' },
+            'Completed': { class: 'completed', icon: 'fa-check-circle',   text: 'Hoàn tất' },
+            'Invoiced':  { class: 'invoiced',  icon: 'fa-file-invoice',   text: 'Đã tạo hóa đơn' },
+            'Paid':      { class: 'paid',      icon: 'fa-check-double',   text: 'Đã thanh toán' },
+            'Cancelled': { class: 'cancelled', icon: 'fa-times-circle',   text: 'Đã hủy' }
+        };
+        const s = map[status] || map['New'];
+        return `<span class="status-badge ${s.class}"><i class="fas ${s.icon}"></i> ${s.text}</span>`;
+    }
+
+    function renderActions(order) {
+        if (order.status === 'New' || order.status === 'Approved') {
+            return `<button class="action-btn assign" onclick="openAssignModal('${order.code}')">
+                    <i class="fas fa-user-plus"></i> Phân công
+                </button>`;
+        }
+        else if (order.status === 'Assigned') {
+            return `<button class="action-btn start" onclick="startWork('${order.code}')">
+                    <i class="fas fa-play"></i> Bắt đầu làm
+                </button>`;
+        }
+        else if (order.status === 'In Progress') {
+            return `<button class="action-btn complete" onclick="openCompleteModal('${order.code}')">
+                    <i class="fas fa-check-circle"></i> Hoàn thành
+                </button>`;
+        }
+        else if (order.status === 'Completed') {
+            return `<button class="action-btn invoice" onclick="createInvoice('${order.code}')">
+                    <i class="fas fa-file-invoice"></i> Tạo hóa đơn
+                </button>`;
+        }
+        else if (order.status === 'Invoiced') {
+            return `<button class="action-btn" disabled>Chờ thanh toán</button>`;
+        }
+        else {
+            return `<button class="action-btn" disabled>${order.status === 'Paid' ? 'Đã xong' : 'Đã hủy'}</button>`;
+        }
+    }
+
+    function renderAuxiliary(order) {
+        return `
+        <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary"
+                    onclick="openViewTicketModal('${order.code}')"
+                    title="Xem chi tiết">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-success"
+                    onclick="openAddPartModal('${order.code}')"
+                    title="Bổ sung phụ tùng">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    `;
+    }
+    // ===========================
+    // PHÂN TRANG
+    // ===========================
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredOrders.length / limit);
+        const pagination = document.getElementById('pagination');
+        if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><button class="page-link" onclick="gotoPage(${i})">${i}</button></li>`;
+        }
+        pagination.innerHTML = html;
+    }
+
+    function gotoPage(page) {
+        currentPage = page;
+        renderTable();
+        document.getElementById('serviceCard')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ===========================
+    // TÌM KIẾM & LỌC
+    // ===========================
+    function searchTickets() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+
+        filteredOrders = serviceOrders.filter(order => {
+            const matchSearch = !query ||
+                order.code.toLowerCase().includes(query) ||
+                order.customer.toLowerCase().includes(query) ||
+                order.plate.toLowerCase().includes(query);
+            const matchStatus = !status || order.status === status;
+            return matchSearch && matchStatus;
+        });
+
+        currentPage = 1;
+        renderTable();
+    }
+
+    function filterByStatus() { searchTickets(); }
+
+    // ===========================
+    // MODAL PHÂN CÔNG
+    // ===========================
+    function openAssignModal(code) {
+        selectedOrder = code;
+        selectedMechanic = null;
+        mechanicPage = 1;
+        document.getElementById('assignTicketCode').textContent = `#${code}`;
+        document.getElementById('confirmAssignBtn').disabled = true;
+        renderMechanicGrid();
+
+        const modalEl = document.getElementById('assignModal');
+        if (!assignModalInstance) assignModalInstance = new bootstrap.Modal(modalEl);
+        assignModalInstance.show();
+    }
+
+    function renderMechanicGrid() {
+        const grid = document.getElementById('mechanicGrid');
+        const start = (mechanicPage - 1) * perPage;
+        const visible = mechanics.slice(start, start + perPage);
+        const slots = [...visible];
+        while (slots.length < perPage) slots.push({ placeholder: true });
+
+        grid.innerHTML = slots.map(m => {
+            if (m.placeholder) {
+                return `<div class="mechanic-card placeholder" style="opacity:0.4;background:#f8f9fa;"><div style="text-align:center;padding:40px 0;color:#adb5bd;">(Trống)</div></div>`;
+            }
+
+            const statusClass = m.status === 'available' ? 'available' : 'busy';
+            const statusIcon = m.status === 'available' ? 'Rảnh' : 'Đang làm';
+
+            return `
+            <div class="mechanic-card" id="mechanic-${m.id}" onclick="selectMechanic(${m.id})">
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=e76f00&color=fff" class="mechanic-card-avatar" alt="${m.name}">
+                <div class="mechanic-card-name">${m.name}</div>
+                <div class="mechanic-card-tickets">${m.tickets} phiếu</div>
+                <span class="mechanic-card-status ${statusClass}">${statusIcon}</span>
+            </div>`;
+        }).join('');
+
+        renderMechanicPagination();
+    }
+
+    function renderMechanicPagination() {
+        const totalPages = Math.ceil(mechanics.length / perPage);
+        const pagination = document.getElementById('mechanicPagination');
+        if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) {
+            const active = i === mechanicPage ? 'background:#e76f00;color:#fff;border:1px solid #e76f00;' : 'background:#fff;color:#333;border:1px solid #dee2e6;';
+            html += `<button onclick="gotoMechanicPage(${i})" style="width:36px;height:36px;border-radius:8px;margin:0 4px;font-weight:600;${active}">${i}</button>`;
+        }
+        pagination.innerHTML = html;
+    }
+
+    function startWork(code) {
+        const order = serviceOrders.find(o => o.code === code);
+        if (!order || !order.mechanic) return;
+
+        order.status = 'In Progress';
+        renderTable();
+        showToast('info', 'Bắt đầu làm', `Thợ ${order.mechanic.name} đã nhận phiếu #${code}`);
+    }
+
+    function gotoMechanicPage(page) {
+        mechanicPage = page;
+        selectedMechanic = null;
+        document.getElementById('confirmAssignBtn').disabled = true;
+        renderMechanicGrid();
+    }
+
+    function selectMechanic(id) {
+        selectedMechanic = id;
+        document.querySelectorAll('.mechanic-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById(`mechanic-${id}`)?.classList.add('selected');
+        document.getElementById('confirmAssignBtn').disabled = false;
+    }
+
+    function confirmAssignment() {
+        if (!selectedMechanic) return;
+        const order = serviceOrders.find(o => o.code === selectedOrder);
+        const mechanic = mechanics.find(m => m.id === selectedMechanic);
+        if (!order || !mechanic) return;
+
+        order.mechanic = mechanic;
+        order.status = 'Assigned';
+        mechanic.tickets++;
+        mechanic.status = 'busy';
+
+        assignModalInstance.hide();
+        setTimeout(() => {
+            renderTable();
+            showToast('success', 'Phân công thành công!', `Đã giao #${selectedOrder} cho ${mechanic.name}`);
+        }, 200);
+    }
+
+    // ===========================
+    // HOÀN THÀNH & TẠO HÓA ĐƠN
+    // ===========================
+    function openCompleteModal(code) {
+        selectedOrder = code;
+        document.getElementById('completeTicketCode').textContent = `#${code}`;
+        const modalEl = document.getElementById('confirmCompleteModal');
+        if (!completeModalInstance) completeModalInstance = new bootstrap.Modal(modalEl);
+        completeModalInstance.show();
+    }
+
+    function confirmComplete() {
+        const order = serviceOrders.find(o => o.code === selectedOrder);
+        if (!order) return;
+        order.status = 'Completed';
+        if (order.mechanic) {
+            order.mechanic.tickets = Math.max(0, order.mechanic.tickets - 1);
+            if (order.mechanic.tickets === 0) order.mechanic.status = 'available';
+        }
+        completeModalInstance.hide();
+        setTimeout(() => { renderTable(); showToast('success', 'Hoàn tất!', `#${selectedOrder} đã xong!`); }, 200);
+    }
+
+    function createInvoice(code) {
+        const order = serviceOrders.find(o => o.code === code);
+        if (!order || order.status !== 'Completed') return;
+        order.status = 'Invoiced';
+        renderTable();
+        showToast('success', 'Tạo hóa đơn!', `Phiếu #${code} đã có hóa đơn`);
+    }
+
+    // ===========================
+    // TẠO PHIẾU MỚI
+    // ===========================
+    function openCreateTicket() {
+        const modalEl = document.getElementById('createTicketModal');
+        if (!createTicketModalInstance) createTicketModalInstance = new bootstrap.Modal(modalEl);
+        createTicketModalInstance.show();
+        document.getElementById('createTicketForm').reset();
+    }
+
+    function handleCreateTicket(e) {
+        e.preventDefault();
+        const name = document.getElementById('customerName').value;
+        const plate = document.getElementById('plateNumber').value;
+        if (!name || !plate) return showToast('error', 'Lỗi', 'Nhập đầy đủ thông tin');
+
+        const newCode = `SV${String((serviceOrders[0]?.code?.replace('SV', '') || 0) * 1 + 1).padStart(3, '0')}`;
+        const newOrder = { code: newCode, customer: name, phone: 'N/A', plate, service: 'Bảo dưỡng', mechanic: null, status: 'New' };
+        serviceOrders.unshift(newOrder);
+        filteredOrders = [...serviceOrders];
+        createTicketModalInstance.hide();
+        setTimeout(() => { currentPage = 1; renderTable(); showToast('success', 'Tạo phiếu!', `#${newCode} đã được tạo`); }, 200);
+    }
+
+    // ===========================
+    // TOAST
+    // ===========================
+    function showToast(type, title, message) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div class="toast-icon"><i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i></div><div class="toast-content"><p class="toast-title">${title}</p><p class="toast-message">${message}</p></div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.animation = 'slideIn 0.4s reverse'; setTimeout(() => toast.remove(), 400); }, 3000);
+    }
+
+    function showEmptyState() {
+        document.getElementById('serviceTableBody').innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">Chưa có phiếu dịch vụ</td></tr>`;
+    }
+
+    function updateStatistics() {
+        const pending = serviceOrders.filter(o => ['New', 'Assigned'].includes(o.status)).length;
+        const completed = serviceOrders.filter(o => o.status === 'Completed').length;
+        document.querySelectorAll('.stat-card .value')[0].textContent = pending;
+        document.querySelectorAll('.stat-card .value')[1].textContent = completed;
+    }
+    // ===========================
+    // Open view ticket
+    // ===========================
+    function openViewTicketModal(code) {
+        const order = serviceOrders.find(o => o.code === code);
+        if (!order) return;
+
+        const modalBody = document.getElementById('ticketDetailContent');
+        modalBody.innerHTML = `
+        <div class="p-3">
+            <p><strong>Mã phiếu:</strong> #${order.code}</p>
+            <p><strong>Khách hàng:</strong> ${order.customer} (${order.phone})</p>
+            <p><strong>Biển số:</strong> ${order.plate}</p>
+            <p><strong>Dịch vụ:</strong> ${order.service}</p>
+            <p><strong>Thợ phụ trách:</strong> ${order.mechanic ? order.mechanic.name : 'Chưa phân công'}</p>
+            <p><strong>Trạng thái:</strong> ${renderStatus(order.status)}</p>
+            <hr>
+            <p class="text-muted small">Tạo lúc: ${new Date().toLocaleString('vi-VN')}</p>
+        </div>
+    `;
+
+        const modalEl = document.getElementById('viewTicketModal');
+        if (!viewTicketModalInstance) viewTicketModalInstance = new bootstrap.Modal(modalEl);
+        viewTicketModalInstance.show();
+    }
+    // ===========================
+    // Open add service
+    // ===========================
+    function openAddServiceRequestModal(code) {
+        selectedOrder = code;
+        document.getElementById('amendTicketId').value = code;
+        document.getElementById('addServiceRequestForm').reset();
+
+        // Tùy chọn: Đặt tiêu đề modal
+        const modalTitle = document.querySelector('#addServiceRequestModal .modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = `<i class="fas fa-plus-circle text-success me-2"></i>Bổ sung dịch vụ – Phiếu #${code}`;
+        }
+
+        const modalEl = document.getElementById('addServiceRequestModal');
+        if (!addServiceRequestModalInstance) addServiceRequestModalInstance = new bootstrap.Modal(modalEl);
+        addServiceRequestModalInstance.show();
+    }
+    // ===========================
+    // KHỞI ĐỘNG
+    // ===========================
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Dashboard Staff khởi động...');
+        initializeData();
+    });
+</script>
+
+<!-- Script logout -->
+<script th:inline="javascript">
+    const LOGOUT_URL = /*[[@{/auth/logout}]]*/ '/auth/logout';
+    const HOME_URL = /*[[@{/}]]*/ '/';
+
+    async function logout(event) {
+        event.preventDefault();
+
+        const result = await Swal.fire({
+            title: 'Xác nhận đăng xuất',
+            text: 'Bạn có chắc chắn muốn đăng xuất không?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff7e29',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Đăng xuất',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (!result.isConfirmed) return;
+
+        Swal.fire({
+            title: 'Đang đăng xuất...',
+            text: 'Vui lòng chờ trong giây lát',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const response = await fetch(LOGOUT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            Swal.close();
+
+            if (response.ok) { // Luôn OK nếu logic invalidate session thành công
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // ✅ Redirect về trang home
+                window.location.href = HOME_URL;
+            } else {
+                // Xử lý lỗi từ server (INTERNAL_SERVER_ERROR)
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Đăng xuất thất bại!',
+                    text: data.message || 'Máy chủ không phản hồi. Vui lòng thử lại.'
+                });
+            }
+        } catch (e) {
+            console.error('Logout error:', e);
+            Swal.close();
+            await Swal.fire({
+                icon: 'error',
+                title: 'Lỗi hệ thống!',
+                text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.'
+            });
+        }
+    }
+</script>
+</body>
+</html>

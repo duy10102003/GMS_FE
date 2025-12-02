@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Dashboard Nhân viên Kinh doanh</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="/static/css/main_dashboard.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Phạm+Minh+Tâm&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Phạm Minh Tâm</h6>
+        <small>Nhân viên kinh doanh</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-users"></i> Khách hàng tiềm năng</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-car-side"></i> Danh mục xe</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-file-contract"></i> Hợp đồng</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-chart-line"></i> Doanh thu</a></li>
+      <li><a href="#" class="nav-link"><i class="fas fa-envelope"></i> Liên hệ khách hàng</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm khách hàng hoặc xe...">
+    </div>
+
+    <div class="d-flex align-items-center">
+      <!-- Notification Dropdown -->
+      <div class="dropdown me-3 position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge">4</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0" aria-labelledby="notifDropdown">
+          <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">
+            Thông báo mới
+          </li>
+
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-primary text-white me-3"><i class="fas fa-user-plus"></i></div>
+              <div>
+                <strong>Khách hàng mới đăng ký</strong>
+                <div class="small text-muted">Nguyễn Hữu D đăng ký tư vấn xe.</div>
+                <div class="notif-time">2 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-success text-white me-3"><i class="fas fa-file-signature"></i></div>
+              <div>
+                <strong>Hợp đồng #HĐ1023 hoàn tất</strong>
+                <div class="small text-muted">Khách hàng: Trần Quốc Lợi</div>
+                <div class="notif-time">10 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-warning text-white me-3"><i class="fas fa-car"></i></div>
+              <div>
+                <strong>Xe mới nhập kho</strong>
+                <div class="small text-muted">Toyota Vios 2024 vừa cập bến.</div>
+                <div class="notif-time">30 phút trước</div>
+              </div>
+            </div>
+          </a></li>
+
+          <li><hr class="dropdown-divider"></li>
+          <li><a href="#" class="dropdown-item text-center text-primary fw-semibold view-all">Xem tất cả thông báo</a></li>
+        </ul>
+      </div>
+
+      <!-- User Dropdown -->
+      <div class="dropdown user-menu">
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+           id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=T&background=FF7A00&color=fff"
+               alt="Avatar" class="rounded-circle me-2" width="40" height="40">
+          <span class="fw-semibold text-dark d-none d-md-inline">Phạm Minh Tâm</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2 text-primary"></i> Hồ sơ cá nhân</a></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2 text-secondary"></i> Cài đặt</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="page-title mb-0">Dashboard Kinh doanh 💼</h1>
+      <nav class="breadcrumb mb-0">
+        <span><a href="#" class="text-primary text-decoration-none">Dashboard</a></span>
+        <span class="mx-2 text-muted">/</span>
+        <a href="/template/sale/dashboard-sale.html" class="text-muted breadcrumb-link">Tổng quan</a>
+      </nav>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(84,160,255,0.1); color: var(--info);"><i class="fas fa-user-tie"></i></div>
+        <h6>Khách hàng tiềm năng</h6>
+        <div class="value">28</div>
+        <div class="change positive"><i class="fas fa-arrow-up"></i> +5 trong tuần</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(247,183,49,0.1); color: var(--warning);"><i class="fas fa-file-signature"></i></div>
+        <h6>Hợp đồng mới</h6>
+        <div class="value">12</div>
+        <div class="change positive"><i class="fas fa-arrow-up"></i> +2 hôm nay</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16,172,132,0.1); color: var(--success);"><i class="fas fa-car"></i></div>
+        <h6>Xe bán ra</h6>
+        <div class="value">9</div>
+        <div class="change positive"><i class="fas fa-check"></i> Tuần này</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(255,122,0,0.1); color: var(--primary);"><i class="fas fa-dollar-sign"></i></div>
+        <h6>Doanh thu tháng</h6>
+        <div class="value">230M</div>
+        <div class="change positive"><i class="fas fa-chart-line"></i> +18%</div>
+      </div>
+    </div>
+
+    <!-- Recent Contracts -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h5>Hợp đồng gần đây</h5>
+        <button class="btn btn-primary"><i class="fas fa-plus"></i> Tạo hợp đồng mới</button>
+      </div>
+
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Mã hợp đồng</th>
+            <th>Khách hàng</th>
+            <th>Xe</th>
+            <th>Ngày ký</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>#HĐ1009</strong></td>
+            <td>Nguyễn Hoàng Nam</td>
+            <td>Honda CR-V 2024</td>
+            <td>06/10/2025</td>
+            <td><span class="badge badge-completed">Hoàn thành</span></td>
+          </tr>
+          <tr>
+            <td><strong>#HĐ1010</strong></td>
+            <td>Trần Mỹ Duyên</td>
+            <td>Toyota Cross 2023</td>
+            <td>07/10/2025</td>
+            <td><span class="badge badge-pending">Đang ký kết</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          alert('Đã đăng xuất thành công!');
+          window.location.href = "login.html";
+        }, 500);
+      }
+    }
+  </script>
+</body>
+</html>

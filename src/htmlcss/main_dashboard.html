@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Dashboard System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="static/css/main_dashboard.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+
+    <div class="user-profile" id="userProfile">
+      <img src="https://ui-avatars.com/api/?name=Customer&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6 id="userName">Khách Hàng</h6>
+        <small id="userRole">Customer</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu" id="navMenu">
+      <!-- Menu sẽ được load động -->
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm kiếm...">
+    </div>
+    <div class="header-actions">
+      <div class="notification-btn">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge" id="notifCount">3</span>
+      </div>
+      <img src="https://ui-avatars.com/api/?name=User&background=FF7A00&color=fff" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <!-- Nội dung sẽ được load động -->
+  </main>
+
+  <!-- Role Switch (Demo) -->
+  <div class="role-switch">
+    <select id="roleSelector" onchange="switchRole(this.value)">
+      <option value="customer">👤 Khách hàng</option>
+      <option value="staff">👔 Nhân viên</option>
+      <option value="mechanic">🔧 Thợ sửa chữa</option>
+      <option value="sale">🚗 Sale</option>
+      <option value="manager">📊 Manager</option>
+      <option value="admin">⚙️ Admin</option>
+    </select>
+  </div>
+
+  <script>
+    const dashboards = {
+      customer: {
+        name: 'Nguyễn Văn A',
+        role: 'Khách hàng',
+        menu: [
+          { icon: 'fa-gauge', text: 'Dashboard', href: '#', active: true },
+          { icon: 'fa-car', text: 'Xe của tôi', href: '#' },
+          { icon: 'fa-wrench', text: 'Lịch sử sửa chữa', href: '#' },
+          { icon: 'fa-file-invoice', text: 'Hóa đơn', href: '#' },
+          { icon: 'fa-phone', text: 'Liên hệ mua xe', href: '#' },
+          { icon: 'fa-user', text: 'Hồ sơ', href: '#' }
+        ],
+        content: `
+          <h1 class="page-title">Xin chào, Nguyễn Văn A 👋</h1>
+          <nav class="breadcrumb">
+            <span>Dashboard</span> / <span class="text-muted">Tổng quan</span>
+          </nav>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-car"></i>
+              </div>
+              <h6>Xe đang sở hữu</h6>
+              <div class="value">2</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> Đã xác thực
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-tools"></i>
+              </div>
+              <h6>Phiếu sửa chữa</h6>
+              <div class="value">3</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> 1 đang xử lý
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-receipt"></i>
+              </div>
+              <h6>Tổng hóa đơn</h6>
+              <div class="value">5</div>
+              <div class="change positive">
+                <i class="fas fa-check"></i> Đã thanh toán
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-coins"></i>
+              </div>
+              <h6>Tổng chi tiêu</h6>
+              <div class="value">8.5M</div>
+              <div class="change positive">
+                <i class="fas fa-chart-line"></i> Tháng này
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="content-card-header">
+              <h5>Phiếu dịch vụ gần đây</h5>
+              <button class="btn btn-primary">Xem tất cả</button>
+            </div>
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã phiếu</th>
+                  <th>Biển số</th>
+                  <th>Dịch vụ</th>
+                  <th>Ngày</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>#SV001</strong></td>
+                  <td>29A-12345</td>
+                  <td>Thay dầu nhớt</td>
+                  <td>05/10/2025</td>
+                  <td><span class="badge badge-completed">Hoàn thành</span></td>
+                </tr>
+                <tr>
+                  <td><strong>#SV002</strong></td>
+                  <td>30B-67890</td>
+                  <td>Bảo dưỡng định kỳ</td>
+                  <td>06/10/2025</td>
+                  <td><span class="badge badge-pending">Đang xử lý</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+
+      staff: {
+        name: 'Trần Thị B',
+        role: 'Nhân viên lễ tân',
+        menu: [
+          { icon: 'fa-gauge', text: 'Dashboard', href: '#', active: true },
+          { icon: 'fa-plus-circle', text: 'Tạo phiếu dịch vụ', href: '#' },
+          { icon: 'fa-list', text: 'Quản lý phiếu', href: '#' },
+          { icon: 'fa-user-check', text: 'Phân công thợ', href: '#' },
+          { icon: 'fa-credit-card', text: 'Thanh toán', href: '#' },
+          { icon: 'fa-exclamation-triangle', text: 'Cảnh báo kho', href: '#' }
+        ],
+        content: `
+          <h1 class="page-title">Dashboard Nhân viên 📋</h1>
+          <nav class="breadcrumb">
+            <span>Staff</span> / <span class="text-muted">Tổng quan</span>
+          </nav>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+              <h6>Phiếu chờ xử lý</h6>
+              <div class="value">8</div>
+              <div class="change negative">
+                <i class="fas fa-arrow-up"></i> +2 hôm nay
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h6>Hoàn thành hôm nay</h6>
+              <div class="value">12</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +4 so với hôm qua
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-box"></i>
+              </div>
+              <h6>Cảnh báo phụ tùng</h6>
+              <div class="value">3</div>
+              <div class="change negative">
+                <i class="fas fa-exclamation-triangle"></i> Cần nhập kho
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <h6>Doanh thu hôm nay</h6>
+              <div class="value">15.8M</div>
+              <div class="change positive">
+                <i class="fas fa-chart-line"></i> +12%
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="content-card-header">
+              <h5>Phiếu cần xử lý</h5>
+              <button class="btn btn-primary"><i class="fas fa-plus"></i> Tạo phiếu mới</button>
+            </div>
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã phiếu</th>
+                  <th>Khách hàng</th>
+                  <th>Biển số</th>
+                  <th>Dịch vụ</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>#SV003</strong></td>
+                  <td>Lê Văn C</td>
+                  <td>51F-34567</td>
+                  <td>Thay lốp</td>
+                  <td><span class="badge badge-new">Mới</span></td>
+                  <td><button class="btn btn-sm btn-primary">Xử lý</button></td>
+                </tr>
+                <tr>
+                  <td><strong>#SV004</strong></td>
+                  <td>Phạm Thị D</td>
+                  <td>29A-88888</td>
+                  <td>Sửa phanh</td>
+                  <td><span class="badge badge-pending">Chờ duyệt</span></td>
+                  <td><button class="btn btn-sm btn-primary">Phân công</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+
+      mechanic: {
+        name: 'Hoàng Văn E',
+        role: 'Thợ sửa chữa',
+        menu: [
+          { icon: 'fa-gauge', text: 'Dashboard', href: '#', active: true },
+          { icon: 'fa-tasks', text: 'Công việc của tôi', href: '#' },
+          { icon: 'fa-clock', text: 'Đang thực hiện', href: '#' },
+          { icon: 'fa-history', text: 'Lịch sử', href: '#' },
+          { icon: 'fa-chart-bar', text: 'Hiệu suất', href: '#' }
+        ],
+        content: `
+          <h1 class="page-title">Dashboard Thợ sửa chữa 🔧</h1>
+          <nav class="breadcrumb">
+            <span>Mechanic</span> / <span class="text-muted">Công việc</span>
+          </nav>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-wrench"></i>
+              </div>
+              <h6>Đang thực hiện</h6>
+              <div class="value">2</div>
+              <div class="change positive">
+                <i class="fas fa-clock"></i> Đang làm việc
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-check-double"></i>
+              </div>
+              <h6>Hoàn thành tháng này</h6>
+              <div class="value">45</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +8 so tháng trước
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-star"></i>
+              </div>
+              <h6>Đánh giá trung bình</h6>
+              <div class="value">4.8</div>
+              <div class="change positive">
+                <i class="fas fa-star"></i> Xuất sắc
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-stopwatch"></i>
+              </div>
+              <h6>Thời gian TB/phiếu</h6>
+              <div class="value">2.5h</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-down"></i> -0.3h
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="content-card-header">
+              <h5>Công việc hiện tại</h5>
+            </div>
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã phiếu</th>
+                  <th>Biển số</th>
+                  <th>Dịch vụ</th>
+                  <th>Thời gian bắt đầu</th>
+                  <th>Ưu tiên</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>#SV005</strong></td>
+                  <td>29A-11111</td>
+                  <td>Thay dầu + Lọc gió</td>
+                  <td>08:30 AM</td>
+                  <td><span class="badge badge-pending">Cao</span></td>
+                  <td><button class="btn btn-sm btn-primary">Cập nhật</button></td>
+                </tr>
+                <tr>
+                  <td><strong>#SV006</strong></td>
+                  <td>51F-99999</td>
+                  <td>Kiểm tra hệ thống phanh</td>
+                  <td>10:00 AM</td>
+                  <td><span class="badge badge-new">Trung bình</span></td>
+                  <td><button class="btn btn-sm btn-primary">Cập nhật</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+
+      sale: {
+        name: 'Đỗ Thị F',
+        role: 'Nhân viên Sale',
+        menu: [
+          { icon: 'fa-gauge', text: 'Dashboard', href: '#', active: true },
+          { icon: 'fa-users', text: 'Khách hàng', href: '#' },
+          { icon: 'fa-phone-volume', text: 'Yêu cầu liên hệ', href: '#' },
+          { icon: 'fa-file-contract', text: 'Hợp đồng', href: '#' },
+          { icon: 'fa-car-side', text: 'Xe đang bán', href: '#' },
+          { icon: 'fa-chart-line', text: 'Doanh số', href: '#' }
+        ],
+        content: `
+          <h1 class="page-title">Dashboard Sale 🚗</h1>
+          <nav class="breadcrumb">
+            <span>Sale</span> / <span class="text-muted">Tổng quan</span>
+          </nav>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-phone-alt"></i>
+              </div>
+              <h6>Yêu cầu mới</h6>
+              <div class="value">5</div>
+              <div class="change positive">
+                <i class="fas fa-bell"></i> Chưa xử lý
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-handshake"></i>
+              </div>
+              <h6>Đang tư vấn</h6>
+              <div class="value">3</div>
+              <div class="change positive">
+                <i class="fas fa-user-check"></i> Khách tiềm năng
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-car"></i>
+              </div>
+              <h6>Xe bán tháng này</h6>
+              <div class="value">8</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +2 so tháng trước
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-trophy"></i>
+              </div>
+              <h6>Doanh số tháng này</h6>
+              <div class="value">2.4 tỷ</div>
+              <div class="change positive">
+                <i class="fas fa-fire"></i> Top 3
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="content-card-header">
+              <h5>Yêu cầu liên hệ mới</h5>
+              <button class="btn btn-primary"><i class="fas fa-car-side"></i> Quản lý xe bán</button>
+            </div>
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã yêu cầu</th>
+                  <th>Khách hàng</th>
+                  <th>SĐT</th>
+                  <th>Xe quan tâm</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>#CR001</strong></td>
+                  <td>Vũ Văn G</td>
+                  <td>0912345678</td>
+                  <td>Honda City 2024</td>
+                  <td><span class="badge badge-new">Mới</span></td>
+                  <td><button class="btn btn-sm btn-primary">Nhận khách</button></td>
+                </tr>
+                <tr>
+                  <td><strong>#CR002</strong></td>
+                  <td>Mai Thị H</td>
+                  <td>0987654321</td>
+                  <td>Toyota Vios 2024</td>
+                  <td><span class="badge badge-new">Mới</span></td>
+                  <td><button class="btn btn-sm btn-primary">Nhận khách</button></td>
+                </tr>
+                <tr>
+                  <td><strong>#CR003</strong></td>
+                  <td>Bùi Văn I</td>
+                  <td>0909090909</td>
+                  <td>Mazda CX-5 2024</td>
+                  <td><span class="badge badge-pending">Đang tư vấn</span></td>
+                  <td><button class="btn btn-sm btn-primary">Xem chi tiết</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+
+      manager: {
+        name: 'Nguyễn Văn K',
+        role: 'Quản lý',
+        menu: [
+          { icon: 'fa-gauge', text: 'Dashboard', href: '#', active: true },
+          { icon: 'fa-chart-pie', text: 'Báo cáo tổng hợp', href: '#' },
+          { icon: 'fa-users-cog', text: 'Quản lý nhân sự', href: '#' },
+          { icon: 'fa-warehouse', text: 'Quản lý kho', href: '#' },
+          { icon: 'fa-dollar-sign', text: 'Doanh thu', href: '#' },
+          { icon: 'fa-cog', text: 'Cài đặt', href: '#' }
+        ],
+        content: `
+          <h1 class="page-title">Dashboard Manager 📊</h1>
+          <nav class="breadcrumb">
+            <span>Manager</span> / <span class="text-muted">Tổng quan kinh doanh</span>
+          </nav>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h6>Doanh thu tháng này</h6>
+              <div class="value">185M</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +15% so tháng trước
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-tools"></i>
+              </div>
+              <h6>Dịch vụ hoàn thành</h6>
+              <div class="value">234</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +8%
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-car-side"></i>
+              </div>
+              <h6>Xe bán được</h6>
+              <div class="value">28</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +12%
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-users"></i>
+              </div>
+              <h6>Khách hàng mới</h6>
+              <div class="value">156</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +24%
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-8">
+              <div class="content-card">
+                <div class="content-card-header">
+                  <h5>Biểu đồ doanh thu 6 tháng</h5>
+                  <select class="form-select" style="width: 150px;">
+                    <option>6 tháng</option>
+                    <option>1 năm</option>
+                  </select>
+                </div>
+                <div style="height: 300px; display: flex; align-items: center; justify-content: center; color: #999;">
+                  <i class="fas fa-chart-area" style="font-size: 3rem;"></i>
+                  <span style="margin-left: 15px;">Biểu đồ sẽ hiển thị ở đây</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="content-card">
+                <div class="content-card-header">
+                  <h5>Hiệu suất thợ</h5>
+                </div>
+                <div style="padding: 10px 0;">
+                  <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>Hoàng Văn E</span>
+                      <span style="font-weight: 600; color: var(--success);">95%</span>
+                    </div>
+                    <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                      <div style="background: var(--success); width: 95%; height: 100%;"></div>
+                    </div>
+                  </div>
+                  <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>Lê Thị M</span>
+                      <span style="font-weight: 600; color: var(--success);">92%</span>
+                    </div>
+                    <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                      <div style="background: var(--success); width: 92%; height: 100%;"></div>
+                    </div>
+                  </div>
+                  <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <span>Trần Văn N</span>
+                      <span style="font-weight: 600; color: var(--warning);">88%</span>
+                    </div>
+                    <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                      <div style="background: var(--warning); width: 88%; height: 100%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-card" style="margin-top: 20px;">
+                <div class="content-card-header">
+                  <h5>Cảnh báo kho</h5>
+                </div>
+                <div style="padding: 10px 0;">
+                  <div style="padding: 10px; background: #fff3e0; border-left: 4px solid var(--warning); margin-bottom: 10px; border-radius: 4px;">
+                    <strong>Dầu nhớt 5W30</strong>
+                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Còn 5 lít - Cần nhập kho</div>
+                  </div>
+                  <div style="padding: 10px; background: #ffebee; border-left: 4px solid var(--danger); margin-bottom: 10px; border-radius: 4px;">
+                    <strong>Lọc gió động cơ</strong>
+                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">Còn 2 cái - Khẩn cấp!</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+
+      admin: {
+        name: 'Admin System',
+        role: 'Quản trị viên',
+        menu: [
+          { icon: 'fa-gauge', text: 'Dashboard', href: '#', active: true },
+          { icon: 'fa-users', text: 'Quản lý người dùng', href: '#' },
+          { icon: 'fa-shield-alt', text: 'Phân quyền', href: '#' },
+          { icon: 'fa-history', text: 'Audit Log', href: '#' },
+          { icon: 'fa-database', text: 'Sao lưu dữ liệu', href: '#' },
+          { icon: 'fa-cogs', text: 'Cấu hình hệ thống', href: '#' }
+        ],
+        content: `
+          <h1 class="page-title">Dashboard Admin ⚙️</h1>
+          <nav class="breadcrumb">
+            <span>Admin</span> / <span class="text-muted">Quản trị hệ thống</span>
+          </nav>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-users"></i>
+              </div>
+              <h6>Tổng người dùng</h6>
+              <div class="value">342</div>
+              <div class="change positive">
+                <i class="fas fa-arrow-up"></i> +12 tuần này
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-user-check"></i>
+              </div>
+              <h6>Đang hoạt động</h6>
+              <div class="value">28</div>
+              <div class="change positive">
+                <i class="fas fa-circle" style="font-size: 0.6rem;"></i> Online
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+              <h6>Hoạt động hôm nay</h6>
+              <div class="value">1,234</div>
+              <div class="change positive">
+                <i class="fas fa-chart-line"></i> Actions
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: rgba(238, 82, 83, 0.1); color: var(--danger);">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <h6>Lỗi hệ thống</h6>
+              <div class="value">2</div>
+              <div class="change negative">
+                <i class="fas fa-bell"></i> Cần xử lý
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="content-card">
+                <div class="content-card-header">
+                  <h5>Người dùng theo vai trò</h5>
+                </div>
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Vai trò</th>
+                      <th>Số lượng</th>
+                      <th>Hoạt động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><i class="fas fa-user" style="color: var(--info);"></i> Khách hàng</td>
+                      <td><strong>285</strong></td>
+                      <td><span class="badge badge-completed">23 online</span></td>
+                    </tr>
+                    <tr>
+                      <td><i class="fas fa-user-tie" style="color: var(--primary);"></i> Nhân viên</td>
+                      <td><strong>15</strong></td>
+                      <td><span class="badge badge-completed">12 online</span></td>
+                    </tr>
+                    <tr>
+                      <td><i class="fas fa-wrench" style="color: var(--warning);"></i> Thợ</td>
+                      <td><strong>18</strong></td>
+                      <td><span class="badge badge-completed">8 online</span></td>
+                    </tr>
+                    <tr>
+                      <td><i class="fas fa-handshake" style="color: var(--success);"></i> Sale</td>
+                      <td><strong>12</strong></td>
+                      <td><span class="badge badge-completed">6 online</span></td>
+                    </tr>
+                    <tr>
+                      <td><i class="fas fa-user-shield" style="color: var(--danger);"></i> Manager</td>
+                      <td><strong>3</strong></td>
+                      <td><span class="badge badge-completed">2 online</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="content-card">
+                <div class="content-card-header">
+                  <h5>Audit Log gần đây</h5>
+                  <button class="btn btn-primary btn-sm">Xem tất cả</button>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                  <div style="padding: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <strong>Trần Thị B</strong>
+                      <small style="color: #999;">2 phút trước</small>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666;">
+                      <i class="fas fa-plus-circle" style="color: var(--success);"></i> Tạo phiếu dịch vụ #SV007
+                    </div>
+                  </div>
+                  <div style="padding: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <strong>Đỗ Thị F</strong>
+                      <small style="color: #999;">15 phút trước</small>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666;">
+                      <i class="fas fa-handshake" style="color: var(--primary);"></i> Nhận yêu cầu liên hệ #CR004
+                    </div>
+                  </div>
+                  <div style="padding: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <strong>Hoàng Văn E</strong>
+                      <small style="color: #999;">28 phút trước</small>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666;">
+                      <i class="fas fa-check-circle" style="color: var(--success);"></i> Hoàn thành phiếu #SV005
+                    </div>
+                  </div>
+                  <div style="padding: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                      <strong>Nguyễn Văn K</strong>
+                      <small style="color: #999;">1 giờ trước</small>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666;">
+                      <i class="fas fa-box" style="color: var(--warning);"></i> Nhập kho phụ tùng
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    };
+
+    function switchRole(role) {
+      const data = dashboards[role];
+      document.getElementById('userName').textContent = data.name;
+      document.getElementById('userRole').textContent = data.role;
+      
+      const userProfile = document.getElementById('userProfile');
+      const img = userProfile.querySelector('img');
+      img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=FF7A00&color=fff`;
+      
+      const navMenu = document.getElementById('navMenu');
+      navMenu.innerHTML = data.menu.map(item => `
+        <li class="nav-item">
+          <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+            <i class="fas ${item.icon}"></i> ${item.text}
+          </a>
+        </li>
+      `).join('');
+      
+      document.getElementById('mainContent').innerHTML = data.content;
+      
+      document.getElementById('notifCount').textContent = Math.floor(Math.random() * 10) + 1;
+    }
+
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          alert('Đã đăng xuất thành công!');
+          location.reload();
+        }, 500);
+      }
+    }
+
+    switchRole('customer');
+  </script>
+</body>
+</html>

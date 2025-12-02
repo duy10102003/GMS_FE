@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Cảnh báo tồn kho</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/staff/staff-dashboard.css">
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Trần+Thị+B&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Trần Thị B</h6>
+        <small>Nhân viên lễ tân</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/staff/dashboard-staff.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/staff/payment/payment.html" class="nav-link"><i class="fas fa-credit-card"></i> Thanh toán</a></li>
+      <li><a href="/template/staff/inventory/inventory-alert.html" class="nav-link active"><i class="fas fa-exclamation-triangle"></i> Cảnh báo kho</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header d-flex align-items-center justify-content-between">
+    <h1 class="page-title">Cảnh báo tồn kho 🚨</h1>
+    <div class="dropdown position-relative">
+      <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge">2</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+      <nav class="breadcrumb mb-0">
+        <span><a href="#" class="text-primary text-decoration-none">Staff</a></span>
+        <span class="mx-2 text-muted">/</span>
+        <span class="text-muted">Cảnh báo tồn kho</span>
+      </nav>
+    </div>
+
+    <!-- Alert Card -->
+    <div class="content-card fade-in">
+      <div class="content-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h5><i class="fas fa-boxes-stacked me-2"></i>Danh sách cảnh báo tồn kho</h5>
+
+        <div class="filter-tabs">
+          <button class="btn btn-outline-secondary active" onclick="filterAlerts('all', event)">
+            <i class="fas fa-list me-1"></i> Tất cả
+          </button>
+          <button class="btn btn-outline-warning" onclick="filterAlerts('low', event)">
+            <i class="fas fa-hourglass-half me-1"></i> Sắp hết
+          </button>
+          <button class="btn btn-outline-danger" onclick="filterAlerts('out', event)">
+            <i class="fas fa-times-circle me-1"></i> Hết hàng
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x: auto;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Mã phụ tùng</th>
+              <th>Tên phụ tùng</th>
+              <th>Tồn kho</th>
+              <th>Ngưỡng cảnh báo</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <nav>
+        <ul class="pagination" id="pagination"></ul>
+      </nav>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modal: Xác nhận báo quản lý -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-paper-plane me-2 text-primary"></i>Xác nhận gửi cảnh báo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn gửi cảnh báo phụ tùng <strong id="confirmItemName"></strong> đến Quản lý kho không?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button class="btn btn-primary" id="confirmSendBtn">
+            <i class="fas fa-check me-1"></i>Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ===========================
+    // DỮ LIỆU GIẢ LẬP
+    // ===========================
+    let stockAlerts = [
+      { id: 'PT001', name: 'Dầu động cơ 5W-30', quantity: 3, threshold: 5, status: 'low', reported: false },
+      { id: 'PT002', name: 'Bugi NGK', quantity: 0, threshold: 10, status: 'out', reported: false },
+      { id: 'PT003', name: 'Má phanh trước', quantity: 12, threshold: 5, status: 'ok', reported: false },
+      { id: 'PT004', name: 'Lọc gió cabin', quantity: 2, threshold: 5, status: 'low', reported: false },
+      { id: 'PT005', name: 'Dây curoa máy phát', quantity: 0, threshold: 3, status: 'out', reported: false }
+    ];
+
+    let currentFilter = 'all';
+    let currentPage = 1;
+    const limit = 5;
+    let selectedAlert = null;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+    // ===========================
+    // HIỂN THỊ DỮ LIỆU
+    // ===========================
+    function renderTable() {
+      const tbody = document.getElementById('inventoryTableBody');
+      const filtered = currentFilter === 'all' ? stockAlerts : stockAlerts.filter(a => a.status === currentFilter);
+      const start = (currentPage - 1) * limit;
+      const visible = filtered.slice(start, start + limit);
+
+      tbody.innerHTML = visible.map(item => `
+        <tr>
+          <td><strong style="color: var(--primary)">#${item.id}</strong></td>
+          <td>${item.name}</td>
+          <td>${item.quantity}</td>
+          <td>${item.threshold}</td>
+          <td>${renderStatus(item.status)}</td>
+          <td>${renderAction(item)}</td>
+        </tr>
+      `).join('');
+
+      renderPagination(filtered.length);
+    }
+
+    function renderStatus(status) {
+      const map = {
+        'ok': { class: 'status-badge paid', text: 'Còn đủ' },
+        'low': { class: 'status-badge assigned', text: 'Sắp hết' },
+        'out': { class: 'status-badge cancelled', text: 'Hết hàng' }
+      };
+      return `<span class="${map[status].class}">${map[status].text}</span>`;
+    }
+
+    function renderAction(item) {
+      if (item.status === 'ok') {
+        return `<button class="action-btn" disabled><i class="fas fa-check-circle"></i> Ổn định</button>`;
+      }
+
+      if (item.reported) {
+        return `<button class="action-btn" disabled><i class="fas fa-check"></i> Đã báo quản lý</button>`;
+      }
+
+      return `<button class="action-btn" style="background:#e76f00;border:none;" onclick="openConfirmModal('${item.id}')">
+                <i class="fas fa-paper-plane me-1"></i>Báo quản lý
+              </button>`;
+    }
+
+    function renderPagination(total) {
+      const totalPages = Math.ceil(total / limit);
+      const pagination = document.getElementById('pagination');
+      if (totalPages <= 1) return pagination.innerHTML = '';
+
+      pagination.innerHTML = Array.from({ length: totalPages }, (_, i) => `
+        <li class="page-item ${i + 1 === currentPage ? 'active' : ''}">
+          <button class="page-link" onclick="gotoPage(${i + 1})">${i + 1}</button>
+        </li>`).join('');
+    }
+
+    function gotoPage(page) {
+      currentPage = page;
+      renderTable();
+    }
+
+    // ===========================
+    // HÀNH ĐỘNG
+    // ===========================
+    function openConfirmModal(id) {
+      selectedAlert = stockAlerts.find(a => a.id === id);
+      document.getElementById('confirmItemName').textContent = selectedAlert.name;
+      modal.show();
+    }
+
+    document.getElementById('confirmSendBtn').addEventListener('click', () => {
+      if (!selectedAlert) return;
+      selectedAlert.reported = true;
+      modal.hide();
+      renderTable();
+      showToast('success', 'Đã gửi cảnh báo!', `Phụ tùng <strong>${selectedAlert.name}</strong> đã được báo cho Quản lý kho ✅`);
+    });
+
+    function filterAlerts(filter, e) {
+      document.querySelectorAll('.filter-tabs button').forEach(btn => btn.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      currentFilter = filter;
+      currentPage = 1;
+      renderTable();
+    }
+
+    // ===========================
+    // GIẢ LẬP CẬP NHẬT KHO
+    // ===========================
+    setInterval(() => {
+      stockAlerts.forEach(item => {
+        if (item.reported && item.status !== 'ok') {
+          // Giả lập: Manager đã nhập kho
+          if (Math.random() > 0.6) {
+            item.quantity += item.threshold;
+            item.status = 'ok';
+            item.reported = false;
+            showToast('success', 'Kho đã cập nhật!', `Phụ tùng <strong>${item.name}</strong> đã đủ hàng trở lại 🧰`);
+          }
+        }
+      });
+      renderTable();
+    }, 10000);
+
+    // ===========================
+    // TOAST THÔNG BÁO
+    // ===========================
+    function showToast(type, title, message) {
+      const container = document.getElementById('toastContainer');
+      const id = Date.now();
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.id = `toast-${id}`;
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i></div>
+        <div class="toast-content">
+          <p class="toast-title">${title}</p>
+          <p class="toast-message">${message}</p>
+        </div>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.animation = 'slideIn 0.4s reverse'; setTimeout(() => toast.remove(), 400); }, 3000);
+    }
+
+    // ===========================
+    // LOGOUT
+    // ===========================
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          alert('Đã đăng xuất thành công!');
+          window.location.href = 'login.html';
+        }, 500);
+      }
+    }
+
+    // ===========================
+    // KHỞI TẠO
+    // ===========================
+    document.addEventListener('DOMContentLoaded', renderTable);
+  </script>
+</body>
+</html>

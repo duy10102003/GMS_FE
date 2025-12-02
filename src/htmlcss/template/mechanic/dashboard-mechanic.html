@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Dashboard Thợ sửa chữa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/main_dashboard.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><span class="orange">Garage</span><span class="dark">Pro</span></div>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Hoàng+Văn+E&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Hoàng Văn E</h6>
+        <small>Thợ sửa chữa</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/mechanic/dashboard-mechanic.html" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/mechanic/history.html" class="nav-link"><i class="fas fa-history"></i> Lịch sử</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <h1 class="page-title mb-0">Dashboard Thợ sửa chữa 🔧</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(247,183,49,0.1); color: var(--warning);">
+          <i class="fas fa-wrench"></i>
+        </div>
+        <h6>Đang thực hiện</h6>
+        <div class="value">2</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16,172,132,0.1); color: var(--success);">
+          <i class="fas fa-check-double"></i>
+        </div>
+        <h6>Hoàn thành tháng này</h6>
+        <div class="value">45</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(84,160,255,0.1); color: var(--info);">
+          <i class="fas fa-star"></i>
+        </div>
+        <h6>Đánh giá trung bình</h6>
+        <div class="value">4.8 ⭐</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(255,122,0,0.1); color: var(--primary);">
+          <i class="fas fa-stopwatch"></i>
+        </div>
+        <h6>Thời gian TB/phiếu</h6>
+        <div class="value">2.5h</div>
+      </div>
+    </div>
+
+    <!-- Current Work -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h5>Công việc hiện tại</h5>
+
+        <div class="d-flex align-items-center">
+            <span class="text-muted me-2 small fw-semibold">Trạng thái:</span>
+            <span id="currentStatusDisplay" class="badge bg-secondary me-3">OFFLINE</span>
+
+            <button id="shiftActionButton" class="btn btn-sm btn-success">
+                <i class="fas fa-sign-in-alt me-1"></i> CHECK-IN
+            </button>
+        </div>
+      </div>
+      
+      <table class="custom-table table-hover shadow-sm">
+        <thead>
+          <tr>
+            <th>Mã phiếu</th>
+            <th>Biển số</th>
+            <th>Dịch vụ</th>
+            <th>Bắt đầu</th>
+            <th>Ưu tiên</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="ticketTable">
+          <tr data-id="SV005">
+            <td><strong>#SV005</strong></td>
+            <td>29A-11111</td>
+            <td>Thay dầu + Lọc gió</td>
+            <td>08:30</td>
+            <td><span class="badge bg-danger">Cao</span></td>
+            <td><span class="badge bg-warning status-badge">In Progress</span></td>
+            <td>
+              <button class="btn btn-sm btn-outline-warning report-btn"
+                data-id="SV005"
+                data-license="29A-11111"
+                data-service="Thay dầu + Lọc gió">
+                Báo cáo hoàn thành
+              </button>
+            </td>
+          </tr>
+          <tr data-id="SV006">
+            <td><strong>#SV006</strong></td>
+            <td>51F-99999</td>
+            <td>Kiểm tra phanh</td>
+            <td>10:00</td>
+            <td><span class="badge bg-info text-dark">Trung bình</span></td>
+            <td><span class="badge bg-warning status-badge">In Progress</span></td>
+            <td>
+              <button class="btn btn-sm btn-outline-warning report-btn"
+                data-id="SV006"
+                data-license="51F-99999"
+                data-service="Kiểm tra phanh">
+                Báo cáo hoàn thành
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal Xác nhận -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title"><i class="fas fa-triangle-exclamation me-2"></i>Xác nhận hoàn thành</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fw-semibold mb-2 text-dark">Bạn có chắc chắn đã hoàn thành công việc này?</p>
+          <div class="border rounded p-3 bg-light mb-3">
+            <p class="mb-1"><strong>Mã phiếu:</strong> <span id="modalTicketId"></span></p>
+            <p class="mb-1"><strong>Biển số:</strong> <span id="modalLicense"></span></p>
+            <p class="mb-1"><strong>Dịch vụ:</strong> <span id="modalService"></span></p>
+          </div>
+          <p class="text-danger small mb-0">
+            ⚠️ Thao tác này <strong>không thể hoàn tác</strong>. Vui lòng kiểm tra kỹ trước khi xác nhận.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button id="confirmCompleteBtn" class="btn btn-success">
+            <i class="fas fa-check-circle me-1"></i> Xác nhận hoàn thành
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Đăng xuất
+    function logout(){
+      if(confirm('Đăng xuất?')){
+        document.body.style.opacity='0';
+        setTimeout(()=>{location.href='login.html'},500);
+      }
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    let currentRow = null;
+
+    // Mở modal khi nhấn "Báo cáo hoàn thành"
+    document.querySelectorAll('.report-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        currentRow = btn.closest('tr');
+        document.getElementById('modalTicketId').textContent = btn.dataset.id;
+        document.getElementById('modalLicense').textContent = btn.dataset.license;
+        document.getElementById('modalService').textContent = btn.dataset.service;
+        modal.show();
+      });
+    });
+
+    // Xác nhận hoàn thành
+    document.getElementById('confirmCompleteBtn').addEventListener('click',()=>{
+      if(currentRow){
+        const btn = currentRow.querySelector('.report-btn');
+        btn.classList.remove('btn-outline-warning');
+        btn.classList.add('btn-success');
+        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Đã báo cáo';
+        btn.disabled = true;
+        const statusBadge = currentRow.querySelector('.status-badge');
+        statusBadge.classList.replace('bg-warning','bg-success');
+        statusBadge.innerText = 'Completed';
+        modal.hide();
+      }
+    });
+  </script>
+  <script>
+    // ===========================================
+    // LOGIC DEMO CHECK-IN/CHECK-OUT
+    // ===========================================
+    const statusDisplay = document.getElementById('currentStatusDisplay');
+    const actionButton = document.getElementById('shiftActionButton');
+    
+    // Khởi tạo trạng thái mặc định
+    let isAvailable = false; 
+    updateShiftStatusDisplay(); 
+
+    // Hàm cập nhật giao diện
+    function updateShiftStatusDisplay() {
+        if (isAvailable) {
+            // Trạng thái AVAILABLE
+            statusDisplay.textContent = 'AVAILABLE';
+            statusDisplay.classList.remove('bg-secondary');
+            statusDisplay.classList.add('bg-success');
+            
+            actionButton.innerHTML = '<i class="fas fa-sign-out-alt me-1"></i> CHECK-OUT';
+            actionButton.classList.remove('btn-success');
+            actionButton.classList.add('btn-danger');
+            
+            console.log("Status changed to AVAILABLE (Check-in success)");
+        } else {
+            // Trạng thái OFFLINE (hoặc mặc định)
+            statusDisplay.textContent = 'OFFLINE';
+            statusDisplay.classList.remove('bg-success');
+            statusDisplay.classList.add('bg-secondary');
+            
+            actionButton.innerHTML = '<i class="fas fa-sign-in-alt me-1"></i> CHECK-IN';
+            actionButton.classList.remove('btn-danger');
+            actionButton.classList.add('btn-success');
+            
+            console.log("Status changed to OFFLINE (Check-out success)");
+        }
+    }
+
+    // Gắn sự kiện cho nút Check-in/Check-out
+    actionButton.addEventListener('click', function() {
+        // Đảo ngược trạng thái
+        isAvailable = !isAvailable; 
+        updateShiftStatusDisplay();
+    });
+
+</script>
+</body>
+</html>

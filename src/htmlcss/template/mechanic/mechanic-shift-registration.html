@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaragePro - Đăng ký ca làm việc</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/static/css/main_dashboard.css}">
+    <style>
+        /* CSS riêng cho form đăng ký ca */
+        body {
+            /* Màu nền body sáng hơn một chút */
+            background: linear-gradient(135deg, #f0f2f5 0%, #e0e5ec 100%); 
+        }
+        .shift-form-card {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 15px;
+            /* Màu nền card sáng hơn, ví dụ trắng hoặc xám nhạt */
+            background-color: #ffffff; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Giảm độ đậm bóng */
+            color: #333; /* Màu chữ mặc định cho card */
+        }
+        .form-label {
+            color: #555; /* Màu label tối hơn để dễ đọc */
+            font-weight: 500;
+        }
+        .form-control, .form-select, .form-control:focus, .form-select:focus {
+            /* Màu nền input/select sáng hơn */
+            background-color: #f8f9fa; 
+            border: 1px solid #ced4da; /* Viền sáng hơn */
+            color: #333; /* Màu chữ trong input */
+        }
+        .form-control::placeholder { /* Placeholder màu tối hơn */
+            color: #888;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #FF7A00; /* Giữ màu cam làm điểm nhấn khi focus */
+            box-shadow: 0 0 0 0.25rem rgba(255, 122, 0, 0.25);
+        }
+        .day-checkbox {
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        .form-check-label {
+            color: #333; /* Màu chữ cho checkbox label */
+        }
+        .alert-info { /* Giữ nguyên màu alert info để dễ phân biệt */
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .alert-info strong {
+            color: #0d6efd; /* Màu xanh của bootstrap info */
+        }
+        h3 {
+             color: #FF7A00; /* Giữ màu cam cho tiêu đề form */
+        }
+        #time-warning {
+            color: #dc3545; /* Màu đỏ của Bootstrap danger */
+        }
+
+        /* Điều chỉnh sidebar nếu nó vẫn đang màu tối */
+        /* Nếu main_dashboard.css đã có sẵn màu tối thì bạn có thể giữ nguyên */
+        /* Nếu muốn sidebar sáng hơn thì chỉnh sửa main_dashboard.css */
+        .sidebar {
+            background-color: #2c3e50; /* Giữ màu tối cho sidebar hoặc điều chỉnh nếu muốn */
+        }
+    </style>
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo"><span class="orange">Garage</span><span class="dark">Pro</span></div>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Hoàng+Văn+E&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Hoàng Văn E</h6>
+        <small>Thợ sửa chữa</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+        <li><a th:href="@{/dashboard-mechanic}" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+        <li>
+            <a th:href="@{/mechanic-shift-registration}" class="nav-link active">
+                <i class="fas fa-clock"></i> Đăng ký ca làm việc
+            </a>
+        </li>
+        <li><a th:href="@{/mechanic-history.html}" class="nav-link"><i class="fas fa-history"></i> Lịch sử</a></li>
+    </ul>
+
+    <button class="logout-btn" type="button" onclick="logout(event)">
+        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+</aside>
+
+<header class="main-header">
+    <h1 class="page-title mb-0">Đăng ký ca làm việc <i class="fas fa-calendar-check"></i></h1>
+</header>
+
+<main class="main-content">
+    <div class="shift-form-card">
+        <h3 class="mb-4 text-center">Thiết lập Lịch làm việc hàng tuần</h3>
+        
+        <form id="shiftRegistrationForm">
+            <div class="alert alert-info border-0" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Lưu ý:</strong> Ca làm việc mặc định là <strong>8 tiếng</strong>. Bạn phải chọn giờ Bắt đầu và Kết thúc phù hợp.
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Chọn các Ngày Làm Việc (Thứ 2 - Thứ 7):</label>
+                <div class="d-flex flex-wrap">
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="MON" id="dayMon" checked>
+                        <label class="form-check-label" for="dayMon">Thứ Hai</label>
+                    </div>
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="TUE" id="dayTue" checked>
+                        <label class="form-check-label" for="dayTue">Thứ Ba</label>
+                    </div>
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="WED" id="dayWed" checked>
+                        <label class="form-check-label" for="dayWed">Thứ Tư</label>
+                    </div>
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="THU" id="dayThu" checked>
+                        <label class="form-check-label" for="dayThu">Thứ Năm</label>
+                    </div>
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="FRI" id="dayFri" checked>
+                        <label class="form-check-label" for="dayFri">Thứ Sáu</label>
+                    </div>
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="SAT" id="daySat" checked>
+                        <label class="form-check-label" for="daySat">Thứ Bảy</label>
+                    </div>
+                    <div class="form-check day-checkbox">
+                        <input class="form-check-input" type="checkbox" name="workDays" value="SUN" id="daySun" disabled>
+                        <label class="form-check-label" for="daySun">Chủ Nhật (Nghỉ)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="startTime" class="form-label">Giờ Bắt đầu Ca (Start Time):</label>
+                    <input type="time" class="form-control" id="startTime" value="08:00" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="endTime" class="form-label">Giờ Kết thúc Ca (End Time):</label>
+                    <input type="time" class="form-control" id="endTime" value="16:00" readonly required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="notes" class="form-label">Ghi chú (Lý do chọn ca, v.v.):</label>
+                <textarea class="form-control" id="notes" rows="3" placeholder="Ví dụ: Ưu tiên ca sáng để tiện đón con..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="background-color: #FF7A00; border-color: #FF7A00;">
+                <i class="fas fa-paper-plane me-2"></i> Gửi Đăng Ký Ca Làm Việc
+            </button>
+        </form>
+
+        <p id="time-warning" class="text-danger small mt-3" style="display: none;">
+            Lỗi: Giờ kết thúc phải cách giờ bắt đầu chính xác 8 tiếng!
+        </p>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const LOGOUT_URL = /*[[@{/auth/logout}]]*/ '/auth/logout';
+    const HOME_URL = /*[[@{/}]]*/ '/';
+    const SHIFT_REGISTER_URL = /*[[@{/api/mechanic/register-shift}]]*/ '/api/mechanic/register-shift';
+
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const form = document.getElementById('shiftRegistrationForm');
+
+    function calculateEndTime() {
+        const startTime = startTimeInput.value;
+        if (!startTime) return;
+
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const totalMinutes = hours * 60 + minutes;
+        
+        const endTotalMinutes = totalMinutes + 480; 
+
+        const endHours = Math.floor(endTotalMinutes / 60) % 24; 
+        const endMinutes = endTotalMinutes % 60;
+
+        const formattedEndHours = String(endHours).padStart(2, '0');
+        const formattedEndMinutes = String(endMinutes).padStart(2, '0');
+        
+        endTimeInput.value = `${formattedEndHours}:${formattedEndMinutes}`;
+        document.getElementById('time-warning').style.display = 'none';
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const workDays = Array.from(document.querySelectorAll('input[name="workDays"]:checked')).map(cb => cb.value);
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        const notes = document.getElementById('notes').value;
+
+        if (workDays.length === 0) {
+            Swal.fire('Lỗi', 'Vui lòng chọn ít nhất một ngày làm việc.', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Đang gửi đăng ký...',
+            text: 'Vui lòng chờ trong giây lát',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+        
+        try {
+            const response = await fetch(SHIFT_REGISTER_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    workDays,
+                    startTime,
+                    endTime,
+                    notes
+                })
+            });
+
+            const data = await response.json();
+            Swal.close();
+
+            if (response.ok && data.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng ký thành công!',
+                    text: 'Lịch làm việc của bạn đã được ghi nhận. Vui lòng chờ quản lý phê duyệt.',
+                });
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Đăng ký thất bại!',
+                    text: data.message || 'Có lỗi xảy ra trong quá trình xử lý. Vui lòng thử lại.',
+                });
+            }
+        } catch (e) {
+            Swal.close();
+            await Swal.fire({
+                icon: 'error',
+                title: 'Lỗi hệ thống!',
+                text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.',
+            });
+        }
+    });
+
+    async function logout(event) {
+        event.preventDefault();
+        const result = await Swal.fire({
+            title: 'Xác nhận đăng xuất',
+            text: 'Bạn có chắc chắn muốn đăng xuất không?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff7e29',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Đăng xuất',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (!result.isConfirmed) return;
+
+        Swal.fire({
+            title: 'Đang đăng xuất...',
+            text: 'Vui lòng chờ trong giây lát',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const response = await fetch(LOGOUT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            Swal.close();
+
+            if (response.ok) { 
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                window.location.href = HOME_URL;
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Đăng xuất thất bại!',
+                    text: data.message || 'Máy chủ không phản hồi. Vui lòng thử lại.'
+                });
+            }
+        } catch (e) {
+            console.error('Logout error:', e);
+            Swal.close();
+            await Swal.fire({
+                icon: 'error',
+                title: 'Lỗi hệ thống!',
+                text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.'
+            });
+        }
+    }
+
+    calculateEndTime();
+    /*]]>*/
+</script>
+</body>
+</html>

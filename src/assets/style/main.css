@@ -1,0 +1,66 @@
+@import './variables.css';
+
+/**
+ * Global Styles
+ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--light, #f8f9fa);
+  color: var(--dark, #2c3a47);
+  overflow-x: hidden;
+}
+
+/* Utility Classes */
+.text-primary { color: var(--primary, #ff7a00); }
+.text-secondary { color: var(--secondary, #4b6584); }
+.text-success { color: var(--success, #10ac84); }
+.text-danger { color: var(--danger, #ee5253); }
+.text-warning { color: var(--warning, #f7b731); }
+.text-info { color: var(--info, #54a0ff); }
+
+.bg-primary { background-color: var(--primary, #ff7a00); }
+.bg-secondary { background-color: var(--secondary, #4b6584); }
+.bg-success { background-color: var(--success, #10ac84); }
+.bg-danger { background-color: var(--danger, #ee5253); }
+.bg-warning { background-color: var(--warning, #f7b731); }
+.bg-info { background-color: var(--info, #54a0ff); }
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-success {
+  background: rgba(16, 172, 132, 0.1);
+  color: var(--success, #10ac84);
+}
+
+.badge-danger {
+  background: rgba(238, 82, 83, 0.1);
+  color: var(--danger, #ee5253);
+}
+
+.badge-warning {
+  background: rgba(247, 183, 49, 0.1);
+  color: var(--warning, #f7b731);
+}
+
+.badge-info {
+  background: rgba(84, 160, 255, 0.1);
+  color: var(--info, #54a0ff);
+}
+
+.badge-primary {
+  background: rgba(255, 122, 0, 0.1);
+  color: var(--primary, #ff7a00);
+}
+

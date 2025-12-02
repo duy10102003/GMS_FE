@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Thanh toán</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/staff/staff-dashboard.css">
+  
+  <style>
+    
+    .payment-wrapper {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      padding: 28px 36px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .payment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-weight: 500;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .filter-tab:hover { background: #f3f4f6; color: #111; }
+    .filter-tab.active { background: var(--primary); color: #fff; }
+
+    .invoice-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: 0.2s;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .invoice-item:hover { background: #fafafa; }
+
+    .invoice-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .invoice-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(255,122,0,0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .invoice-info h6 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #111;
+    }
+
+    .invoice-info p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .invoice-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      text-align: right;
+    }
+
+    .invoice-amount {
+      font-weight: 600;
+      color: #111;
+      font-size: 16px;
+    }
+
+    .badge-status {
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-new {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+
+    .status-paid {
+      background: rgba(22,163,74,0.1);
+      color: #16a34a;
+    }
+
+    .payment-method-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .payment-method-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .payment-method-card:hover {
+      border-color: var(--primary);
+      background: rgba(255,122,0,0.05);
+    }
+
+    .payment-method-card.selected {
+      border-color: var(--primary);
+      background: rgba(255,122,0,0.1);
+    }
+
+    .payment-method-icon {
+      font-size: 48px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .payment-method-name {
+      font-weight: 600;
+      color: #111;
+      font-size: 16px;
+    }
+
+    .qr-code-container {
+      text-align: center;
+      padding: 24px;
+      display: none;
+    }
+
+    .qr-code-container.show {
+      display: block;
+    }
+
+    .qr-placeholder {
+      width: 250px;
+      height: 250px;
+      background: #f3f4f6;
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 80px;
+      color: #9ca3af;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      color: #d1d5db;
+      margin-bottom: 16px;
+    }
+
+    .action-btn.pay {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .action-btn.pay:hover {
+      background: #e76f00;
+      transform: translateY(-1px);
+    }
+
+    .confirm-payment-info {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .confirm-payment-info .row {
+      margin-bottom: 8px;
+    }
+
+    .confirm-payment-info strong {
+      color: #111;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Trần+Thị+B&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Trần Thị B</h6>
+        <small>Nhân viên lễ tân</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/staff/dashboard-staff.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/staff/payment/payment.html" class="nav-link active"><i class="fas fa-credit-card"></i> Thanh toán</a></li>
+      <li><a href="/template/staff/inventory/inventory-alert.html" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Cảnh báo kho</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header d-flex align-items-center justify-content-between">
+    <h1 class="page-title">Thanh toán 💳</h1>
+
+    <div class="dropdown position-relative">
+      <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge">3</span>
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="min-width: 320px; border-radius: 16px;">
+        <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold">
+          Thông báo hôm nay
+        </li>
+        <li><a href="#" class="dropdown-item py-3">
+          <div class="d-flex align-items-start gap-3">
+            <div style="width:40px;height:40px;background:rgba(59,130,246,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#3b82f6;">
+              <i class="fas fa-file-invoice"></i>
+            </div>
+            <div>
+              <strong>Hóa đơn mới #INV003</strong>
+              <div class="small text-muted">Chờ thanh toán</div>
+              <div class="small text-muted">5 phút trước</div>
+            </div>
+          </div>
+        </a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+      <nav class="breadcrumb mb-0">
+        <span><a href="#" class="text-primary text-decoration-none">Staff</a></span>
+        <span class="mx-2 text-muted">/</span>
+        <span class="text-muted">Thanh toán</span>
+      </nav>
+    </div>
+
+    <div class="payment-wrapper fade-in">
+      <div class="payment-header">
+        <h5><i class="fas fa-file-invoice-dollar me-2"></i>Danh sách hóa đơn</h5>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterInvoices('new', event)">
+            <i class="fas fa-clock me-1"></i>Mới
+          </button>
+          <button class="filter-tab" onclick="filterInvoices('paid', event)">
+            <i class="fas fa-check-circle me-1"></i>Đã thanh toán
+          </button>
+          <button class="filter-tab" onclick="filterInvoices('all', event)">
+            <i class="fas fa-list me-1"></i>Tất cả
+          </button>
+        </div>
+      </div>
+
+      <div id="invoiceContainer"></div>
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <i class="fas fa-inbox"></i>
+        <h6>Không có hóa đơn nào</h6>
+        <p>Chưa có hóa đơn trong danh sách này</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modal: Payment -->
+  <div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-credit-card me-2"></i>Thanh toán hóa đơn</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-payment-info">
+            <div class="row">
+              <div class="col-6"><strong>Mã hóa đơn:</strong></div>
+              <div class="col-6 text-end" id="payInvoiceCode">#INV001</div>
+            </div>
+            <div class="row">
+              <div class="col-6"><strong>Khách hàng:</strong></div>
+              <div class="col-6 text-end" id="payCustomerName">-</div>
+            </div>
+            <div class="row">
+              <div class="col-6"><strong>Số tiền:</strong></div>
+              <div class="col-6 text-end text-primary fw-bold" id="payAmount">0 VNĐ</div>
+            </div>
+          </div>
+
+          <p class="text-muted mb-3"><i class="fas fa-info-circle me-1"></i>Chọn phương thức thanh toán:</p>
+
+          <div class="payment-method-grid">
+            <div class="payment-method-card" onclick="selectPaymentMethod('qr')">
+              <div class="payment-method-icon"><i class="fas fa-qrcode"></i></div>
+              <div class="payment-method-name">QR Code</div>
+            </div>
+            <div class="payment-method-card" onclick="selectPaymentMethod('cash')">
+              <div class="payment-method-icon"><i class="fas fa-money-bill-wave"></i></div>
+              <div class="payment-method-name">Tiền mặt</div>
+            </div>
+          </div>
+
+          <div class="qr-code-container" id="qrCodeContainer">
+            <div class="qr-placeholder">
+              <i class="fas fa-qrcode"></i>
+            </div>
+            <p class="text-muted mb-0">Quét mã QR để thanh toán</p>
+            <small class="text-muted">Ngân hàng: MB Bank - 0123456789</small>
+          </div>
+
+          <div class="text-end mt-4">
+            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="confirmPayment()" id="confirmPayBtn" disabled style="background:#e76f00;border:none;">
+              <i class="fas fa-check me-2"></i>Xác nhận thanh toán
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirm Success -->
+  <div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="confirm-dialog">
+            <div class="confirm-icon success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <h5 class="confirm-title">Thanh toán thành công!</h5>
+            <p class="confirm-message">Hóa đơn <strong id="successInvoiceCode"></strong> đã được thanh toán.</p>
+            <div class="confirm-actions">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                <i class="fas fa-check me-2"></i>Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ===========================
+    // DỮ LIỆU HÓA ĐƠN
+    // ===========================
+    let invoices = [
+      { 
+        id: 'INV008', 
+        code: 'SV008',
+        customer: 'Phạm Thị D', 
+        plate: '29A-88888', 
+        amount: 2850000, 
+        date: '09/10/2025 14:30',
+        status: 'new',
+        items: [
+          { name: 'Thay bugi', qty: 4, price: 150000 },
+          { name: 'Vệ sinh kim phun', qty: 1, price: 800000 }
+        ]
+      },
+      { 
+        id: 'INV009', 
+        code: 'SV009',
+        customer: 'Lê Văn C', 
+        plate: '51F-34567', 
+        amount: 4200000, 
+        date: '09/10/2025 15:45',
+        status: 'new',
+        items: [
+          { name: 'Thay lốp Michelin', qty: 4, price: 950000 }
+        ]
+      },
+      { 
+        id: 'INV010', 
+        code: 'SV010',
+        customer: 'Trần Văn B', 
+        plate: '51F-54321', 
+        amount: 1650000, 
+        date: '09/10/2025 16:20',
+        status: 'new',
+        items: [
+          { name: 'Sửa phanh trước', qty: 2, price: 650000 },
+          { name: 'Thay má phanh sau', qty: 2, price: 175000 }
+        ]
+      },
+      { 
+        id: 'INV001', 
+        code: 'SV001',
+        customer: 'Nguyễn Văn A', 
+        plate: '30H-12345', 
+        amount: 3850000, 
+        date: '05/10/2025 10:20',
+        status: 'paid',
+        items: [
+          { name: 'Thay dầu động cơ', qty: 1, price: 800000 },
+          { name: 'Thay lọc gió', qty: 1, price: 350000 },
+          { name: 'Bảo dưỡng phanh', qty: 1, price: 1200000 }
+        ]
+      },
+      { 
+        id: 'INV002', 
+        code: 'SV002',
+        customer: 'Hoàng Văn G', 
+        plate: '60C-77777', 
+        amount: 880000, 
+        date: '06/10/2025 11:15',
+        status: 'paid',
+        items: [
+          { name: 'Thay nhớt', qty: 1, price: 650000 },
+          { name: 'Rửa xe', qty: 1, price: 150000 }
+        ]
+      }
+    ];
+
+    let filteredInvoices = [];
+    let currentFilter = 'new';
+    let selectedInvoice = null;
+    let selectedPaymentMethod = null;
+
+    // Modal instances
+    let paymentModalInstance = null;
+    let successModalInstance = null;
+
+    // ===========================
+    // RENDER DANH SÁCH HÓA ĐƠN
+    // ===========================
+    function renderInvoices() {
+      const container = document.getElementById('invoiceContainer');
+      const emptyState = document.getElementById('emptyState');
+      
+      // Filter invoices based on current filter
+      if (currentFilter === 'new') {
+        filteredInvoices = invoices.filter(inv => inv.status === 'new');
+      } else if (currentFilter === 'paid') {
+        filteredInvoices = invoices.filter(inv => inv.status === 'paid');
+      } else {
+        filteredInvoices = [...invoices];
+      }
+
+      if (filteredInvoices.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      
+      container.innerHTML = filteredInvoices.map(invoice => {
+        const statusClass = invoice.status === 'new' ? 'status-new' : 'status-paid';
+        const statusText = invoice.status === 'new' ? 'Chờ thanh toán' : 'Đã thanh toán';
+        const actionBtn = invoice.status === 'new' 
+          ? `<button class="action-btn pay" onclick="openPaymentModal('${invoice.id}')">
+               <i class="fas fa-credit-card me-1"></i>Thanh toán
+             </button>`
+          : `<button class="action-btn" disabled>
+               <i class="fas fa-check-circle me-1"></i>Đã xong
+             </button>`;
+
+        return `
+          <div class="invoice-item fade-in" data-status="${invoice.status}">
+            <div class="invoice-left">
+              <div class="invoice-icon">
+                <i class="fas fa-file-invoice-dollar"></i>
+              </div>
+              <div class="invoice-info">
+                <h6>#${invoice.id} - ${invoice.customer}</h6>
+                <p><i class="fas fa-car me-1"></i>${invoice.plate} • <i class="fas fa-clock me-1"></i>${invoice.date}</p>
+              </div>
+            </div>
+            <div class="invoice-right">
+              <div>
+                <div class="invoice-amount">${invoice.amount.toLocaleString('vi-VN')} VNĐ</div>
+                <span class="badge-status ${statusClass}">${statusText}</span>
+              </div>
+              ${actionBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===========================
+    // LỌC HÓA ĐƠN
+    // ===========================
+    function filterInvoices(filter, event) {
+      currentFilter = filter;
+      
+      // Update active tab
+      document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      renderInvoices();
+    }
+
+    // ===========================
+    // MỞ MODAL THANH TOÁN
+    // ===========================
+    function openPaymentModal(invoiceId) {
+      selectedInvoice = invoices.find(inv => inv.id === invoiceId);
+      selectedPaymentMethod = null;
+      
+      if (!selectedInvoice) return;
+      
+      // Reset UI
+      document.getElementById('payInvoiceCode').textContent = `#${selectedInvoice.id}`;
+      document.getElementById('payCustomerName').textContent = selectedInvoice.customer;
+      document.getElementById('payAmount').textContent = `${selectedInvoice.amount.toLocaleString('vi-VN')} VNĐ`;
+      document.getElementById('confirmPayBtn').disabled = true;
+      document.getElementById('qrCodeContainer').classList.remove('show');
+      
+      // Reset payment method cards
+      document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // Show modal
+      const modalEl = document.getElementById('paymentModal');
+      if (!paymentModalInstance) {
+        paymentModalInstance = new bootstrap.Modal(modalEl);
+      }
+      paymentModalInstance.show();
+    }
+
+    // ===========================
+    // CHỌN PHƯƠNG THỨC THANH TOÁN
+    // ===========================
+    function selectPaymentMethod(method) {
+      selectedPaymentMethod = method;
+      
+      // Update UI
+      document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      event.currentTarget.classList.add('selected');
+      document.getElementById('confirmPayBtn').disabled = false;
+      
+      // Show QR code if selected
+      if (method === 'qr') {
+        document.getElementById('qrCodeContainer').classList.add('show');
+      } else {
+        document.getElementById('qrCodeContainer').classList.remove('show');
+      }
+    }
+
+    // ===========================
+    // XÁC NHẬN THANH TOÁN
+    // ===========================
+    function confirmPayment() {
+      if (!selectedInvoice || !selectedPaymentMethod) return;
+      
+      // Update invoice status
+      selectedInvoice.status = 'paid';
+      
+      // Close payment modal
+      if (paymentModalInstance) {
+        paymentModalInstance.hide();
+      }
+      
+      // Show success modal after close animation
+      setTimeout(() => {
+        document.getElementById('successInvoiceCode').textContent = `#${selectedInvoice.id}`;
+        
+        const modalEl = document.getElementById('successModal');
+        if (!successModalInstance) {
+          successModalInstance = new bootstrap.Modal(modalEl);
+        }
+        successModalInstance.show();
+        
+        // Update list
+        renderInvoices();
+        
+        // Show toast
+        const methodText = selectedPaymentMethod === 'qr' ? 'QR Code' : 'Tiền mặt';
+        showToast('success', 'Thanh toán thành công!', `Hóa đơn #${selectedInvoice.id} đã thanh toán qua ${methodText} ✅`);
+      }, 300);
+    }
+
+    // ===========================
+    // THÔNG BÁO TOAST
+    // ===========================
+    function showToast(type, title, message) {
+      const container = document.getElementById('toastContainer');
+      const id = Date.now();
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.id = `toast-${id}`;
+      toast.innerHTML = `
+        <div class="toast-icon">
+          <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        </div>
+        <div class="toast-content">
+          <p class="toast-title">${title}</p>
+          <p class="toast-message">${message}</p>
+        </div>`;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.4s reverse';
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    // ===========================
+    // LOGOUT
+    // ===========================
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          alert('Đã đăng xuất thành công!');
+          window.location.href = 'login.html';
+        }, 500);
+      }
+    }
+
+    // ===========================
+    // KHỞI TẠO
+    // ===========================
+    document.addEventListener('DOMContentLoaded', () => {
+      renderInvoices();
+    });
+  </script>
+
+</body>
+</html>

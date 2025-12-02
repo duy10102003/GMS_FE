@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GaragePro - Hồ sơ cá nhân</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/static/css/main_dashboard.css" />
+
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --primary-dark: #E56E00;
+      --secondary: #4B6584;
+      --success: #10AC84;
+      --danger: #EE5253;
+      --warning: #F7B731;
+      --info: #54A0FF;
+      --light: #F8F9FA;
+      --dark: #2C3A47;
+      --sidebar-width: 260px;
+    }
+
+    body { 
+      background: var(--light); 
+      font-family: 'Inter', 'SF Pro Display', sans-serif; 
+      color: var(--dark);
+    }
+
+    .profile-wrapper {
+      max-width: 1200px;
+      margin: 50px auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .profile-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 30px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .avatar-section {
+      text-align: center;
+      padding: 30px;
+      background: var(--light);
+      border-right: 1px solid #eee;
+    }
+
+    .avatar {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 5px solid var(--primary);
+      transition: all 0.3s ease;
+    }
+
+    .avatar:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .upload-btn {
+      margin-top: 20px;
+      font-weight: 600;
+      color: var(--primary);
+      background: #fff3e6;
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 8px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+      border-radius: 8px;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.25rem rgba(255, 122, 0, 0.2);
+      background: #ffffff;
+    }
+
+    .btn-save {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 32px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-save:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .btn-cancel {
+      border-radius: 10px;
+      border: 1px solid #eee;
+      padding: 12px 32px;
+      font-weight: 600;
+      color: var(--dark);
+      background: #fff;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+      background: var(--light);
+      border-color: #d1d5db;
+    }
+
+    .info-box {
+      background: var(--light);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .info-box p {
+      margin: 4px 0;
+      font-size: 0.95rem;
+    }
+
+/* ====== FIX: Dropdown notification responsive ====== */
+header.main-header .dropdown-menu {
+  right: 0 !important;
+  left: auto !important;
+  min-width: 260px;
+  transform: translateY(10px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Khi màn hình nhỏ, dropdown không bị văng ra ngoài */
+@media (max-width: 768px) {
+  header.main-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 16px !important;
+  }
+
+  header.main-header .dropdown {
+    align-self: flex-end;
+    position: relative;
+    margin-top: 5px;
+  }
+
+  header.main-header .notification-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+  }
+
+  header.main-header h4 {
+    font-size: 1rem;
+    text-align: left;
+    margin-bottom: 0;
+  }
+}
+
+
+  </style>
+</head>
+
+<body>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/home.html" class="logo text-decoration-none d-flex align-items-center">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </a>
+    </div>
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=FF7A00&color=fff" alt="Avatar" />
+      <div class="user-info">
+        <h6>Nguyễn Văn A</h6>
+        <small>Khách hàng</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/customer/dashboard-customer.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/customer/my-vehicle/list-add-vehicle.html" class="nav-link"><i class="fas fa-car"></i> Xe của tôi</a></li>
+      <li><a href="/template/customer/serviceticket/list-service-ticket.html" class="nav-link"><i class="fas fa-wrench"></i> Lịch sử sửa chữa</a></li>
+      <li><a href="/template/customer/invoice/list-invoice.html" class="nav-link"><i class="fas fa-file-invoice"></i> Hóa đơn</a></li>
+      <li><a href="/template/customer/contact/contact-form.html" class="nav-link"><i class="fas fa-phone"></i> Liên hệ mua xe</a></li>
+      <li><a href="/template/customer/profile.html" class="nav-link active"><i class="fas fa-user"></i> Hồ sơ</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+  </aside>
+
+  <!-- ===== HEADER ===== -->
+  <header class="main-header d-flex align-items-center justify-content-between px-4 py-2 shadow-sm bg-white">
+    <h4 class="fw-bold mb-0 text-dark">Hồ sơ cá nhân 👤</h4>
+    <div class="dropdown position-relative">
+      <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown">
+        <i class="fas fa-bell"></i><span class="notification-badge">3</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0">
+        <li class="dropdown-header py-3 px-3 bg-light fw-semibold text-dark">Thông báo gần đây</li>
+        <li><a href="#" class="dropdown-item small text-muted">Xe của bạn đã sẵn sàng bàn giao.</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+    <div class="profile-wrapper">
+      <div class="profile-header">
+        <div>
+          <h3>Thông Tin Tài Khoản</h3>
+          <p class="mb-0">Cập nhật hồ sơ và thông tin cá nhân của bạn để đảm bảo thông tin chính xác</p>
+        </div>
+      </div>
+
+      <div class="row g-0">
+        <!-- Avatar -->
+<div class="col-md-4 d-flex flex-column align-items-center justify-content-start p-5 bg-light">
+  <div class="avatar-wrapper position-relative mb-3">
+    <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=FF7A00&color=fff"
+         alt="Avatar"
+         class="avatar shadow-sm">
+  </div>
+
+  <button class="upload-btn shadow-sm mt-2">
+    <i class="fas fa-upload me-2"></i> Tải ảnh lên
+  </button>
+
+  <div class="info-box text-start mt-4 w-100 px-4 py-3 shadow-sm" style="background:#fff; border:1px solid #eee; border-radius:12px;">
+    <p class="mb-2"><strong>ID:</strong> USR000001</p>
+    <p class="mb-2"><strong>Vai trò:</strong> Customer</p>
+    <p class="mb-0"><strong>Trạng thái:</strong> <span class="text-success fw-semibold">Hoạt động</span></p>
+  </div>
+</div>
+
+
+        <!-- Form -->
+        <div class="col-md-8 p-5">
+          <form id="profileForm">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <label for="name" class="form-label">Họ và tên</label>
+                <input type="text" class="form-control" id="name" value="Nguyễn Văn A">
+              </div>
+              <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" value="nguyenvana@example.com">
+              </div>
+
+              <div class="col-md-6">
+                <label for="phone" class="form-label">Số điện thoại</label>
+                <input type="tel" class="form-control" id="phone" value="0987123456">
+              </div>
+              <div class="col-md-6">
+  <label for="status" class="form-label">Trạng thái</label>
+  <input 
+    type="text" 
+    id="status" 
+    class="form-control text-success fw-semibold" 
+    value="Active" 
+    readonly 
+    style="background-color:#f9fafb; cursor:not-allowed;">
+</div>
+
+
+              <div class="col-md-12">
+                <label for="address" class="form-label">Địa chỉ</label>
+                <input type="text" class="form-control" id="address" value="123 Đường ABC, Quận 1, TP.HCM">
+              </div>
+            </div>
+
+            <div class="text-end mt-5">
+              <button type="button" class="btn-cancel me-3" onclick="document.getElementById('profileForm').reset()">Hủy</button>
+              <button type="submit" class="btn-save"><i class="fas fa-save me-2"></i> Lưu thay đổi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function logout() {
+      if (confirm("Bạn có chắc muốn đăng xuất?")) {
+        document.body.style.opacity = "0";
+        setTimeout(() => { window.location.href = "login.html"; }, 500);
+      }
+    }
+
+    // Lưu hồ sơ
+    document.getElementById("profileForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const btn = e.target.querySelector(".btn-save");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang lưu...';
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i> Lưu thành công';
+        alert("Thông tin đã được cập nhật!");
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaragePro - Dashboard Nhân viên</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}"/>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/staff/staff-dashboard.css}"/>
+</head>
+<body>
+<!-- Sidebar (giữ nguyên) -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <a href="http://localhost:8081/home">
+                <span class="orange">Garage</span><span class="dark">Pro</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="user-profile">
+        <img src="https://ui-avatars.com/api/?name=Trần+Thị+B&background=FF7A00&color=fff" alt="Avatar">
+        <div class="user-info">
+            <h6>Trần Thị B</h6>
+            <small>Nhân viên lễ tân</small>
+        </div>
+    </div>
+
+    <ul class="nav-menu">
+        <li><a href="/dashboard-staff" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a></li>
+        <li><a href="/payment" class="nav-link"><i class="fas fa-credit-card"></i> Thanh toán</a></li>
+        <li><a href="/inventory-alert" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Cảnh báo kho</a></li>
+    </ul>
+
+    <button class="logout-btn" type="button" onclick="logout(event)">
+        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+</aside>
+
+<!-- Header (giữ nguyên) -->
+<header class="main-header d-flex align-items-center justify-content-between">
+    <h1 class="page-title">Dashboard Nhân viên 📋</h1>
+
+    <div class="dropdown position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">4</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="min-width: 320px; border-radius: 16px;">
+            <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold">
+                Thông báo hôm nay
+            </li>
+            <li><a href="#" class="dropdown-item py-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div style="width:40px;height:40px;background:rgba(247,183,49,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#f7b731;">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <div>
+                        <strong>Phiếu mới #SV009</strong>
+                        <div class="small text-muted">Khách hàng: Lê Văn C</div>
+                        <div class="small text-muted">Vừa xong</div>
+                    </div>
+                </div>
+            </a></li>
+        </ul>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <nav class="breadcrumb mb-0">
+            <span><a href="#" class="text-primary text-decoration-none">Staff</a></span>
+            <span class="mx-2 text-muted">/</span>
+            <span class="text-muted">Tổng quan</span>
+        </nav>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid fade-in">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <h6>Phiếu chờ xử lý</h6>
+            <div class="value" id="pendingCount">0</div>
+            <div class="change negative"><i class="fas fa-arrow-up"></i> <span id="pendingChange">0</span> hôm nay</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h6>Hoàn thành hôm nay</h6>
+            <div class="value" id="completedCount">0</div>
+            <div class="change positive"><i class="fas fa-arrow-up"></i> <span id="completedChange">0</span> so với hôm qua</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+                <i class="fas fa-box"></i>
+            </div>
+            <h6>Cảnh báo phụ tùng</h6>
+            <div class="value">3</div>
+            <div class="change negative"><i class="fas fa-exclamation-triangle"></i> Cần nhập kho</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <h6>Doanh thu hôm nay</h6>
+            <div class="value" id="revenueToday">0</div>
+            <div class="change positive"><i class="fas fa-chart-line"></i> +12%</div>
+        </div>
+    </div>
+
+    <!-- Service Management Card -->
+    <div class="content-card fade-in" id="serviceCard">
+        <div class="content-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5><i class="fas fa-clipboard-list me-2"></i>Quản lý phiếu dịch vụ</h5>
+            <button class="btn btn-primary" onclick="openCreateTicket()">
+                <i class="fas fa-plus"></i> Tạo phiếu mới
+            </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm theo mã phiếu, khách hàng, biển số..." id="searchInput" oninput="searchTickets()">
+            </div>
+            <select class="filter-select" id="statusFilter" onchange="filterByStatus()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="New">Mới</option>
+                <option value="Assigned">Đã phân công</option>
+                <option value="In Progress">Đang xử lý</option>
+                <option value="Completed">Hoàn tất</option>
+                <option value="Paid">Đã thanh toán</option>
+                <option value="Cancelled">Đã hủy</option>
+            </select>
+        </div>
+        <p>Tổng số phiếu: <strong id="totalTickets">0</strong></p>
+
+        <!-- Table -->
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                <tr>
+                    <th>Mã phiếu</th>
+                    <th>Khách hàng</th>
+                    <th>Biển số</th>
+                    <th>Dịch vụ</th>
+                    <th>Thợ phụ trách</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+                </thead>
+                <tbody id="serviceTableBody">
+                <!-- Data will be rendered by JavaScript -->
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                        <p class="mt-2">Đang tải dữ liệu...</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav>
+            <ul class="pagination" id="pagination"></ul>
+        </nav>
+    </div>
+
+    <!-- Modal: View Ticket Detail -->
+    <div class="modal fade" id="viewTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-eye me-2 text-primary"></i>Chi tiết phiếu dịch vụ</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="ticketDetailContent">
+                    <!-- Nội dung chi tiết render bằng JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Yêu cầu bổ sung dịch vụ -->
+    <div class="modal fade" id="addServiceRequestModal" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4 p-3">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fas fa-plus-circle text-primary me-2"></i>Yêu cầu bổ sung dịch vụ
+                    </h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body mt-2">
+                    <form id="addServiceRequestForm" onsubmit="submitAddServiceRequest(event)">
+                        <input type="hidden" id="amendTicketId">
+                        <div class="mb-3">
+                            <label class="form-label">Dịch vụ muốn thêm *</label>
+                            <select id="amendServiceSelect" class="form-select" required>
+                                <option value="">-- Chọn dịch vụ --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lý do đề xuất</label>
+                            <textarea id="amendReason" class="form-control" rows="3" placeholder="Ví dụ: Khách muốn thay dầu thêm..."></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Ticket -->
+    <div class="modal fade" id="createTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content p-4 shadow-lg border-0 rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fas fa-file-medical me-2 text-primary"></i>
+                        Tạo phiếu dịch vụ mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body mt-2">
+                    <form id="createTicketForm" onsubmit="handleCreateTicket(event)">
+                        <div class="row g-3">
+
+                            <!-- ========== THÔNG TIN KHÁCH HÀNG ========== -->
+                            <div class="col-12">
+                                <h6 class="section-title"><i class="fas fa-user me-2"></i>Thông tin khách hàng</h6>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Họ tên *</label>
+                                <input type="text" class="form-control" id="customerName" required placeholder="Nguyễn Văn A">
+                            </div>
+
+                            <!--                        <div class="col-md-4">-->
+                            <!--                            <label class="form-label">Số điện thoại *</label>-->
+                            <!--                            <input type="tel" class="form-control" id="customerPhone" required placeholder="0912345678">-->
+                            <!--                        </div>-->
+
+                            <div class="col-md-4">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="customerEmail" placeholder="example@email.com">
+                            </div>
+
+                            <!-- ========== THÔNG TIN XE ========== -->
+                            <div class="col-12 mt-4">
+                                <h6 class="section-title"><i class="fas fa-car me-2"></i>Thông tin xe</h6>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Biển số *</label>
+                                <input type="text" class="form-control" id="plateNumber" required placeholder="30H-12345"
+                                       onblur="fetchVehicleInfo(this.value)">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Hãng xe (Brand)</label>
+                                <select class="form-select" id="carBrand" required>
+                                    <option value="">-- Chọn hãng --</option>
+                                    <option value="Toyota">Toyota</option>
+                                    <option value="Mazda">Mazda</option>
+                                    <option value="Hyundai">Hyundai</option>
+                                    <option value="Honda">Honda</option>
+                                    <option value="Kia">Kia</option>
+                                    <option value="VinFast">VinFast</option>
+                                    <option value="Mitsubishi">Mitsubishi</option>
+                                    <option value="Ford">Ford</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3 position-relative">
+                                <label class="form-label">Model xe</label>
+                                <input type="text" class="form-control" id="carModelInput" placeholder="Nhập model xe..." autocomplete="off" required>
+                                <ul id="modelSuggestions"
+                                    class="list-group position-absolute w-100 shadow"
+                                    style="z-index:1000; display:none; max-height:180px; overflow-y:auto;"></ul>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Năm sản xuất</label>
+                                <select class="form-select" id="carYear" required>
+                                    <option value="">-- Chọn năm --</option>
+                                    <script>
+                                        const yearNow = new Date().getFullYear();
+                                        for (let y = yearNow; y >= 1990; y--) {
+                                            document.write(`<option value="${y}">${y}</option>`);
+                                        }
+                                    </script>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Số km hiện tại</label>
+                                <input type="number" class="form-control" id="currentKm" placeholder="Ví dụ: 45250">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Màu xe</label>
+                                <select class="form-select" id="carColor">
+                                    <option value="">-- Chọn màu --</option>
+                                    <option value="Trắng">Trắng</option>
+                                    <option value="Đen">Đen</option>
+                                    <option value="Xám">Xám</option>
+                                    <option value="Đỏ">Đỏ</option>
+                                    <option value="Xanh">Xanh</option>
+                                    <option value="Bạc">Bạc</option>
+                                </select>
+                            </div>
+
+
+                            <div class="col-md-3">
+                                <label class="form-label">Loại nhiên liệu</label>
+                                <select class="form-select" id="fuelType">
+                                    <option value="">-- Chọn loại --</option>
+                                    <option value="Xăng">Xăng</option>
+                                    <option value="Dầu">Dầu</option>
+                                    <option value="Điện">Điện</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="carCondition" class="form-label">Tình trạng xe khi nhận</label>
+                                <select id="carCondition" class="form-select">
+                                    <option value="">-- Chọn tình trạng --</option>
+                                    <option value="normal">Bình thường</option>
+                                    <option value="minor-scratch">Trầy nhẹ</option>
+                                    <option value="damaged">Hư hỏng</option>
+                                    <option value="dirty">Bẩn / Cần vệ sinh</option>
+                                    <option value="other">Khác...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Loại sử dụng</label>
+                                <select class="form-select" id="usageType">
+                                    <option value="PERSONAL">Cá nhân</option>
+                                    <option value="SERVICE">Dịch vụ</option>
+                                    <option value="TAXI">Taxi</option>
+                                    <option value="RENTAL">Cho thuê</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Ngày nhận xe</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="receivedDate">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnSetNow">Bây giờ</button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Kỹ thuật viên tiếp nhận</label>
+                                <input type="text" class="form-control" id="receiverTech" readonly placeholder="(tự động)">
+                                <input type="hidden" id="receiverTechId" name="receiverTechId">
+                            </div>
+
+                            <!-- ========== DỊCH VỤ YÊU CẦU + GHI CHÚ ========== -->
+                            <div class="col-12 mt-4">
+                                <div class="row">
+                                    <div class="col-lg-8 col-md-7">
+                                        <h6 class="section-title"><i class="fas fa-wrench me-2"></i>Dịch vụ yêu cầu</h6>
+                                        <div class="mb-3 position-relative">
+                                            <input type="text" id="serviceSearch" class="form-control" placeholder="Nhập tên dịch vụ...">
+                                            <ul id="serviceSuggestions"
+                                                class="list-group position-absolute w-100 shadow"
+                                                style="z-index:1000; display:none;"></ul>
+                                        </div>
+                                        <div id="selectedServiceList" class="mt-3"></div>
+                                        <input type="hidden" id="selectedServicesJson" name="selectedServicesJson">
+                                    </div>
+
+                                    <div class="col-lg-4 col-md-5 mt-4 mt-md-0">
+                                        <h6 class="section-title"><i class="fas fa-clipboard-list me-2"></i>Ghi chú thêm</h6>
+                                        <textarea class="form-control" id="notes" rows="5" placeholder="Nhập ghi chú..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary px-4"><i class="fas fa-check me-2"></i>Tạo phiếu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- 🔥 INJECT DỮ LIỆU TỪ THYMELEAF VÀO JAVASCRIPT -->
+<script th:inline="javascript">
+    // ===========================
+    // 🚀 NHẬN DỮ LIỆU TỪ CONTROLLER
+    // ===========================
+    const BACKEND_TICKETS = /*[[${tickets}]]*/ [];
+
+    console.log('✅ Dữ liệu từ Backend:', BACKEND_TICKETS);
+    console.log('✅ Tổng số phiếu:', BACKEND_TICKETS.length);
+</script>
+
+<script>
+    // ===========================
+    // GLOBAL VARIABLES
+    // ===========================
+    let serviceOrders = [];
+    let filteredOrders = [];
+    let currentPage = 1;
+    const limit = 5;
+
+    const mechanics = [
+        { id: 1, name: 'Nguyễn Văn Thợ', tickets: 2, status: 'busy' },
+        { id: 2, name: 'Trần Công Sửa', tickets: 1, status: 'busy' },
+        { id: 3, name: 'Lê Kỹ Thuật', tickets: 0, status: 'available' },
+        { id: 4, name: 'Phạm Văn Chuyên', tickets: 3, status: 'busy' },
+        { id: 5, name: 'Hoàng Thanh Long', tickets: 0, status: 'available' }
+    ];
+
+    // ===========================
+    // 🔥 KHỞI TẠO DỮ LIỆU
+    // ===========================
+    function initializeData() {
+        console.log('🔄 Khởi tạo dữ liệu từ Backend...');
+
+        if (!BACKEND_TICKETS || BACKEND_TICKETS.length === 0) {
+            console.warn('⚠️ Không có dữ liệu từ Backend');
+            showEmptyState();
+            return;
+        }
+
+        // Map dữ liệu từ Backend sang format Frontend
+        serviceOrders = BACKEND_TICKETS.map(ticket => ({
+            code: ticket.ticketCode?.replace('#', '') || '',
+            customer: ticket.customerName || 'N/A',
+            phone: ticket.customerPhone || 'N/A',
+            plate: ticket.licensePlate || 'N/A',
+            service: ticket.serviceName || 'N/A',
+            createdAt: ticket.createdAt || new Date().toISOString(),
+            mechanic: mapMechanicData(ticket),
+            status: mapStatus(ticket.status)
+        }));
+
+        filteredOrders = [...serviceOrders];
+
+        console.log('✅ Đã map được:', serviceOrders.length, 'phiếu');
+
+        // Render dữ liệu
+        renderTable();
+        updateStatistics();
+    }
+
+    // ===========================
+    // MAP DỮ LIỆU MECHANIC
+    // ===========================
+    function mapMechanicData(ticket) {
+        if (!ticket.mechanicName || ticket.mechanicName === '—') {
+            return null;
+        }
+
+        return {
+            id: ticket.mechanicId || null,
+            name: ticket.mechanicName,
+            status: (ticket.mechanicStatus === 'ENGAGED' || ticket.mechanicStatus === 'Đang làm')
+                ? 'busy'
+                : 'available',
+            tickets: 0
+        };
+    }
+
+    // ===========================
+    // MAP TRẠNG THÁI
+    // ===========================
+    function mapStatus(status) {
+        const statusMap = {
+            'PENDING': 'New',
+            'APPROVED': 'Assigned',
+            'IN_PROGRESS': 'In Progress',
+            'COMPLETED': 'Completed',
+            'INVOICED': 'Invoiced',
+            'PAID': 'Paid',
+            'CANCELLED': 'Cancelled'
+        };
+        return statusMap[status] || 'New';
+    }
+
+    // ===========================
+    // RENDER BẢNG
+    // ===========================
+    function renderTable() {
+        const tbody = document.getElementById('serviceTableBody');
+        const start = (currentPage - 1) * limit;
+        const end = start + limit;
+        const visible = filteredOrders.slice(start, end);
+
+        if (visible.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Không có phiếu dịch vụ nào</p>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = visible.map(order => `
+            <tr class="fade-in">
+                <td><strong style="color: var(--primary);">#${order.code}</strong></td>
+                <td>
+                    <div style="font-weight: 600; color: var(--dark);">${order.customer}</div>
+                    <div style="font-size: 12px; color: #6c757d;">${order.phone}</div>
+                </td>
+                <td><span style="font-weight: 600; color: var(--info);">${order.plate}</span></td>
+                <td>${order.service}</td>
+                <td>${renderMechanic(order.mechanic)}</td>
+                <td>${renderStatus(order.status)}</td>
+                <td class="text-center">${renderActions(order)}</td>
+            </tr>
+        `).join('');
+
+        renderPagination();
+
+        // Cập nhật số lượng phiếu
+        document.getElementById('totalTickets').textContent = filteredOrders.length;
+    }
+
+    // ===========================
+    // RENDER MECHANIC
+    // ===========================
+    function renderMechanic(mechanic) {
+        if (!mechanic) {
+            return '<span style="color: #adb5bd; font-size: 13px;">Chưa phân công</span>';
+        }
+
+        const statusIcon = mechanic.status === 'available' ? '🟢' : '🟠';
+        const statusText = mechanic.status === 'available' ? 'Rảnh' : 'Đang làm';
+
+        return `
+            <div class="mechanic-info">
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(mechanic.name)}&background=FF7A00&color=fff"
+                     class="mechanic-avatar" alt="${mechanic.name}">
+                <div>
+                    <div class="mechanic-name">${mechanic.name}</div>
+                    <div class="mechanic-status">${statusIcon} ${statusText}</div>
+                </div>
+            </div>`;
+    }
+
+    // ===========================
+    // RENDER STATUS
+    // ===========================
+    function renderStatus(status) {
+        const statusMap = {
+            'New': { class: 'new', icon: 'fa-file', text: 'Mới' },
+            'Assigned': { class: 'assigned', icon: 'fa-user-check', text: 'Đã phân công' },
+            'In Progress': { class: 'in-progress', icon: 'fa-cog fa-spin', text: 'Đang xử lý' },
+            'Completed': { class: 'completed', icon: 'fa-check-circle', text: 'Hoàn tất' },
+            'Invoiced': { class: 'invoiced', icon: 'fa-file-invoice', text: 'Đã tạo hóa đơn' },
+            'Paid': { class: 'paid', icon: 'fa-check-double', text: 'Đã thanh toán' },
+            'Cancelled': { class: 'cancelled', icon: 'fa-times-circle', text: 'Đã hủy' }
+        };
+
+        const s = statusMap[status] || statusMap['New'];
+        return `<span class="status-badge ${s.class}"><i class="fas ${s.icon}"></i> ${s.text}</span>`;
+    }
+
+    // ===========================
+    // RENDER ACTIONS
+    // ===========================
+    function renderActions(order) {
+        const now = new Date();
+        const created = new Date(order.createdAt);
+        const diffMinutes = (now - created) / 60000;
+        const canCancel = order.status === 'Pending Confirmation' && diffMinutes >= 5;
+
+        // Base button luôn hiển thị
+        let actions = `
+            <div class="d-flex justify-content-center flex-wrap gap-2">
+                <button class="action-btn view" onclick="viewTicket('${order.code}')">
+                    <i class="fas fa-eye"></i>
+                </button>`;
+
+        // =============================
+        // 1️⃣ Staff tạo phiếu (New)
+        // =============================
+        if (order.status === 'New') {
+            actions += `
+                <button class="action-btn edit" onclick="editTicket('${order.code}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn assign" onclick="openAssignModal('${order.code}')">
+                    <i class="fas fa-user-plus"></i> Phân công
+                </button>`;
+        }
+
+            // =============================
+            // 2️⃣ Staff đã phân công mechanic
+        // =============================
+        else if (order.status === 'Assigned') {
+            actions += `
+                <button class="action-btn disabled" title="Đang chờ thợ nhận việc">
+                    <i class="fas fa-hourglass-half"></i> Chờ nhận việc
+                </button>`;
+        }
+
+            // =============================
+            // 3️⃣ Mechanic xác nhận nhận việc (In Progress)
+        // =============================
+        else if (order.status === 'In Progress') {
+            actions += `
+                <button class="action-btn add-service" onclick="openAddServiceRequest('${order.code}')">
+                    <i class="fas fa-plus-circle"></i> Bổ sung
+                </button>
+                <button class="action-btn complete" onclick="openCompleteModal('${order.code}')">
+                    <i class="fas fa-check-circle"></i> Hoàn thành
+                </button>`;
+        }
+
+            // =============================
+            // 4️⃣ Phiếu hoàn tất
+        // =============================
+        else if (order.status === 'Completed') {
+            actions += `
+                <button class="action-btn invoice" onclick="createInvoice('${order.code}')" id="btn-invoice-${order.code}">
+                    <i class="fas fa-file-invoice"></i> Tạo hóa đơn
+                </button>`;
+        }
+
+            // =============================
+            // 5️⃣ Hóa đơn đã tạo
+        // =============================
+        else if (order.status === 'Invoiced') {
+            actions += `
+                <button class="action-btn disabled">
+                    <i class="fas fa-file-invoice-dollar"></i> Chờ thanh toán
+                </button>`;
+        }
+
+            // =============================
+            // 6️⃣ Đã thanh toán
+        // =============================
+        else if (order.status === 'Paid') {
+            actions += `<button class="action-btn disabled">Đã thanh toán</button>`;
+        }
+
+            // =============================
+            // ❌ Phiếu hủy
+        // =============================
+        else if (order.status === 'Cancelled') {
+            actions += `<button class="action-btn disabled">Đã hủy</button>`;
+        }
+
+            // =============================
+            // ⏳ Chờ khách xác nhận email
+        // =============================
+        else if (order.status === 'Pending Confirmation') {
+            if (canCancel) {
+                actions += `
+                    <button class="action-btn cancel" onclick="cancelTicket('${order.code}')">
+                        <i class="fas fa-times"></i> Hủy phiếu
+                    </button>`;
+            } else {
+                actions += `
+                    <button class="action-btn disabled" title="Chờ khách xác nhận">
+                        <i class="fas fa-clock"></i> Đang chờ xác nhận
+                    </button>`;
+            }
+        }
+
+        actions += `</div>`;
+        return actions;
+    }
+
+    // ===========================
+    // PAGINATION
+    // ===========================
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredOrders.length / limit);
+        const pagination = document.getElementById('pagination');
+
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <button class="page-link" onclick="gotoPage(${i})">${i}</button>
+                </li>`;
+        }
+
+        pagination.innerHTML = html;
+    }
+
+    function gotoPage(page) {
+        currentPage = page;
+        renderTable();
+        document.getElementById('serviceCard')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ===========================
+    // SEARCH & FILTER
+    // ===========================
+    function searchTickets() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+
+        filteredOrders = serviceOrders.filter(order => {
+            const matchSearch = !query ||
+                order.code.toLowerCase().includes(query) ||
+                order.customer.toLowerCase().includes(query) ||
+                order.plate.toLowerCase().includes(query);
+
+            const matchStatus = !status || order.status === status;
+
+            return matchSearch && matchStatus;
+        });
+
+        currentPage = 1;
+        renderTable();
+    }
+
+    function filterByStatus() {
+        searchTickets();
+    }
+
+    // ===========================
+    // UPDATE STATISTICS
+    // ===========================
+    function updateStatistics() {
+        const pending = serviceOrders.filter(o => o.status === 'New' || o.status === 'Assigned').length;
+        const completed = serviceOrders.filter(o => o.status === 'Completed').length;
+
+        document.getElementById('pendingCount').textContent = pending;
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('pendingChange').textContent = '+' + Math.floor(pending / 4);
+        document.getElementById('completedChange').textContent = '+' + Math.floor(completed / 3);
+    }
+
+    // ===========================
+    // EMPTY STATE
+    // ===========================
+    function showEmptyState() {
+        const tbody = document.getElementById('serviceTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có phiếu dịch vụ nào</p>
+                    <button class="btn btn-primary" onclick="openCreateTicket()">
+                        <i class="fas fa-plus"></i> Tạo phiếu mới
+                    </button>
+                </td>
+            </tr>`;
+    }
+
+    // ===========================
+    // ACTION FUNCTIONS
+    // ===========================
+    function viewTicket(code) {
+        showToast('info', 'Xem chi tiết', `Đang tải thông tin phiếu #${code}`);
+        // TODO: Implement view ticket detail modal
+    }
+
+    function editTicket(code) {
+        showToast('info', 'Chỉnh sửa', `Mở form chỉnh sửa phiếu #${code}`);
+        // TODO: Implement edit ticket
+    }
+
+    function openAddServiceRequest(code) {
+        showToast('info', 'Bổ sung dịch vụ', `Yêu cầu bổ sung dịch vụ cho phiếu #${code}`);
+        // TODO: Implement add service request
+        const modal = new bootstrap.Modal(document.getElementById('addServiceRequestModal'));
+        document.getElementById('amendTicketId').value = code;
+        modal.show();
+    }
+
+    function submitAddServiceRequest(event) {
+        event.preventDefault();
+        const ticketId = document.getElementById('amendTicketId').value;
+        const service = document.getElementById('amendServiceSelect').value;
+        const reason = document.getElementById('amendReason').value;
+
+        showToast('success', 'Gửi yêu cầu thành công', `Đã gửi yêu cầu bổ sung dịch vụ cho phiếu #${ticketId}`);
+        bootstrap.Modal.getInstance(document.getElementById('addServiceRequestModal')).hide();
+    }
+
+    function cancelTicket(code) {
+        Swal.fire({
+            title: 'Xác nhận hủy phiếu',
+            text: `Bạn có chắc chắn muốn hủy phiếu #${code}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Hủy phiếu',
+            cancelButtonText: 'Không'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const order = serviceOrders.find(o => o.code === code);
+                if (order) {
+                    order.status = 'Cancelled';
+                    renderTable();
+                    showToast('success', 'Đã hủy', `Phiếu #${code} đã được hủy`);
+                }
+            }
+        });
+    }
+
+    function openAssignModal(code) {
+        const modal = new bootstrap.Modal(document.getElementById('assignModal'));
+        document.getElementById('assignTicketCode').textContent = `#${code}`;
+        modal.show();
+        showToast('info', 'Phân công', `Chọn thợ cho phiếu #${code}`);
+    }
+
+    function openCompleteModal(code) {
+        const modal = new bootstrap.Modal(document.getElementById('confirmCompleteModal'));
+        document.getElementById('completeTicketCode').textContent = `#${code}`;
+        modal.show();
+    }
+
+    function confirmComplete() {
+        const code = document.getElementById('completeTicketCode').textContent.replace('#', '');
+        const order = serviceOrders.find(o => o.code === code);
+
+        if (order) {
+            order.status = 'Completed';
+            renderTable();
+            showToast('success', 'Hoàn thành!', `Phiếu #${code} đã hoàn tất sửa chữa 🎉`);
+            bootstrap.Modal.getInstance(document.getElementById('confirmCompleteModal')).hide();
+        }
+    }
+
+    function createInvoice(code) {
+        Swal.fire({
+            title: 'Tạo hóa đơn',
+            text: `Tạo hóa đơn cho phiếu #${code}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Tạo hóa đơn',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const order = serviceOrders.find(o => o.code === code);
+                if (order) {
+                    order.status = 'Invoiced';
+                    renderTable();
+                    showToast('success', 'Tạo hóa đơn thành công', `Đã tạo hóa đơn cho phiếu #${code}`);
+                }
+            }
+        });
+    }
+
+    function openCreateTicket() {
+        const modal = new bootstrap.Modal(document.getElementById('createTicketModal'));
+        modal.show();
+        document.getElementById('createTicketForm').reset();
+    }
+
+    function handleCreateTicket(event) {
+        event.preventDefault();
+        showToast('success', 'Tạo phiếu thành công', 'Phiếu dịch vụ mới đã được tạo');
+        bootstrap.Modal.getInstance(document.getElementById('createTicketModal')).hide();
+        // TODO: Implement actual ticket creation
+    }
+
+    // ===========================
+    // TOAST NOTIFICATION
+    // ===========================
+    function showToast(type, title, message) {
+        const container = document.getElementById('toastContainer');
+        const id = Date.now();
+
+        const iconMap = {
+            'success': 'check-circle',
+            'error': 'exclamation-circle',
+            'info': 'info-circle',
+            'warning': 'exclamation-triangle'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.id = `toast-${id}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas fa-${iconMap[type]}"></i>
+            </div>
+            <div class="toast-content">
+                <p class="toast-title">${title}</p>
+                <p class="toast-message">${message}</p>
+            </div>`;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.4s reverse';
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
+    }
+
+    // ===========================
+    // LOGOUT
+    // ===========================
+    async function logout(event) {
+        event.preventDefault();
+        const result = await Swal.fire({
+            title: 'Xác nhận đăng xuất',
+            text: 'Bạn có chắc chắn muốn đăng xuất không?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff7e29',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Đăng xuất',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (result.isConfirmed) {
+            window.location.href = '/auth/logout';
+        }
+    }
+
+    // ===========================
+    // 🚀 KHỞI ĐỘNG KHI PAGE LOAD
+    // ===========================
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🚀 Dashboard Staff đã load');
+        initializeData();
+    });
+</script>
+</body>
+</html>

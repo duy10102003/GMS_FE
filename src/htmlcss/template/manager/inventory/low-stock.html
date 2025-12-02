@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Cảnh báo từ Staff</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/main_dashboard.css">
+  <style>
+    .alert-card { background: #fff3e6; border-left: 4px solid #ff9800; }
+    .resolved-alert { background: #e8f5e9; border-left-color: #4caf50; }
+    .priority-high { border-left-color: #f44336 !important; }
+    .action-btn { transition: all 0.3s ease; }
+    .action-btn:hover { transform: translateY(-2px); }
+    .staff-avatar { width: 32px; height: 32px; border-radius: 50%; }
+    .table-container { max-height: 400px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="orange">Garage</span><span class="dark">Pro</span>
+      </div>
+    </div>
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+Khoa&background=FF7A00&color=fff" alt="Avatar">
+      <div class="user-info">
+        <h6>Nguyễn Văn Khoa</h6>
+        <small>Quản lý</small>
+      </div>
+    </div>
+    <ul class="nav-menu">
+    <li><a href="#" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a></li>
+    <li><a href="#" class="nav-link"><i class="fas fa-chart-pie"></i> Báo cáo tổng hợp</a></li>
+    <li><a href="#" class="nav-link"><i class="fas fa-users"></i> Nhân sự</a></li>
+    <li>
+      <a href="#" class="nav-link"><i class="fas fa-warehouse"></i> Kho phụ tùng</a>
+      <ul class="sub-menu">
+        <li><a href="/template/manager/inventory/manage-parts.html" class="nav-link"><i class="fas fa-cogs"></i> Quản lý phụ tùng</a></li>
+        <li><a href="/template/manager/inventory/low-stock.html" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Cảnh báo từ Staff</a></li>
+        <li><a href="/template/manager/inventory/restock.html" class="nav-link"><i class="fas fa-shopping-cart"></i> Nhập kho</a></li>
+      </ul>
+    </li>
+    <li><a href="#" class="nav-link"><i class="fas fa-dollar-sign"></i> Doanh thu</a></li>
+    <li><a href="#" class="nav-link"><i class="fas fa-cog"></i> Cài đặt hệ thống</a></li>
+    </ul>
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm kiếm cảnh báo từ staff..." id="searchInput" onkeyup="filterAlerts()">
+    </div>
+    <div class="d-flex align-items-center">
+      <div class="dropdown me-3 position-relative">
+        <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="alertBadge">3</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0" aria-labelledby="notifDropdown">
+          <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">
+            Cảnh báo mới từ staff
+          </li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-danger text-white me-3"><i class="fas fa-exclamation-triangle"></i></div>
+              <div>
+                <strong>Trần Thị B: Bugi NGK hết hàng</strong>
+                <div class="small text-muted">Cần nhập gấp</div>
+                <div class="notif-time">14:30 09/10/2025</div>
+              </div>
+            </div>
+          </a></li>
+          <li><a href="#" class="dropdown-item">
+            <div class="d-flex align-items-start">
+              <div class="notif-icon bg-warning text-white me-3"><i class="fas fa-box"></i></div>
+              <div>
+                <strong>Hoàng Văn E: Dầu 5W30 sắp hết</strong>
+                <div class="small text-muted">Còn 3 can</div>
+                <div class="notif-time">12:15 09/10/2025</div>
+              </div>
+            </div>
+          </a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a href="#" class="dropdown-item text-center text-primary fw-semibold" onclick="filterAlerts('pending')">Xem tất cả</a></li>
+        </ul>
+      </div>
+      <div class="dropdown user-menu">
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+           id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=K&background=FF7A00&color=fff"
+               alt="Avatar" class="rounded-circle me-2" width="40" height="40">
+          <span class="fw-semibold text-dark d-none d-md-inline">Nguyễn Văn Khoa</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2 text-primary"></i> Hồ sơ cá nhân</a></li>
+          <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2 text-secondary"></i> Cài đặt</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="page-title mb-0">Cảnh báo từ Staff 🚨</h1>
+      <nav class="breadcrumb mb-0">
+        <span><a href="#" class="text-primary text-decoration-none">Dashboard</a></span>
+        <span class="mx-2 text-muted">/</span>
+        <a href="/template/manager/inventory/low-stock.html" class="text-muted breadcrumb-link">Phụ tùng thấp</a>
+      </nav>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h5><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Danh sách cảnh báo từ staff</h5>
+        <div class="filter-tabs d-flex gap-2 flex-wrap">
+          <button class="btn btn-outline-primary active" onclick="filterAlerts('all', event)">
+            <i class="fas fa-list me-1"></i> Tất cả
+          </button>
+          <button class="btn btn-outline-warning" onclick="filterAlerts('pending', event)">
+            <i class="fas fa-clock me-1"></i> Chờ xử lý
+          </button>
+          <button class="btn btn-outline-success" onclick="filterAlerts('resolved', event)">
+            <i class="fas fa-check me-1"></i> Đã giải quyết
+          </button>
+          <button class="btn btn-outline-danger" onclick="filterAlerts('urgent', event)">
+            <i class="fas fa-fire me-1"></i> Ưu tiên cao
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Staff</th>
+              <th>Phụ tùng</th>
+              <th>Tồn kho</th>
+              <th>Ngưỡng</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="alertsTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="row mt-4">
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <div class="value text-danger" id="pendingCount">3</div>
+            <h6>Chờ xử lý</h6>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <div class="value text-success" id="resolvedCount">1</div>
+            <h6>Đã giải quyết</h6>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <div class="value text-warning" id="urgentCount">1</div>
+            <h6>Ưu tiên cao</h6>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card text-center">
+            <div class="value text-primary" id="totalCount">4</div>
+            <h6>Tổng cảnh báo</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Chi tiết cảnh báo -->
+  <div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Chi tiết cảnh báo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button class="btn btn-warning" id="restockBtn">🛒 Nhập kho</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Dữ liệu demo: Cảnh báo từ staff (đồng bộ với inventory-alert.html)
+    let stockAlerts = [
+      {
+        id: 'ALERT001', partId: 'PT002', partName: 'Bugi NGK', quantity: 0, threshold: 10,
+        staff: 'Trần Thị B', staffAvatar: 'https://ui-avatars.com/api/?name=TB&background=FF7A00&color=fff',
+        time: '14:30 09/10/2025', status: 'pending', priority: 'urgent',
+        message: 'Bugi NGK đã hết hoàn toàn, cần nhập gấp cho xe Toyota đang chờ sửa.'
+      },
+      {
+        id: 'ALERT002', partId: 'PT001', partName: 'Dầu 5W-30', quantity: 3, threshold: 5,
+        staff: 'Hoàng Văn E', staffAvatar: 'https://ui-avatars.com/api/?name=HE&background=16A085&color=fff',
+        time: '12:15 09/10/2025', status: 'pending', priority: 'high',
+        message: 'Dầu động cơ sắp hết, còn 3 can. Đề xuất nhập 20 can.'
+      },
+      {
+        id: 'ALERT003', partId: 'PT004', partName: 'Lọc gió cabin', quantity: 2, threshold: 5,
+        staff: 'Nguyễn Văn F', staffAvatar: 'https://ui-avatars.com/api/?name=NF&background=9B59B6&color=fff',
+        time: '10:45 09/10/2025', status: 'resolved', priority: 'normal',
+        message: 'Lọc gió cabin thấp, đã được bổ sung kịp thời.',
+        resolved: true, resolvedBy: 'Nguyễn Văn Khoa', resolvedTime: '11:30 09/10/2025'
+      },
+      {
+        id: 'ALERT004', partId: 'PT005', partName: 'Má phanh trước', quantity: 4, threshold: 8,
+        staff: 'Trần Thị B', staffAvatar: 'https://ui-avatars.com/api/?name=TB&background=FF7A00&color=fff',
+        time: '09:20 09/10/2025', status: 'pending', priority: 'normal',
+        message: 'Má phanh trước sắp hết, cần kiểm tra đơn hàng.'
+      }
+    ];
+
+    let currentFilter = 'all';
+    let filteredAlerts = [...stockAlerts];
+
+    // Render bảng
+    function renderTable() {
+      const tbody = document.getElementById('alertsTableBody');
+      const visibleAlerts = filteredAlerts.slice(0, 10); // Hạn chế 10 dòng cho demo
+      
+      tbody.innerHTML = visibleAlerts.map(alert => `
+        <tr class="${alert.status === 'resolved' ? 'resolved-alert' : 'alert-card'} ${alert.priority === 'urgent' ? 'priority-high' : ''}">
+          <td>${alert.time}</td>
+          <td>
+            <div class="d-flex align-items-center">
+              <img src="${alert.staffAvatar}" alt="${alert.staff}" class="staff-avatar me-2">
+              <div>
+                <div class="fw-semibold">${alert.staff}</div>
+                <small class="text-muted">Thợ sửa chữa</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <strong>#${alert.partId}</strong><br>
+            <small>${alert.partName}</small>
+          </td>
+          <td><span class="badge bg-${alert.quantity === 0 ? 'danger' : 'warning'}">${alert.quantity}</span></td>
+          <td>${alert.threshold}</td>
+          <td>${renderStatus(alert.status)}</td>
+          <td>
+            ${alert.status === 'resolved' ? 
+              `<span class="badge bg-success"><i class="fas fa-check"></i> Đã xử lý</span>` :
+              `<div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary action-btn me-1" onclick="viewDetail('${alert.id}')">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning action-btn" onclick="restockAlert('${alert.id}')">
+                  <i class="fas fa-shopping-cart"></i> Nhập kho
+                </button>
+              </div>`
+            }
+          </td>
+        </tr>
+      `).join('');
+
+      updateSummary();
+    }
+
+    function renderStatus(status) {
+      return status === 'pending' ? '<span class="badge bg-warning"><i class="fas fa-clock"></i> Chờ xử lý</span>' :
+             status === 'resolved' ? '<span class="badge bg-success"><i class="fas fa-check"></i> Đã giải quyết</span>' : '';
+    }
+
+    function updateSummary() {
+      document.getElementById('pendingCount').textContent = filteredAlerts.filter(a => a.status === 'pending').length;
+      document.getElementById('resolvedCount').textContent = filteredAlerts.filter(a => a.status === 'resolved').length;
+      document.getElementById('urgentCount').textContent = filteredAlerts.filter(a => a.priority === 'urgent').length;
+      document.getElementById('totalCount').textContent = filteredAlerts.length;
+      document.getElementById('alertBadge').textContent = filteredAlerts.filter(a => a.status === 'pending').length;
+    }
+
+    function filterAlerts(filter, event) {
+      document.querySelectorAll('.filter-tabs button').forEach(btn => btn.classList.remove('active'));
+      if (event) event.target.classList.add('active');
+      
+      currentFilter = filter;
+      if (filter === 'all') {
+        filteredAlerts = [...stockAlerts];
+      } else if (filter === 'pending') {
+        filteredAlerts = stockAlerts.filter(a => a.status === 'pending');
+      } else if (filter === 'resolved') {
+        filteredAlerts = stockAlerts.filter(a => a.status === 'resolved');
+      } else if (filter === 'urgent') {
+        filteredAlerts = stockAlerts.filter(a => a.priority === 'urgent');
+      }
+      renderTable();
+    }
+
+    function viewDetail(alertId) {
+      const alert = stockAlerts.find(a => a.id === alertId);
+      if (!alert) return;
+
+      const suggestedQuantity = alert.threshold - alert.quantity;
+      document.getElementById('modalBody').innerHTML = `
+        <div class="alert-card p-3 mb-3 ${alert.priority === 'urgent' ? 'priority-high' : ''}">
+          <h6><i class="fas fa-exclamation-triangle me-2"></i>${alert.partName}</h6>
+          <p class="mb-2">${alert.message}</p>
+          <div class="row">
+            <div class="col-md-6">
+              <strong>Staff báo cáo:</strong> ${alert.staff}<br>
+              <strong>Thời gian:</strong> ${alert.time}<br>
+              <strong>Tồn kho:</strong> ${alert.quantity}/${alert.threshold}
+            </div>
+            <div class="col-md-6">
+              <strong>Mã phụ tùng:</strong> #${alert.partId}<br>
+              <strong>Ưu tiên:</strong> 
+              <span class="badge bg-${alert.priority === 'urgent' ? 'danger' : 'warning'}">${alert.priority.toUpperCase()}</span><br>
+              <strong>Gợi ý nhập:</strong> ${suggestedQuantity > 0 ? suggestedQuantity : 0} cái
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+      document.getElementById('restockBtn').onclick = () => restockAlert(alertId);
+      modal.show();
+    }
+
+    function restockAlert(alertId) {
+      const alert = stockAlerts.find(a => a.id === alertId);
+      if (alert) {
+        const params = new URLSearchParams({
+          alertId: alert.id,
+          partId: alert.partId,
+          partName: alert.partName,
+          currentQuantity: alert.quantity,
+          threshold: alert.threshold
+        }).toString();
+        window.location.href = `/template/manager/inventory/restock.html?${params}`;
+      }
+    }
+
+    function showToast(type, title, message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+      toast.role = 'alert';
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong>${title}</strong>: ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      container.appendChild(toast);
+      const bsToast = new bootstrap.Toast(toast);
+      bsToast.show();
+      toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+
+    function logout() {
+      if (confirm('Đăng xuất khỏi hệ thống quản lý?')) {
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          alert('Đã đăng xuất thành công!');
+          window.location.href = "login.html";
+        }, 500);
+      }
+    }
+
+    // Khởi tạo
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+      filterAlerts('all', null);
+    });
+
+    // Cập nhật từ restock.html
+    function checkRestockUpdate() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const alertId = urlParams.get('alertId');
+      const newQuantity = urlParams.get('newQuantity');
+      if (alertId && newQuantity) {
+        const alert = stockAlerts.find(a => a.id === alertId);
+        if (alert) {
+          alert.quantity = parseInt(newQuantity);
+          if (alert.quantity >= alert.threshold) {
+            alert.status = 'resolved';
+            alert.resolved = true;
+            alert.resolvedBy = 'Nguyễn Văn Khoa';
+            alert.resolvedTime = new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+            showToast('success', 'Thành công!', `Cảnh báo "${alert.partName}" đã được giải quyết ✅`);
+          }
+          renderTable();
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+    checkRestockUpdate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+
+    :root {
+      --gp-orange: #ff7a00;
+      --gp-orange-dark: #e86c00;
+      --gp-bg-light: #fafafa;
+      --gp-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    body {
+      background-color: var(--gp-bg-light);
+    }
+
+    .search-filter-section {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      box-shadow: var(--gp-shadow);
+    }
+
+    .search-box {
+      position: relative;
+      max-width: 500px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 14px 20px 14px 48px;
+      border: 2px solid #e8ecf1;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--gp-orange);
+      box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.1);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a0a0b0;
+    }
+
+    .filter-tags {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .filter-tag {
+      padding: 8px 16px;
+      border: 2px solid #e8ecf1;
+      border-radius: 20px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .filter-tag:hover {
+      border-color: var(--gp-orange);
+      color: var(--gp-orange);
+    }
+
+    .filter-tag.active {
+      background: var(--gp-orange);
+      border-color: var(--gp-orange);
+      color: white;
+    }
+
+    /* Service Ticket Cards */
+    .tickets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+    }
+
+    .ticket-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--gp-shadow);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ticket-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--gp-orange) 0%, var(--gp-orange-dark) 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .ticket-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+    }
+
+    .ticket-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    .ticket-id {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ticket-id i {
+      color: var(--gp-orange);
+      font-size: 18px;
+    }
+
+    .badge-status {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pending {
+      background: linear-gradient(135deg, #fff4e5 0%, #ffe8cc 100%);
+      color: #ff7a00;
+      border: 1px solid #ffd699;
+    }
+
+    .status-complete {
+      background: linear-gradient(135deg, #e6f6ec 0%, #d1f0dd 100%);
+      color: #198754;
+      border: 1px solid #a8e6c1;
+    }
+
+    .status-cancel {
+      background: linear-gradient(135deg, #fde4e4 0%, #fcd0d0 100%);
+      color: #dc3545;
+      border: 1px solid #f8b4b4;
+    }
+
+    .ticket-vehicle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .vehicle-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--gp-orange) 0%, var(--gp-orange-dark) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+    }
+
+    .vehicle-info h6 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .vehicle-info p {
+      margin: 0;
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    .ticket-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .detail-item i {
+      width: 24px;
+      height: 24px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gp-orange);
+      font-size: 12px;
+    }
+
+    .detail-item .label {
+      color: #6c757d;
+      min-width: 80px;
+    }
+
+    .detail-item .value {
+      color: #1a1a2e;
+      font-weight: 600;
+    }
+
+    .ticket-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .ticket-price {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--gp-orange) 0%, var(--gp-orange-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-view-detail {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, var(--gp-orange) 0%, var(--gp-orange-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-view-detail:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(255, 122, 0, 0.3);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--gp-shadow);
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      color: #e0e0e0;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h5 {
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: #a0a0b0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .tickets-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+/* ====== Confirm / Cancel Buttons (GaragePro Vibe) ====== */
+.btn-confirm, .btn-cancel {
+  flex: 1;
+  min-width: 110px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ✅ Xác nhận – Gradient xanh nhẹ & bóng ấm */
+.btn-confirm {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
+}
+.btn-confirm:hover {
+  background: linear-gradient(135deg, #27ae60 0%, #219150 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+.btn-confirm:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.25);
+}
+
+/* ❌ Hủy – Gradient đỏ sẫm tinh tế */
+.btn-cancel {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+}
+.btn-cancel:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #992d22 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192, 57, 43, 0.4);
+}
+.btn-cancel:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(192, 57, 43, 0.25);
+}
+
+/* 👇 Nếu muốn căn giữa trong card */
+.ticket-footer .d-flex {
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .ticket-footer .d-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .btn-confirm, .btn-cancel {
+    width: 100%;
+  }
+}
+/* 🔵 Chờ xác nhận */
+.status-waiting {
+  background: rgba(0, 123, 255, 0.1);
+  color: #0d6efd;
+  border: 1px solid rgba(13, 110, 253, 0.25);
+}
+
+
+

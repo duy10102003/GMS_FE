@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GaragePro - Dashboard Khách hàng</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/static/css/main_dashboard.css" />
+</head>
+
+<body>
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+  <a href="/home.html" class="logo text-decoration-none d-flex align-items-center">
+    <span class="orange">Garage</span><span class="dark">Pro</span>
+  </a>
+</div>
+
+
+
+    <div class="user-profile">
+      <img src="https://ui-avatars.com/api/?name=Nguyễn+Văn+A&background=FF7A00&color=fff" alt="Avatar" />
+      <div class="user-info">
+        <h6>Nguyễn Văn A</h6>
+        <small>Khách hàng</small>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/template/customer/dashboard-customer.html" class="nav-link"><i class="fas fa-gauge"></i> Dashboard</a></li>
+      <li><a href="/template/customer/my-vehicle/list-add-vehicle.html" class="nav-link"><i class="fas fa-car"></i> Xe của tôi</a></li>
+      <li><a href="/template/customer/serviceticket/list-service-ticket.html" class="nav-link"><i class="fas fa-wrench"></i> Lịch sử sửa chữa</a></li>
+      <li><a href="/template/customer/invoice/list-invoice.html" class="nav-link"><i class="fas fa-file-invoice"></i> Hóa đơn</a></li>
+      <li><a href="/template/customer/contact/contact-form.html" class="nav-link"><i class="fas fa-phone"></i> Liên hệ mua xe</a></li>
+      <li><a href="/template/customer/information/profile.html" class="nav-link"><i class="fas fa-user"></i> Hồ sơ</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+    </button>
+  </aside>
+
+  <!-- ====== HEADER ====== -->
+<header class="main-header d-flex align-items-center justify-content-between px-4 py-2 shadow-sm bg-white">
+  <!-- Tiêu đề bên trái -->
+  <h4 class="fw-bold mb-0 text-dark">Xin chào, Nguyễn Văn A 👋</h4>
+
+
+  <!-- Khu vực thông báo bên phải -->
+  <div class="d-flex align-items-center ms-auto">
+    <div class="dropdown position-relative">
+      <button class="notification-btn" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell"></i>
+        <span class="notification-badge">3</span>
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0" aria-labelledby="notifDropdown">
+        <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">Thông báo gần đây</li>
+
+        <li><a href="#" class="dropdown-item">
+          <div class="d-flex align-items-start">
+            <div class="notif-icon bg-primary text-white me-3"><i class="fas fa-car"></i></div>
+            <div>
+              <strong>Xe của bạn đã sẵn sàng!</strong>
+              <div class="small text-muted">Dịch vụ bảo dưỡng định kỳ đã hoàn tất.</div>
+              <div class="notif-time">5 phút trước</div>
+            </div>
+          </div>
+        </a></li>
+
+        <li><a href="#" class="dropdown-item">
+          <div class="d-flex align-items-start">
+            <div class="notif-icon bg-warning text-white me-3"><i class="fas fa-wrench"></i></div>
+            <div>
+              <strong>Phiếu dịch vụ mới</strong>
+              <div class="small text-muted">#SV002 đang được xử lý.</div>
+              <div class="notif-time">30 phút trước</div>
+            </div>
+          </div>
+        </a></li>
+
+        <li><a href="#" class="dropdown-item">
+          <div class="d-flex align-items-start">
+            <div class="notif-icon bg-success text-white me-3"><i class="fas fa-receipt"></i></div>
+            <div>
+              <strong>Hóa đơn đã thanh toán</strong>
+              <div class="small text-muted">Cảm ơn bạn đã sử dụng GaragePro.</div>
+              <div class="notif-time">1 giờ trước</div>
+            </div>
+          </div>
+        </a></li>
+
+        <li><hr class="dropdown-divider" /></li>
+        <li><a href="#" class="dropdown-item text-center text-primary fw-semibold view-all">Xem tất cả thông báo</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main-content">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+  <nav class="breadcrumb mb-0">
+    <span><a href="#" class="text-primary text-decoration-none">Dashboard</a></span>
+    <span class="mx-2 text-muted">/</span>
+    <a href="/template/customer/dashboard-customer.html" class="text-muted breadcrumb-link">Tổng quan</a>
+  </nav>
+</div>
+
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success);">
+          <i class="fas fa-car"></i>
+        </div>
+        <h6>Xe đang sở hữu</h6>
+        <div class="value">2</div>
+        <div class="change positive"><i class="fas fa-arrow-up"></i> Đã xác thực</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning);">
+          <i class="fas fa-tools"></i>
+        </div>
+        <h6>Phiếu sửa chữa</h6>
+        <div class="value">3</div>
+        <div class="change positive"><i class="fas fa-arrow-up"></i> 1 đang xử lý</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info);">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <h6>Tổng hóa đơn</h6>
+        <div class="value">5</div>
+        <div class="change positive"><i class="fas fa-check"></i> Đã thanh toán</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary);">
+          <i class="fas fa-coins"></i>
+        </div>
+        <h6>Tổng chi tiêu</h6>
+        <div class="value">8.5M</div>
+        <div class="change positive"><i class="fas fa-chart-line"></i> Tháng này</div>
+      </div>
+    </div>
+
+    <!-- Recent Service Tickets -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h5>Phiếu dịch vụ gần đây</h5>
+        <button class="btn btn-primary">Xem tất cả</button>
+      </div>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Mã phiếu</th>
+            <th>Biển số</th>
+            <th>Dịch vụ</th>
+            <th>Ngày</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>#SV001</strong></td>
+            <td>29A-12345</td>
+            <td>Thay dầu nhớt</td>
+            <td>05/10/2025</td>
+            <td><span class="badge badge-completed">Hoàn thành</span></td>
+          </tr>
+          <tr>
+            <td><strong>#SV002</strong></td>
+            <td>30B-67890</td>
+            <td>Bảo dưỡng định kỳ</td>
+            <td>06/10/2025</td>
+            <td><span class="badge badge-pending">Đang xử lý</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function logout() {
+      if (confirm("Bạn có chắc muốn đăng xuất?")) {
+        document.body.style.opacity = "0";
+        setTimeout(() => {
+          alert("Đã đăng xuất thành công!");
+          window.location.href = "login.html";
+        }, 500);
+      }
+    }
+
+    // Tự active menu theo URL
+    document.addEventListener("DOMContentLoaded", function () {
+      const currentPath = window.location.pathname;
+      document.querySelectorAll(".nav-menu .nav-link").forEach(link => {
+        const linkPath = new URL(link.href).pathname;
+        link.classList.toggle("active", currentPath.endsWith(linkPath));
+      });
+    });
+  </script>
+</body>
+</html>

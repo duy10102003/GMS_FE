@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GaragePro - Dịch vụ Ô tô Cao cấp</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #FF7A00;
+      --primary-dark: #e66d00;
+      --white: #fff;
+      --gray: #6c757d;
+      --dark: #121212;
+      --text-dark: #212529;
+      --text-light: #f8f9fa;
+      --light-bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] {
+      --white: #181818;
+      --text-dark: #f5f5f5;
+      --light-bg: #121212;
+      --card-bg: #1e1e1e;
+      --shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--white);
+      color: var(--text-dark);
+      transition: background-color 0.4s ease, color 0.4s ease;
+      overflow-x: hidden;
+    }
+
+    /* Navbar */
+    .navbar {
+      background-color: var(--card-bg) !important;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .navbar-brand {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .navbar-brand span {
+      color: var(--primary);
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: var(--text-dark) !important;
+      transition: var(--transition);
+    }
+
+    .nav-link:hover {
+      color: var(--primary) !important;
+    }
+
+    .btn-login,
+    .btn-register {
+      padding: 0.5rem 1.3rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .btn-login {
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-login:hover {
+      background-color: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-register {
+      background-color: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-register:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .theme-toggle {
+      border: none;
+      background: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--primary);
+      margin-left: 1rem;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      height: 100vh;
+      background: url('https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--white);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      padding: 2rem;
+    }
+
+    .hero-content h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-content p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn-cta {
+      background-color: var(--primary);
+      color: var(--white);
+      padding: 0.8rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      box-shadow: 0 6px 20px rgba(255, 122, 0, 0.3);
+    }
+
+    .btn-cta:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-3px);
+    }
+
+    /* Modal */
+    .custom-modal-content {
+      display: flex;
+      flex-direction: row;
+      background: linear-gradient(145deg, var(--card-bg), #f2f2f2);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    [data-theme="dark"] .custom-modal-content {
+      background: linear-gradient(145deg, #1e1e1e, #2b2b2b);
+    }
+
+    .modal-image {
+      flex: 1;
+      min-height: 300px;
+      position: relative;
+      display: none;
+    }
+
+    .modal-image::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-image-text {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--white);
+      padding: 1rem;
+      z-index: 1;
+    }
+    .modal-image-text h4,.modal-image-text p {
+      color: #fff !important;
+    }
+
+    .modal-image-text h4 {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-image-text p {
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    @media(min-width: 992px) {
+      .modal-image {
+        display: block;
+      }
+    }
+
+    .modal-form {
+      flex: 1;
+      padding: 2rem;
+      background: var(--card-bg);
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      border: none;
+      background: var(--card-bg);
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-dark);
+      transition: var(--transition);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .form-header h3 {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .form-header p {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .floating-label-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .floating-label-group input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      font-size: 1rem;
+      background-color: var(--card-bg);
+      color: var(--text-dark);
+      transition: var(--transition);
+    }
+
+    .floating-label-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 5px rgba(255, 122, 0, 0.3);
+    }
+
+    .floating-label-group label {
+      position: absolute;
+      top: 50%;
+      left: 1rem;
+      transform: translateY(-50%);
+      color: #777;
+      font-size: 0.9rem;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+
+    .floating-label-group input:focus+label,
+    .floating-label-group input:not(:placeholder-shown)+label {
+      top: 0;
+      left: 0.8rem;
+      font-size: 0.75rem;
+      color: var(--primary);
+      background-color: var(--card-bg);
+      padding: 0 0.3rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+      transform: translateY(-2px);
+    }
+
+    /* About Section */
+    .about-section {
+      padding: 5rem 0;
+      background-color: var(--light-bg);
+      transition: var(--transition);
+    }
+
+    .about-content {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .about-image {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .about-image img {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .about-image:hover img {
+      transform: scale(1.05);
+    }
+
+    .about-text {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .about-text h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .about-text h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 80px;
+      height: 4px;
+      background-color: var(--primary);
+      border-radius: 2px;
+    }
+
+    .about-text p {
+      font-size: 1.1rem;
+      color: var(--gray);
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+    }
+
+    .about-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 1rem;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .stat-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-item h3 {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-item p {
+      font-size: 1rem;
+      color: var(--text-dark);
+      margin: 0;
+    }
+
+    /* Sections */
+    section {
+      padding: 5rem 0;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 3rem;
+      color: var(--text-dark);
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background-color: var(--primary);
+      border-radius: 2px;
+    }
+
+    .service-card {
+      background: linear-gradient(145deg, #fff, #f2f2f2);
+      padding: 2rem;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] .service-card {
+      background: linear-gradient(145deg, #1e1e1e, #2b2b2b);
+    }
+
+    .service-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 25px rgba(255, 122, 0, 0.2);
+    }
+
+    .service-card img {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 1rem;
+    }
+
+    .service-card h5 {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-dark);
+    }
+
+    .car-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      padding-bottom: 1rem;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .car-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .car-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .car-card .car-info {
+      padding: 1.5rem;
+    }
+
+    .car-card h5 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .car-card p {
+      font-size: 1rem;
+      color: var(--gray);
+      margin: 0.3rem 0;
+    }
+
+    .car-card .btn-cta {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      padding: 0.5rem 1.5rem;
+    }
+
+    .testimonial-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .testimonial-card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-card p {
+      font-style: italic;
+      color: var(--text-dark);
+    }
+
+    .stars {
+      color: #ffc107;
+      margin-bottom: 0.5rem;
+    }
+
+    #carDropdown {
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 10px;
+    display: none;
+    z-index: 1055;
+  }
+  #carDropdown .list-group-item:hover {
+    background-color: #fff3e0;
+  }
+
+  .btn-garagepro {
+  background-color: #ff7a00;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 6px rgba(255, 122, 0, 0.25);
+}
+
+.btn-garagepro:hover {
+  background-color: #e66c00;
+  box-shadow: 0 4px 10px rgba(255, 122, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-garagepro:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+
+    /* Footer */
+    .footer {
+      background-color: var(--dark);
+      color: var(--white);
+      padding: 4rem 0 2rem;
+      transition: var(--transition);
+    }
+
+    .footer a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      color: var(--primary);
+    }
+
+    .newsletter-form {
+      display: flex;
+      gap: 1rem;
+      max-width: 400px;
+      margin-top: 1rem;
+    }
+
+    .newsletter-form input {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background-color: var(--card-bg);
+      color: var(--text-dark);
+    }
+
+    .newsletter-form button {
+      padding: 0.75rem 1.5rem;
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .newsletter-form button:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 50px;
+      height: 50px;
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+      z-index: 1000;
+    }
+
+    .back-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    @media (max-width: 768px) {
+      .about-content {
+        flex-direction: column;
+      }
+
+      .about-image img {
+        height: 300px;
+      }
+
+      .hero-content h1 {
+        font-size: 2rem;
+      }
+
+      .car-card {
+        margin-bottom: 1rem;
+      }
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    section {
+      scroll-margin-top: 100px;
+    }
+  </style>
+</head>
+
+<body data-theme="light">
+  <!-- Header -->
+  <header>
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#"><span>Garage</span>Pro</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <button class="theme-toggle" id="themeToggle"><i class="fa-solid fa-sun"></i></button>
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="menu">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title">GaragePro</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+          </div>
+          <div class="offcanvas-body">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+              <li class="nav-item"><a class="nav-link" href="#hero">Trang chủ</a></li>
+              <li class="nav-item"><a class="nav-link" href="#about">Giới thiệu</a></li>
+              <li class="nav-item"><a class="nav-link" href="#service">Dịch vụ</a></li>
+              <li class="nav-item"><a class="nav-link" href="#cars">Xe</a></li>
+              <li class="nav-item"><a class="nav-link" href="#reviews">Đánh giá</a></li>
+              <li class="nav-item"><a class="nav-link" href="#contact">Liên hệ</a></li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
+                  Tài khoản
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                  <li class="dropdown-item user-info">Khách hàng: Nguyễn Văn A</li>
+                  <li><a class="dropdown-item" href="#profile"><i class="fas fa-user me-2"></i>Hồ sơ</a></li>
+                  <li><a class="dropdown-item" href="#history"><i class="fas fa-history me-2"></i>Lịch sử</a></li>
+                  <li><a class="dropdown-item" href="#settings"><i class="fas fa-cog me-2"></i>Cài đặt</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                </ul>
+              </li>
+            </ul>
+            <div class="d-flex mt-3 mt-lg-0 gap-2">
+              <a href="#" class="btn-login" data-bs-toggle="modal" data-bs-target="#login-modal">Đăng nhập</a>
+              <a href="#" class="btn-register" data-bs-toggle="modal" data-bs-target="#register-modal">Đăng ký</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <h1>Trải nghiệm Dịch vụ Ô tô Cao cấp cùng GaragePro</h1>
+      <p>Mua bán, sửa chữa, bảo dưỡng – tất cả trong một nền tảng chuyên nghiệp và tận tâm.</p>
+      <a href="#service" class="btn-cta">Khám phá ngay</a>
+    </div>
+  </section>
+
+  <!-- Login Modal -->
+  <div class="modal fade" id="login-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="custom-modal-content">
+          <div class="modal-image" style="background: url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;">
+            <div class="modal-image-text">
+              <h4>Chào mừng trở lại!</h4>
+              <p>Cùng GaragePro chăm sóc chiếc xe của bạn dễ dàng hơn.</p>
+            </div>
+          </div>
+          <div class="modal-form">
+            <button type="button" class="modal-close" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+            <div class="form-header">
+              <h3>Đăng nhập</h3>
+              <p>Nhập email để tiếp tục</p>
+            </div>
+            <form id="loginForm">
+              <div class="floating-label-group">
+                <input type="email" id="loginEmail" placeholder=" " required>
+                <label for="loginEmail">Email</label>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+            </form>
+            <div class="text-center mt-3">
+              <span>Chưa có tài khoản? </span>
+              <a href="#" data-bs-toggle="modal" data-bs-target="#register-modal" data-bs-dismiss="modal">Đăng ký</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal fade" id="register-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="custom-modal-content">
+          <div class="modal-image" style="background: url('https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;">
+            <div class="modal-image-text">
+              <h4>Gia nhập GaragePro</h4>
+              <p>Tận hưởng dịch vụ chăm sóc, sửa chữa và mua bán xe toàn diện.</p>
+            </div>
+          </div>
+          <div class="modal-form">
+            <button type="button" class="modal-close" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+            <div class="form-header">
+              <h3>Đăng ký</h3>
+              <p>Chỉ mất 1 phút để bắt đầu</p>
+            </div>
+            <form id="registerForm">
+              <div class="floating-label-group">
+                <input type="text" id="registerFullName" placeholder=" " required>
+                <label for="registerFullName">Họ và tên</label>
+              </div>
+              <div class="floating-label-group">
+                <input type="email" id="registerEmail" placeholder=" " required>
+                <label for="registerEmail">Email</label>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+            </form>
+            <div class="text-center mt-3">
+              <span>Đã có tài khoản? </span>
+              <a href="#" data-bs-toggle="modal" data-bs-target="#login-modal" data-bs-dismiss="modal">Đăng nhập</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <section id="about" class="about-section">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-image">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80" alt="Luxury Car">
+        </div>
+        <div class="about-text">
+          <h2>GaragePro</h2>
+          <p>GaragePro là nền tảng hàng đầu cung cấp giải pháp toàn diện cho xe hơi, từ mua bán, sửa chữa đến bảo dưỡng định kỳ. Với đội ngũ kỹ thuật viên chuyên nghiệp và công nghệ tiên tiến, chúng tôi cam kết mang đến trải nghiệm dịch vụ cao cấp, minh bạch và đáng tin cậy.</p>
+          <p>Mục tiêu của chúng tôi là giúp khách hàng quản lý và chăm sóc xe hơi một cách dễ dàng, tiết kiệm thời gian và chi phí, đồng thời đảm bảo chất lượng dịch vụ luôn đạt tiêu chuẩn cao nhất.</p>
+          <div class="about-stats">
+            <div class="stat-item">
+              <h3>10K+</h3>
+              <p>Khách hàng tin cậy</p>
+            </div>
+            <div class="stat-item">
+              <h3>500+</h3>
+              <p>Xe được phục vụ</p>
+            </div>
+            <div class="stat-item">
+              <h3>50+</h3>
+              <p>Kỹ thuật viên chuyên nghiệp</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section id="service" class="py-5">
+    <div class="container">
+      <h2 class="section-title">Dịch vụ nổi bật</h2>
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="service-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/2598/2598799.png" alt="repair">
+            <h5>Sửa chữa chuyên nghiệp</h5>
+            <p>Đội ngũ kỹ thuật viên chứng nhận, phục hồi mọi dòng xe.</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="service-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" alt="maintenance">
+            <h5>Bảo dưỡng định kỳ</h5>
+            <p>Giữ xe vận hành ổn định, tiết kiệm chi phí dài hạn.</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="service-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/3094/3094855.png" alt="sale">
+            <h5>Mua bán xe</h5>
+            <p>Giao dịch minh bạch, giá trị thật, bảo hành rõ ràng.</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="service-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/2331/2331942.png" alt="finance">
+            <h5>Tư vấn tài chính</h5>
+            <p>Hỗ trợ trả góp linh hoạt, lãi suất ưu đãi nhất thị trường.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Cars -->
+  <section id="cars" class="py-5 bg-light">
+    <div class="container text-center">
+      <h2 class="section-title mb-4">Bộ sưu tập xe nổi bật</h2>
+      <div class="position-relative">
+        <button id="prevCar" class="btn btn-outline-secondary rounded-circle position-absolute top-50 start-0 translate-middle-y shadow">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="row g-4 justify-content-center" id="carList"></div>
+        <button id="nextCar" class="btn btn-outline-secondary rounded-circle position-absolute top-50 end-0 translate-middle-y shadow">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="mt-5">
+        <a href="/templates/viewAllCar.html" class="btn btn-cta px-5">
+          Xem tất cả xe
+          <i class="fa-solid fa-arrow-right ms-2"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews -->
+  <section id="reviews" class="py-5">
+    <div class="container">
+      <h2 class="section-title">Đánh giá khách hàng</h2>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="testimonial-card">
+            <img src="https://randomuser.me/api/portraits/men/11.jpg" alt="Customer 1">
+            <div class="stars">★★★★★</div>
+            <p>“Dịch vụ tuyệt vời, nhân viên thân thiện và chuyên nghiệp.”</p>
+            <strong>- Minh Nguyễn</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial-card">
+            <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Customer 2">
+            <div class="stars">★★★★★</div>
+            <p>“Xe của tôi được bảo dưỡng nhanh chóng và tận tâm.”</p>
+            <strong>- Hương Trần</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial-card">
+            <img src="https://randomuser.me/api/portraits/men/45.jpg" alt="Customer 3">
+            <div class="stars">★★★★★</div>
+            <p>“Mua xe tại đây rất yên tâm, mọi thứ rõ ràng và uy tín.”</p>
+            <strong>- Tuấn Phạm</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+<section id="contact" class="py-5 bg-light">
+  <div class="container text-center">
+    <h2 class="section-title fw-bold text-dark">Liên hệ ngay</h2>
+    <p class="lead text-muted">
+      Sẵn sàng hỗ trợ bạn 24/7. Liên hệ ngay để được tư vấn và nhận ưu đãi tốt nhất.
+    </p>
+    <a href="#" class="btn btn-cta btn-warning px-4 py-2 fw-semibold text-white" 
+       data-bs-toggle="modal" data-bs-target="#contactModal">
+      <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
+    </a>
+  </div>
+</section>
+
+<!-- MODAL: Liên hệ mua xe -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-light border-0">
+        <h5 class="modal-title fw-bold text-dark">Gửi yêu cầu tư vấn mua xe</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="contactForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Họ và tên</label>
+              <input type="text" class="form-control" id="fullName" placeholder="Nhập họ tên của bạn" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" placeholder="Nhập email liên hệ" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số điện thoại</label>
+              <input type="tel" class="form-control" id="phone" placeholder="Nhập số điện thoại" required>
+            </div>
+
+            <!-- Dòng xe quan tâm -->
+            <div class="col-md-6 position-relative">
+              <label class="form-label">Dòng xe quan tâm</label>
+              <input type="text" id="carSearch" class="form-control" placeholder="Nhập tên hoặc hãng xe (VD: VinFast)" autocomplete="off">
+              <ul id="carDropdown" class="list-group position-absolute w-100 shadow-sm"></ul>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Nội dung yêu cầu</label>
+              <textarea class="form-control" id="message" rows="4" placeholder="Nhập yêu cầu hoặc thắc mắc của bạn..." required></textarea>
+            </div>
+          </div>
+
+          <div class="text-end mt-4">
+  <button type="submit" class="btn btn-garagepro fw-semibold px-4">
+    <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
+  </button>
+</div>
+
+
+          <div id="successAlert" class="alert alert-success mt-4 d-none">
+            <i class="fas fa-check-circle me-2"></i> Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ lại sớm nhất.
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h4>GaragePro</h4>
+          <p>Giải pháp toàn diện cho ô tô của bạn – Uy tín, minh bạch, tận tâm.</p>
+          <p>© 2025 GaragePro. All rights reserved.</p>
+        </div>
+        <div class="col-md-4">
+          <h5>Liên hệ</h5>
+          <p><i class="fas fa-map-marker-alt me-2"></i> Khu Giáo dục và Đào tạo - Khu Công nghệ cao Hòa Lạc - Km29 Đại lộ Thăng Long, xã Hòa Lạc, TP. Hà Nội</p>
+          <p><i class="fas fa-phone me-2"></i> (024) 7300 5588</p>
+          <p><i class="fas fa-envelope me-2"></i> support@garagepro.vn</p>
+        </div>
+        <div class="col-md-4">
+          <h5>Đăng ký nhận tin</h5>
+          <p>Nhận thông tin mới nhất về các mẫu xe và ưu đãi đặc biệt.</p>
+          <form class="newsletter-form">
+            <input type="email" placeholder="Nhập email của bạn" required>
+            <button type="submit">Đăng ký</button>
+          </form>
+          <h5 class="mt-4">Theo dõi chúng tôi</h5>
+          <div class="d-flex gap-3">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button id="backToTopBtn" class="back-to-top"><i class="fa-solid fa-arrow-up"></i></button>
+
+<script>
+  // Theme Toggle
+  const toggle = document.getElementById('themeToggle');
+  const body = document.body;
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  if (currentTheme === 'dark') {
+    body.dataset.theme = 'dark';
+    toggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+  }
+
+  // Hàm cập nhật giao diện khi đổi theme
+  function updateDarkModeUI() {
+    const isDark = body.dataset.theme === 'dark';
+
+    // === HERO SECTION ===
+    const hero = document.querySelector('.hero');
+    if (hero) {
+      const heroTitle = hero.querySelector('h1');
+      const heroDesc = hero.querySelector('p');
+      const cta = hero.querySelector('.btn-cta');
+      if (heroTitle) heroTitle.style.color = isDark ? '#fff' : '#fff';
+      if (heroDesc) heroDesc.style.color = isDark ? '#fff' : '#fff';
+      if (cta) {
+        cta.style.color = '#fff';
+        cta.style.backgroundColor = isDark ? '#ff7a00' : '#ff7a00';
+      }
+    }
+
+    // === FOOTER ===
+const footer = document.querySelector('.footer');
+if (footer) {
+  const footerText = footer.querySelectorAll('h4, h5, p, a, i, input, button');
+  footer.style.backgroundColor = '#0e0e0e';
+  footerText.forEach(el => {
+    el.style.color = '#fff';
+  });
+
+  // Nếu có input form đăng ký
+  const input = footer.querySelector('input');
+  const button = footer.querySelector('button');
+  if (input) {
+    input.style.backgroundColor = '#1b1b1b';
+    input.style.color = '#fff';
+    input.style.border = '1px solid #444';
+  }
+  if (button) {
+    button.style.backgroundColor = '#ff7a00';
+    button.style.color = '#fff';
+  }
+}
+
+  }
+
+  // Gọi ngay khi load trang
+  updateDarkModeUI();
+
+  // Toggle theme
+  toggle.addEventListener('click', () => {
+    const theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+    body.dataset.theme = theme;
+    localStorage.setItem('theme', theme);
+    toggle.innerHTML = theme === 'dark'
+      ? '<i class="fa-solid fa-moon"></i>'
+      : '<i class="fa-solid fa-sun"></i>';
+    updateDarkModeUI();
+  });
+
+  // Scroll handling for back-to-top
+  const backToTopBtn = document.getElementById('backToTopBtn');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) backToTopBtn.classList.add('show');
+    else backToTopBtn.classList.remove('show');
+  });
+  backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // Redirect OTP logic
+  function smoothRedirect(mode, email) {
+    document.body.style.transition = "opacity 0.4s ease";
+    document.body.style.opacity = '0';
+    setTimeout(() => {
+      window.location.href = `/templates/verify_otp.html?mode=${mode}&email=${encodeURIComponent(email)}`;
+    }, 600);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    // LOGIN FORM
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      if (!email) {
+        alert('Vui lòng nhập email để nhận mã OTP.');
+        return;
+      }
+      bootstrap.Modal.getInstance(document.getElementById('login-modal')).hide();
+      setTimeout(() => smoothRedirect('login', email), 400);
+    });
+
+    // REGISTER FORM
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('registerFullName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      if (!name || !email) {
+        alert('Vui lòng nhập đầy đủ họ tên và email.');
+        return;
+      }
+      bootstrap.Modal.getInstance(document.getElementById('register-modal')).hide();
+      setTimeout(() => smoothRedirect('register', email), 400);
+    });
+
+    // === CAR SLIDER ===
+    const cars = [
+      { name: "Honda CR-V 2023", img: "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80", price: "720 triệu VNĐ" },
+      { name: "Toyota Camry 2022", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80", price: "850 triệu VNĐ" },
+      { name: "Mercedes C200 2021", img: "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=80", price: "1,2 tỷ VNĐ" },
+      { name: "BMW 5 Series 2020", img: "https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=800&q=80", price: "1,8 tỷ VNĐ" },
+      { name: "Porsche Cayenne 2019", img: "https://images.unsplash.com/photo-1605559424840-4e0b86781b25?auto=format&fit=crop&w=800&q=80", price: "3,5 tỷ VNĐ" },
+      { name: "Rolls-Royce Ghost 2018", img: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=800&q=80", price: "10 tỷ VNĐ" }
+    ];
+
+    let currentIndex = 0;
+    const carsPerView = 3;
+
+    function renderCars() {
+      const container = document.getElementById("carList");
+      container.innerHTML = "";
+      for (let i = currentIndex; i < currentIndex + carsPerView; i++) {
+        const car = cars[i % cars.length];
+        container.innerHTML += `
+          <div class="col-md-4">
+            <div class="car-card">
+              <img src="${car.img}" alt="${car.name}">
+              <div class="car-info">
+                <h5>${car.name}</h5>
+                <p>${car.price}</p>
+                <a href="#" class="btn-cta">Xem chi tiết</a>
+              </div>
+            </div>
+          </div>`;
+      }
+    }
+
+    document.getElementById('prevCar').addEventListener('click', () => {
+      currentIndex = (currentIndex - carsPerView + cars.length) % cars.length;
+      renderCars();
+    });
+
+    document.getElementById('nextCar').addEventListener('click', () => {
+      currentIndex = (currentIndex + carsPerView) % cars.length;
+      renderCars();
+    });
+
+    renderCars();
+    setInterval(() => {
+      currentIndex = (currentIndex + 1) % cars.length;
+      renderCars();
+    }, 3500);
+  });
+</script>
+<!-- ========================= -->
+<!-- JS for Modal Form -->
+<!-- ========================= -->
+<script>
+  const vehicleList = [
+    { name: "Toyota Vios 2023", brand: "Toyota", price: "520.000.000đ" },
+    { name: "Mazda CX-5 2022", brand: "Mazda", price: "850.000.000đ" },
+    { name: "Hyundai Accent 2023", brand: "Hyundai", price: "580.000.000đ" },
+    { name: "Honda City 2024", brand: "Honda", price: "610.000.000đ" },
+    { name: "VinFast VF5 Plus 2024", brand: "VinFast", price: "468.000.000đ" },
+    { name: "VinFast Lux A2.0 2022", brand: "VinFast", price: "890.000.000đ" },
+    { name: "VinFast VF8 2023", brand: "VinFast", price: "1.050.000.000đ" },
+    { name: "Kia Seltos 2023", brand: "Kia", price: "720.000.000đ" },
+    { name: "Ford Ranger 2024", brand: "Ford", price: "980.000.000đ" }
+  ];
+
+  const searchInput = document.getElementById("carSearch");
+  const dropdown = document.getElementById("carDropdown");
+
+  function renderDropdown(filter) {
+    dropdown.innerHTML = "";
+    if (!filter) { dropdown.style.display = "none"; return; }
+
+    const filtered = vehicleList.filter(v =>
+      v.name.toLowerCase().includes(filter.toLowerCase()) ||
+      v.brand.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    filtered.slice(0, 5).forEach(v => {
+      const item = document.createElement("li");
+      item.classList.add("list-group-item");
+      item.textContent = `${v.name} – ${v.price}`;
+      item.onclick = () => {
+        searchInput.value = v.name;
+        dropdown.style.display = "none";
+      };
+      dropdown.appendChild(item);
+    });
+
+    dropdown.style.display = filtered.length > 0 ? "block" : "none";
+  }
+
+  searchInput.addEventListener("input", e => renderDropdown(e.target.value.trim()));
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".position-relative")) dropdown.style.display = "none";
+  });
+
+  document.getElementById("contactForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const btn = e.target.querySelector("button[type='submit']");
+    const now = Date.now();
+    const lastSubmit = localStorage.getItem("lastSubmitTime");
+
+    // 🔒 Chống spam trong 30 giây
+    if (lastSubmit && now - lastSubmit < 30000) {
+      alert("Bạn vừa gửi yêu cầu, vui lòng thử lại sau ít phút.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang gửi...';
+
+    // Giả lập gửi API
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu';
+      document.getElementById("successAlert").classList.remove("d-none");
+      e.target.reset();
+
+      // 🔐 Lưu thời gian gửi gần nhất
+      localStorage.setItem("lastSubmitTime", now);
+
+      // ⏳ Đóng modal sau 1.2 giây
+      setTimeout(() => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById("contactModal"));
+        modal.hide();
+        document.getElementById("successAlert").classList.add("d-none");
+      }, 1200);
+    }, 1000);
+  });
+</script>
+
+</body>
+</html>
