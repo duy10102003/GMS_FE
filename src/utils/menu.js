@@ -170,6 +170,13 @@ export const STOCKER_MENU = [
     permission: PERMISSIONS.VIEW_INVENTORY
   },
   {
+    key: 'part-categories',
+    label: 'Danh mục phụ tùng',
+    icon: 'fa-list',
+    path: '/stocker/part-categories',
+    permission: PERMISSIONS.MANAGE_PARTS
+  },
+  {
     key: 'parts',
     label: 'Quản lý phụ tùng',
     icon: 'fa-cogs',
