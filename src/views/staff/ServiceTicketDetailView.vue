@@ -21,20 +21,48 @@
           </GmsButton>
           <div class="header-actions">
             <GmsButton
-              v-if="canEdit"
+              v-if="canUpdate"
               variant="primary"
               icon="fa-edit"
-              @click="showEditDialog = true"
+              @click="openUpdateDialog"
             >
-              Chỉnh sửa
+              Cập nhật
             </GmsButton>
+            
             <GmsButton
               v-if="canAssign"
               variant="success"
               icon="fa-user-plus"
-              @click="showAssignDialog = true"
+              @click="openAssignDialog"
             >
               Phân công thợ
+            </GmsButton>
+            
+            <GmsButton
+              v-if="canConfirmAdjustment"
+              variant="warning"
+              icon="fa-check"
+              @click="confirmAdjustment"
+            >
+              Xác nhận điều chỉnh
+            </GmsButton>
+            
+            <GmsButton
+              v-if="canCreateInvoice"
+              variant="info"
+              icon="fa-file-invoice"
+              @click="openInvoiceDialog"
+            >
+              Tạo hóa đơn
+            </GmsButton>
+            
+            <GmsButton
+              v-if="canCancel"
+              variant="danger"
+              icon="fa-times"
+              @click="openCancelDialog"
+            >
+              Hủy phiếu
             </GmsButton>
           </div>
         </div>
@@ -80,11 +108,11 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>Tên:</label>
-                <span class="value">{{ serviceTicket.customer?.customerName }}</span>
+                <span class="value">{{ serviceTicket.customer?.customerName || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <label>Số điện thoại:</label>
-                <span class="value">{{ serviceTicket.customer?.customerPhone }}</span>
+                <span class="value">{{ serviceTicket.customer?.customerPhone || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <label>Email:</label>
@@ -101,59 +129,52 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>Tên xe:</label>
-                <span class="value">{{ serviceTicket.vehicle?.vehicleName }}</span>
+                <span class="value">{{ serviceTicket.vehicle?.vehicleName || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <label>Biển số:</label>
-                <span class="value">{{ serviceTicket.vehicle?.vehicleLicensePlate }}</span>
+                <span class="value">{{ serviceTicket.vehicle?.vehicleLicensePlate || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <label>Hãng:</label>
-                <span class="value">{{ serviceTicket.vehicle?.make }}</span>
+                <span class="value">{{ serviceTicket.vehicle?.make || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <label>Model:</label>
-                <span class="value">{{ serviceTicket.vehicle?.model }}</span>
+                <span class="value">{{ serviceTicket.vehicle?.model || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <label>Số km hiện tại:</label>
-                <span class="value">{{ serviceTicket.vehicle?.currentKm?.toLocaleString() }} km</span>
+                <span class="value">{{ serviceTicket.vehicle?.currentKm?.toLocaleString() || 'N/A' }} km</span>
               </div>
             </div>
           </div>
 
           <!-- Parts -->
           <div class="info-card">
-            <div class="card-header-with-action">
-              <h5 class="card-title">
-                <i class="fas fa-cogs me-2"></i>Phụ tùng
-              </h5>
-              <GmsButton
-                v-if="canEdit"
-                variant="primary"
-                size="small"
-                icon="fa-plus"
-                @click="showAddPartDialog = true"
-              >
-                Thêm phụ tùng
-              </GmsButton>
-            </div>
+            <h5 class="card-title">
+              <i class="fas fa-cogs me-2"></i>Phụ tùng
+            </h5>
             <GmsTable
               v-if="serviceTicket.parts && serviceTicket.parts.length > 0"
               :data="serviceTicket.parts"
               :columns="partsColumns"
               :pagination="false"
             >
-              <template #cell-actions="{ row }">
-                <GmsButton
-                  v-if="canEdit"
-                  variant="danger"
-                  size="small"
-                  icon="fa-trash"
-                  @click="handleDeletePart(row.serviceTicketDetailId)"
-                >
-                  Xóa
-                </GmsButton>
+              <template #cell-partName="{ row }">
+                {{ row.part?.partName || row.partName || 'N/A' }}
+              </template>
+              <template #cell-partCode="{ row }">
+                {{ row.part?.partCode || row.partCode || 'N/A' }}
+              </template>
+              <template #cell-quantity="{ row }">
+                {{ row.quantity || 0 }}
+              </template>
+              <template #cell-partUnit="{ row }">
+                {{ row.part?.partUnit || row.partUnit || 'N/A' }}
+              </template>
+              <template #cell-partPrice="{ row }">
+                {{ formatPrice(row.part?.partPrice || row.partPrice || 0) }}
               </template>
             </GmsTable>
             <div v-else class="empty-state">
@@ -164,36 +185,20 @@
 
           <!-- Garage Services -->
           <div class="info-card">
-            <div class="card-header-with-action">
-              <h5 class="card-title">
-                <i class="fas fa-wrench me-2"></i>Dịch vụ
-              </h5>
-              <GmsButton
-                v-if="canEdit"
-                variant="primary"
-                size="small"
-                icon="fa-plus"
-                @click="showAddServiceDialog = true"
-              >
-                Thêm dịch vụ
-              </GmsButton>
-            </div>
+            <h5 class="card-title">
+              <i class="fas fa-wrench me-2"></i>Dịch vụ
+            </h5>
             <GmsTable
               v-if="serviceTicket.garageServices && serviceTicket.garageServices.length > 0"
               :data="serviceTicket.garageServices"
               :columns="servicesColumns"
               :pagination="false"
             >
-              <template #cell-actions="{ row }">
-                <GmsButton
-                  v-if="canEdit"
-                  variant="danger"
-                  size="small"
-                  icon="fa-trash"
-                  @click="handleDeleteService(row.serviceTicketDetailId)"
-                >
-                  Xóa
-                </GmsButton>
+              <template #cell-serviceName="{ row }">
+                {{ row.garageService?.garageServiceName || row.garageServiceName || 'N/A' }}
+              </template>
+              <template #cell-servicePrice="{ row }">
+                {{ formatPrice(row.garageService?.garageServicePrice || row.garageServicePrice || 0) }}
               </template>
             </GmsTable>
             <div v-else class="empty-state">
@@ -221,11 +226,11 @@
                     </span>
                   </div>
                   <div class="task-info">
-                    <span>Thợ: {{ task.assignedTo?.fullName || 'N/A' }}</span>
+                    <span>Thợ: {{ task.assignedToTechnicalName || 'N/A' }}</span>
                     <span>Ngày assign: {{ formatDate(task.assignedAt) }}</span>
                   </div>
                 </div>
-                <p class="task-description">{{ task.description }}</p>
+                <p class="task-description">{{ task.description || 'Không có mô tả' }}</p>
               </div>
             </div>
             <div v-else class="empty-state">
@@ -237,9 +242,162 @@
       </main>
     </div>
 
+    <!-- Update Dialog -->
+    <GmsDialog
+      v-model="showUpdateDialog"
+      title="Cập nhật phiếu dịch vụ"
+      size="large"
+    >
+      <form @submit.prevent="handleUpdate">
+        <div class="mb-3">
+          <label class="form-label">Mô tả vấn đề *</label>
+          <textarea
+            v-model="updateForm.initialIssue"
+            class="form-control"
+            rows="4"
+            placeholder="Nhập mô tả vấn đề..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Parts -->
+        <div class="mb-3">
+          <label class="form-label">Phụ tùng</label>
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <GmsInput
+                v-model="partSearch"
+                placeholder="Tìm kiếm phụ tùng..."
+                prefix-icon="fa-search"
+                :clearable="true"
+                @input="searchParts"
+                @focus="showPartDropdown = true"
+              />
+              <div v-if="showPartDropdown && partSearchResults.length > 0" class="dropdown-results">
+                <div
+                  v-for="part in partSearchResults"
+                  :key="part.partId"
+                  class="dropdown-item"
+                  @click="addPartToUpdate(part)"
+                >
+                  <div class="item-name">{{ part.partName }} ({{ part.partCode }})</div>
+                  <div class="item-details">
+                    <span>Tồn kho: {{ part.partQuantity }} {{ part.partUnit }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="updateForm.parts.length > 0" class="selected-items-list mt-2">
+            <div
+              v-for="(part, index) in updateForm.parts"
+              :key="`${part.partId}-${index}`"
+              class="selected-item"
+            >
+              <div class="selected-info">
+                <strong>{{ part.partName }}</strong>
+                <span>{{ part.partCode }} - Tồn kho: {{ part.partQuantity }} {{ part.partUnit }}</span>
+              </div>
+              <div class="quantity-input">
+                <label>Số lượng:</label>
+                <GmsInput
+                  v-model.number="part.quantity"
+                  type="number"
+                  :min="1"
+                  :max="part.partQuantity"
+                  style="width: 100px;"
+                />
+              </div>
+              <GmsButton variant="outline" size="small" icon="fa-times" @click="removePartFromUpdate(index)">
+                Xóa
+              </GmsButton>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services -->
+        <div class="mb-3">
+          <label class="form-label">Dịch vụ</label>
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <GmsInput
+                v-model="serviceSearch"
+                placeholder="Tìm kiếm dịch vụ..."
+                prefix-icon="fa-search"
+                :clearable="true"
+                @input="searchServices"
+                @focus="showServiceDropdown = true"
+              />
+              <div v-if="showServiceDropdown && serviceSearchResults.length > 0" class="dropdown-results">
+                <div
+                  v-for="service in serviceSearchResults"
+                  :key="service.garageServiceId"
+                  class="dropdown-item"
+                  @click="addServiceToUpdate(service)"
+                >
+                  <div class="item-name">{{ service.garageServiceName }}</div>
+                  <div class="item-details">
+                    <span v-if="service.garageServicePrice">
+                      {{ formatPrice(service.garageServicePrice) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="updateForm.garageServiceIds.length > 0" class="selected-items-list mt-2">
+            <div
+              v-for="(serviceId, index) in updateForm.garageServiceIds"
+              :key="serviceId"
+              class="selected-item"
+            >
+              <div class="selected-info">
+                <strong>{{ getServiceName(serviceId) }}</strong>
+              </div>
+              <GmsButton variant="outline" size="small" icon="fa-times" @click="removeServiceFromUpdate(index)">
+                Xóa
+              </GmsButton>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="closeUpdateDialog">Hủy</GmsButton>
+          <GmsButton type="submit" variant="primary" :loading="updating">
+            Cập nhật
+          </GmsButton>
+        </div>
+      </form>
+    </GmsDialog>
+
     <!-- Assign Dialog -->
-    <GmsDialog v-model="showAssignDialog" title="Phân công thợ" size="medium">
+    <GmsDialog
+      v-model="showAssignDialog"
+      title="Phân công thợ kỹ thuật"
+      size="medium"
+    >
       <form @submit.prevent="handleAssign">
+        <div class="mb-3">
+          <label class="form-label">Chọn thợ:</label>
+          <select
+            v-model.number="assignForm.assignedToTechnical"
+            class="form-select"
+            required
+          >
+            <option value="">-- Chọn thợ --</option>
+            <option
+              v-for="staff in technicalStaff"
+              :key="staff.userId"
+              :value="staff.userId"
+            >
+              {{ staff.fullName }}
+              <span v-if="staff.isAvailable">(Rảnh)</span>
+              <span v-else>(Đang có {{ staff.currentTaskCount }} task)</span>
+            </option>
+          </select>
+        </div>
         <div class="mb-3">
           <label class="form-label">Mô tả công việc *</label>
           <textarea
@@ -250,90 +408,65 @@
             required
           ></textarea>
         </div>
-        <div class="mt-3">
-          <label>Chọn thợ:</label>
-          <select v-model="assignForm.assignedToTechnical" class="form-select" required>
-            <option value="">-- Chọn thợ --</option>
-            <option
-              v-for="mechanic in mechanics"
-              :key="mechanic.id"
-              :value="mechanic.id"
-            >
-              {{ mechanic.name }}
-            </option>
-          </select>
-        </div>
-        <template #footer>
-          <GmsButton variant="outline" @click="showAssignDialog = false">Hủy</GmsButton>
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="showAssignDialog = false">Hủy</GmsButton>
           <GmsButton type="submit" variant="primary" :loading="assignLoading">
             Phân công
           </GmsButton>
-        </template>
+        </div>
       </form>
     </GmsDialog>
 
-    <!-- Add Part Dialog -->
-    <GmsDialog v-model="showAddPartDialog" title="Thêm phụ tùng" size="medium">
-      <form @submit.prevent="handleAddPart">
+    <!-- Invoice Dialog -->
+    <GmsDialog
+      v-model="showInvoiceDialog"
+      title="Tạo hóa đơn"
+      size="medium"
+    >
+      <form @submit.prevent="handleCreateInvoice">
         <div class="mb-3">
-          <label>Chọn phụ tùng:</label>
-          <select v-model="partForm.partId" class="form-select" required>
-            <option value="">-- Chọn phụ tùng --</option>
-            <option
-              v-for="part in availableParts"
-              :key="part.partId"
-              :value="part.partId"
-            >
-              {{ part.partName }} - Tồn kho: {{ part.partStock }} {{ part.partUnit }}
-            </option>
-          </select>
+          <label class="form-label">Thuế VAT (VNĐ)</label>
+          <GmsInput
+            v-model.number="invoiceForm.taxAmount"
+            type="number"
+            placeholder="0"
+            :min="0"
+          />
         </div>
-        <GmsInput
-          v-model.number="partForm.quantity"
-          label="Số lượng"
-          type="number"
-          :min="1"
-          :required="true"
-        />
-        <template #footer>
-          <GmsButton variant="outline" @click="showAddPartDialog = false">Hủy</GmsButton>
-          <GmsButton type="submit" variant="primary" :loading="addPartLoading">
-            Thêm
+        <div class="mb-3">
+          <label class="form-label">Giảm giá (VNĐ)</label>
+          <GmsInput
+            v-model.number="invoiceForm.discountAmount"
+            type="number"
+            placeholder="0"
+            :min="0"
+          />
+        </div>
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="showInvoiceDialog = false">Hủy</GmsButton>
+          <GmsButton type="submit" variant="primary" :loading="creatingInvoice">
+            Tạo hóa đơn
           </GmsButton>
-        </template>
+        </div>
       </form>
     </GmsDialog>
 
-    <!-- Add Service Dialog -->
-    <GmsDialog v-model="showAddServiceDialog" title="Thêm dịch vụ" size="medium">
-      <form @submit.prevent="handleAddService">
-        <div class="mb-3">
-          <label>Chọn dịch vụ:</label>
-          <select v-model="serviceForm.garageServiceId" class="form-select" required>
-            <option value="">-- Chọn dịch vụ --</option>
-            <option
-              v-for="service in availableServices"
-              :key="service.garageServiceId"
-              :value="service.garageServiceId"
-            >
-              {{ service.garageServiceName }} - {{ formatPrice(service.garageServicePrice) }}
-            </option>
-          </select>
-        </div>
-        <GmsInput
-          v-model.number="serviceForm.quantity"
-          label="Số lượng"
-          type="number"
-          :min="1"
-          :required="true"
-        />
-        <template #footer>
-          <GmsButton variant="outline" @click="showAddServiceDialog = false">Hủy</GmsButton>
-          <GmsButton type="submit" variant="primary" :loading="addServiceLoading">
-            Thêm
+    <!-- Cancel Dialog -->
+    <GmsDialog
+      v-model="showCancelDialog"
+      title="Xác nhận hủy phiếu"
+      size="small"
+    >
+      <template v-if="serviceTicket">
+        <p>Bạn có chắc chắn muốn hủy phiếu <strong>#{{ serviceTicket.serviceTicketCode }}</strong>?</p>
+        <p class="text-muted small">Phụ tùng sẽ được rollback về kho.</p>
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="showCancelDialog = false">Hủy</GmsButton>
+          <GmsButton variant="danger" :loading="cancelling" @click="handleCancel">
+            Xác nhận hủy
           </GmsButton>
-        </template>
-      </form>
+        </div>
+      </template>
     </GmsDialog>
 
     <GmsToast ref="toastRef" />
@@ -349,7 +482,11 @@ import { useToast } from '@/composables/useToast'
 import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
 import serviceTicketService from '@/services/serviceTicket'
-import api from '@/services/api'
+import technicalTaskService from '@/services/technicalTask'
+import invoiceService from '@/services/invoice'
+import userService from '@/services/user'
+import partService from '@/services/part'
+import garageServiceService from '@/services/garageService'
 import {
   SERVICE_TICKET_STATUS,
   SERVICE_TICKET_STATUS_LABELS,
@@ -366,51 +503,63 @@ const toast = useToast()
 
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
+const updating = ref(false)
+const assignLoading = ref(false)
+const creatingInvoice = ref(false)
+const cancelling = ref(false)
+
 const serviceTicket = ref(null)
-const mechanics = ref([])
-const availableParts = ref([])
-const availableServices = ref([])
+const technicalStaff = ref([])
 const menuItems = ref([])
 
+const showUpdateDialog = ref(false)
 const showAssignDialog = ref(false)
-const showAddPartDialog = ref(false)
-const showAddServiceDialog = ref(false)
-const assignLoading = ref(false)
-const addPartLoading = ref(false)
-const addServiceLoading = ref(false)
+const showInvoiceDialog = ref(false)
+const showCancelDialog = ref(false)
 
+// Update form
+const updateForm = ref({
+  initialIssue: '',
+  parts: [],
+  garageServiceIds: []
+})
+
+// Assign form
 const assignForm = ref({
-  assignedToTechnical: '',
+  assignedToTechnical: null,
   description: ''
 })
 
-const partForm = ref({
-  partId: '',
-  quantity: 1
+// Invoice form
+const invoiceForm = ref({
+  taxAmount: 0,
+  discountAmount: 0
 })
 
-const serviceForm = ref({
-  garageServiceId: '',
-  quantity: 1
-})
+// Search states for update
+const partSearch = ref('')
+const partSearchResults = ref([])
+const showPartDropdown = ref(false)
+const availableServices = ref([])
+const serviceSearch = ref('')
+const serviceSearchResults = ref([])
+const showServiceDropdown = ref(false)
 
 const partsColumns = ref([
-  { key: 'part.partName', label: 'Tên phụ tùng' },
-  { key: 'part.partCode', label: 'Mã' },
+  { key: 'partName', label: 'Tên phụ tùng' },
+  { key: 'partCode', label: 'Mã' },
   { key: 'quantity', label: 'Số lượng' },
-  { key: 'part.partUnit', label: 'Đơn vị' },
-  { key: 'part.inventoryPrice', label: 'Giá', formatter: (val) => formatPrice(val) },
-  { key: 'actions', label: 'Hành động' }
+  { key: 'partUnit', label: 'Đơn vị' },
+  { key: 'partPrice', label: 'Giá' }
 ])
 
 const servicesColumns = ref([
-  { key: 'garageService.garageServiceName', label: 'Tên dịch vụ' },
-  { key: 'quantity', label: 'Số lượng' },
-  { key: 'garageService.garageServicePrice', label: 'Giá', formatter: (val) => formatPrice(val) },
-  { key: 'actions', label: 'Hành động' }
+  { key: 'serviceName', label: 'Tên dịch vụ' },
+  { key: 'servicePrice', label: 'Giá' }
 ])
 
-const canEdit = computed(() => {
+// Computed
+const canUpdate = computed(() => {
   if (!serviceTicket.value) return false
   return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED &&
          serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED
@@ -418,8 +567,49 @@ const canEdit = computed(() => {
 
 const canAssign = computed(() => {
   if (!serviceTicket.value) return false
-  return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING
+  return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION ||
+         serviceTicket.value.serviceTicketStatus === 0
 })
+
+const canConfirmAdjustment = computed(() => {
+  if (!serviceTicket.value) return false
+  return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         serviceTicket.value.serviceTicketStatus === 1
+})
+
+const canCreateInvoice = computed(() => {
+  if (!serviceTicket.value) return false
+  return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.COMPLETED ||
+         serviceTicket.value.serviceTicketStatus === 3
+})
+
+const canCancel = computed(() => {
+  if (!serviceTicket.value) return false
+  return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED &&
+         serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED &&
+         serviceTicket.value.serviceTicketStatus !== 3 &&
+         serviceTicket.value.serviceTicketStatus !== 4
+})
+
+// Methods
+const formatPrice = (price) => {
+  if (!price && price !== 0) return '0 đ'
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(price)
+}
+
+const formatDate = (date) => {
+  if (!date) return 'N/A'
+  return new Date(date).toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 const getStatusLabel = (status) => {
   return SERVICE_TICKET_STATUS_LABELS[status] || 'N/A'
@@ -437,14 +627,277 @@ const getTaskStatusColor = (status) => {
   return TASK_STATUS_COLORS[status] || 'secondary'
 }
 
-const formatDate = (date) => {
-  if (!date) return 'N/A'
-  return new Date(date).toLocaleString('vi-VN')
+const getServiceName = (serviceId) => {
+  const service = availableServices.value.find(s => s.garageServiceId === serviceId)
+  return service ? service.garageServiceName : `Service #${serviceId}`
 }
 
-const formatPrice = (price) => {
-  if (!price) return '0'
-  return new Intl.NumberFormat('vi-VN').format(price) + ' đ'
+const searchParts = async () => {
+  if (!partSearch.value || partSearch.value.length < 2) {
+    partSearchResults.value = []
+    return
+  }
+  
+  try {
+    const response = await partService.search(partSearch.value)
+    partSearchResults.value = (response.data || []).filter(part => 
+      !updateForm.value.parts.find(p => p.partId === part.partId)
+    )
+  } catch (error) {
+    console.error('Error searching parts:', error)
+    partSearchResults.value = []
+  }
+}
+
+const addPartToUpdate = (part) => {
+  if (updateForm.value.parts.find(p => p.partId === part.partId)) {
+    toast.warning('Phụ tùng đã được thêm')
+    return
+  }
+  
+  updateForm.value.parts.push({
+    ...part,
+    quantity: 1
+  })
+  
+  partSearch.value = ''
+  showPartDropdown.value = false
+  partSearchResults.value = []
+}
+
+const removePartFromUpdate = (index) => {
+  updateForm.value.parts.splice(index, 1)
+}
+
+const searchServices = async () => {
+  if (!serviceSearch.value || serviceSearch.value.length < 2) {
+    serviceSearchResults.value = []
+    return
+  }
+  
+  try {
+    const response = await garageServiceService.search(serviceSearch.value)
+    serviceSearchResults.value = (response.data || []).filter(service => 
+      !updateForm.value.garageServiceIds.find(s => s.garageServiceId === service.garageServiceId)
+    )
+  } catch (error) {
+    console.error('Error searching services:', error)
+    serviceSearchResults.value = []
+  }
+}
+
+const addServiceToUpdate = (service) => {
+  if (updateForm.value.garageServiceIds.includes(service.garageServiceId)) {
+    toast.warning('Dịch vụ đã được thêm')
+    return
+  }
+  
+  updateForm.value.garageServiceIds.push(service.garageServiceId)
+  availableServices.value.push(service)
+  
+  serviceSearch.value = ''
+  showServiceDropdown.value = false
+  serviceSearchResults.value = []
+}
+
+const removeServiceFromUpdate = (index) => {
+  updateForm.value.garageServiceIds.splice(index, 1)
+}
+
+const openUpdateDialog = () => {
+  if (!serviceTicket.value) return
+  
+  updateForm.value = {
+    initialIssue: serviceTicket.value.initialIssue || '',
+    parts: (serviceTicket.value.parts || []).map(p => ({
+      partId: p.part?.partId || p.partId,
+      partName: p.part?.partName || '',
+      partCode: p.part?.partCode || '',
+      partQuantity: p.part?.partQuantity || 0,
+      partUnit: p.part?.partUnit || '',
+      quantity: p.quantity || 1
+    })),
+    garageServiceIds: (serviceTicket.value.garageServices || []).map(s => 
+      s.garageService?.garageServiceId || s.garageServiceId
+    )
+  }
+  
+  // Load available services for display
+  loadAvailableServices()
+  showUpdateDialog.value = true
+}
+
+const closeUpdateDialog = () => {
+  showUpdateDialog.value = false
+  updateForm.value = {
+    initialIssue: '',
+    parts: [],
+    garageServiceIds: []
+  }
+  partSearch.value = ''
+  serviceSearch.value = ''
+  partSearchResults.value = []
+  serviceSearchResults.value = []
+  showPartDropdown.value = false
+  showServiceDropdown.value = false
+}
+
+const handleUpdate = async () => {
+  if (!updateForm.value.initialIssue.trim()) {
+    toast.error('Vui lòng nhập mô tả vấn đề')
+    return
+  }
+  
+  // Validate part quantities
+  for (const part of updateForm.value.parts) {
+    if (!part.quantity || part.quantity < 1) {
+      toast.error(`Vui lòng nhập số lượng hợp lệ cho ${part.partName}`)
+      return
+    }
+    if (part.quantity > part.partQuantity) {
+      toast.error(`Số lượng ${part.partName} vượt quá tồn kho (${part.partQuantity})`)
+      return
+    }
+  }
+  
+  try {
+    updating.value = true
+    const currentUser = authService.getCurrentUser()
+    
+    const payload = {
+      modifiedBy: currentUser?.userId,
+      initialIssue: updateForm.value.initialIssue.trim(),
+      parts: updateForm.value.parts.map(p => ({
+        partId: p.partId,
+        quantity: p.quantity
+      })),
+      garageServiceIds: updateForm.value.garageServiceIds
+    }
+    
+    await serviceTicketService.update(route.params.id, payload)
+    
+    toast.success('Cập nhật thành công!')
+    closeUpdateDialog()
+    await loadServiceTicket()
+  } catch (error) {
+    toast.error('Lỗi khi cập nhật', error.message || error.userMsg || 'Có lỗi xảy ra')
+  } finally {
+    updating.value = false
+  }
+}
+
+const openAssignDialog = async () => {
+  await loadTechnicalStaff()
+  assignForm.value = {
+    assignedToTechnical: null,
+    description: ''
+  }
+  showAssignDialog.value = true
+}
+
+const handleAssign = async () => {
+  if (!assignForm.value.assignedToTechnical || !assignForm.value.description.trim()) {
+    toast.error('Vui lòng chọn thợ và nhập mô tả công việc')
+    return
+  }
+  
+  try {
+    assignLoading.value = true
+    await serviceTicketService.assign(route.params.id, {
+      assignedToTechnical: assignForm.value.assignedToTechnical,
+      description: assignForm.value.description.trim()
+    })
+    
+    toast.success('Phân công thành công!')
+    showAssignDialog.value = false
+    await loadServiceTicket()
+  } catch (error) {
+    toast.error('Lỗi khi phân công', error.message || error.userMsg || 'Có lỗi xảy ra')
+  } finally {
+    assignLoading.value = false
+  }
+}
+
+const confirmAdjustment = async () => {
+  if (!serviceTicket.value || !serviceTicket.value.technicalTasks || serviceTicket.value.technicalTasks.length === 0) {
+    toast.error('Không tìm thấy technical task')
+    return
+  }
+  
+  const task = serviceTicket.value.technicalTasks[0]
+  if (!task.technicalTaskId) {
+    toast.error('Không tìm thấy technical task ID')
+    return
+  }
+  
+  try {
+    const currentUser = authService.getCurrentUser()
+    await technicalTaskService.confirm(task.technicalTaskId, currentUser?.userId)
+    
+    toast.success('Xác nhận điều chỉnh thành công!')
+    await loadServiceTicket()
+  } catch (error) {
+    toast.error('Lỗi khi xác nhận điều chỉnh', error.message || error.userMsg || 'Có lỗi xảy ra')
+  }
+}
+
+const openInvoiceDialog = () => {
+  invoiceForm.value = {
+    taxAmount: 0,
+    discountAmount: 0
+  }
+  showInvoiceDialog.value = true
+}
+
+const handleCreateInvoice = async () => {
+  if (!serviceTicket.value) return
+  
+  try {
+    creatingInvoice.value = true
+    const payload = {
+      serviceTicketId: serviceTicket.value.serviceTicketId,
+      customerId: serviceTicket.value.customer?.customerId,
+      taxAmount: invoiceForm.value.taxAmount || 0,
+      discountAmount: invoiceForm.value.discountAmount || 0
+    }
+    
+    const response = await invoiceService.create(payload)
+    
+    toast.success('Tạo hóa đơn thành công!', `Invoice ID: ${response.data.invoiceId}`)
+    showInvoiceDialog.value = false
+    // Navigate to invoice detail if needed
+    // router.push(`/staff/invoices/${response.data.invoiceId}`)
+  } catch (error) {
+    toast.error('Lỗi khi tạo hóa đơn', error.message || error.userMsg || 'Có lỗi xảy ra')
+  } finally {
+    creatingInvoice.value = false
+  }
+}
+
+const openCancelDialog = () => {
+  showCancelDialog.value = true
+}
+
+const handleCancel = async () => {
+  if (!serviceTicket.value) return
+  
+  try {
+    cancelling.value = true
+    const currentUser = authService.getCurrentUser()
+    
+    await serviceTicketService.setStatusCancelled(route.params.id, {
+      modifiedBy: currentUser?.userId,
+      note: 'Hủy phiếu dịch vụ'
+    })
+    
+    toast.success('Hủy phiếu thành công!')
+    showCancelDialog.value = false
+    await loadServiceTicket()
+  } catch (error) {
+    toast.error('Lỗi khi hủy phiếu', error.message || error.userMsg || 'Có lỗi xảy ra')
+  } finally {
+    cancelling.value = false
+  }
 }
 
 const loadServiceTicket = async () => {
@@ -453,110 +906,44 @@ const loadServiceTicket = async () => {
     const response = await serviceTicketService.getById(route.params.id)
     serviceTicket.value = response.data
   } catch (error) {
-    toast.error('Lỗi khi tải chi tiết phiếu', error.message)
+    toast.error('Lỗi khi tải chi tiết phiếu', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
 }
 
-const loadMechanics = async () => {
+const loadTechnicalStaff = async () => {
   try {
-    const response = await api.get('/mechanics')
-    mechanics.value = response.data || response
+    const response = await userService.getTechnicalStaff()
+    technicalStaff.value = response.data || []
   } catch (error) {
-    console.error('Error loading mechanics:', error)
+    console.error('Error loading technical staff:', error)
+    technicalStaff.value = []
   }
 }
 
-const loadParts = async () => {
+const loadAvailableServices = async () => {
   try {
-    const response = await api.get('/parts')
-    availableParts.value = response.data || response
-  } catch (error) {
-    console.error('Error loading parts:', error)
-  }
-}
-
-const loadServices = async () => {
-  try {
-    const response = await api.get('/garage-services')
-    availableServices.value = response.data || response
+    // Load all services for display names
+    const response = await garageServiceService.search('', 1000)
+    availableServices.value = response.data || []
   } catch (error) {
     console.error('Error loading services:', error)
-  }
-}
-
-const handleAssign = async () => {
-  try {
-    assignLoading.value = true
-    await serviceTicketService.assign(route.params.id, assignForm.value)
-    toast.success('Phân công thành công!')
-    showAssignDialog.value = false
-    await loadServiceTicket()
-  } catch (error) {
-    toast.error('Lỗi khi phân công', error.message)
-  } finally {
-    assignLoading.value = false
-  }
-}
-
-const handleAddPart = async () => {
-  try {
-    addPartLoading.value = true
-    await serviceTicketService.addPart(route.params.id, partForm.value)
-    toast.success('Thêm phụ tùng thành công!')
-    showAddPartDialog.value = false
-    partForm.value = { partId: '', quantity: 1 }
-    await loadServiceTicket()
-  } catch (error) {
-    toast.error('Lỗi khi thêm phụ tùng', error.message)
-  } finally {
-    addPartLoading.value = false
-  }
-}
-
-const handleAddService = async () => {
-  try {
-    addServiceLoading.value = true
-    await serviceTicketService.addGarageService(route.params.id, serviceForm.value)
-    toast.success('Thêm dịch vụ thành công!')
-    showAddServiceDialog.value = false
-    serviceForm.value = { garageServiceId: '', quantity: 1 }
-    await loadServiceTicket()
-  } catch (error) {
-    toast.error('Lỗi khi thêm dịch vụ', error.message)
-  } finally {
-    addServiceLoading.value = false
-  }
-}
-
-const handleDeletePart = async (detailId) => {
-  if (!confirm('Bạn có chắc muốn xóa phụ tùng này?')) return
-  
-  try {
-    await serviceTicketService.deleteDetail(route.params.id, detailId)
-    toast.success('Xóa phụ tùng thành công!')
-    await loadServiceTicket()
-  } catch (error) {
-    toast.error('Lỗi khi xóa phụ tùng', error.message)
-  }
-}
-
-const handleDeleteService = async (detailId) => {
-  if (!confirm('Bạn có chắc muốn xóa dịch vụ này?')) return
-  
-  try {
-    await serviceTicketService.deleteDetail(route.params.id, detailId)
-    toast.success('Xóa dịch vụ thành công!')
-    await loadServiceTicket()
-  } catch (error) {
-    toast.error('Lỗi khi xóa dịch vụ', error.message)
+    availableServices.value = []
   }
 }
 
 const handleLogout = async () => {
   await authService.logout()
   router.push('/')
+}
+
+// Close dropdowns when clicking outside
+const handleClickOutside = (event) => {
+  if (!event.target.closest('.search-input-wrapper')) {
+    showPartDropdown.value = false
+    showServiceDropdown.value = false
+  }
 }
 
 onMounted(async () => {
@@ -570,12 +957,9 @@ onMounted(async () => {
     menuItems.value = getMenuByRole(user.role)
   }
 
-  await Promise.all([
-    loadServiceTicket(),
-    loadMechanics(),
-    loadParts(),
-    loadServices()
-  ])
+  await loadServiceTicket()
+  await loadAvailableServices()
+  document.addEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -594,11 +978,14 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .header-actions {
   display: flex;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .loading-state {
@@ -633,13 +1020,6 @@ onMounted(async () => {
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
-}
-
-.card-header-with-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
 }
 
 .info-grid {
@@ -678,6 +1058,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .task-info {
@@ -685,6 +1067,7 @@ onMounted(async () => {
   gap: 1rem;
   font-size: 0.85rem;
   color: #666;
+  flex-wrap: wrap;
 }
 
 .task-description {
@@ -703,4 +1086,165 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   display: block;
 }
-</style>
+
+.search-container {
+  margin-bottom: 1rem;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.dropdown-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-weight: 600;
+  color: var(--dark, #2c3a47);
+  margin-bottom: 0.25rem;
+}
+
+.item-details {
+  font-size: 0.875rem;
+  color: #666;
+  display: flex;
+  gap: 1rem;
+}
+
+.selected-items-list {
+  margin-top: 1rem;
+}
+
+.selected-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.selected-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.selected-info strong {
+  color: var(--dark, #2c3a47);
+}
+
+.selected-info span {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.quantity-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-input label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--dark, #2c3a47);
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary, #ff7a00);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.form-select:focus {
+  border-color: var(--primary, #ff7a00);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.text-muted {
+  color: #999;
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem;
+}
+</style>     

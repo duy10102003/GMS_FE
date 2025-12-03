@@ -21,6 +21,7 @@ class ServiceTicketService {
 
   /**
    * Tạo Service Ticket (Staff)
+   * POST /api/ServiceTicket
    */
   async create(data) {
     return await api.post('/ServiceTicket', data)
@@ -28,90 +29,61 @@ class ServiceTicketService {
 
   /**
    * Cập nhật Service Ticket (Staff)
+   * PUT /api/ServiceTicket/{id}
    */
   async update(id, data) {
     return await api.put(`/ServiceTicket/${id}`, data)
   }
 
   /**
-   * Assign Service Ticket cho Mechanic
+   * Chuyển Status - PendingTechnicalConfirmation (0)
+   * PUT /api/ServiceTicket/{id}/status/pending
+   */
+  async setStatusPending(id, data) {
+    return await api.put(`/ServiceTicket/${id}/status/pending`, data)
+  }
+
+  /**
+   * Chuyển Status - AdjustedByTechnical (1)
+   * PUT /api/ServiceTicket/{id}/status/adjusted
+   */
+  async setStatusAdjusted(id, data) {
+    return await api.put(`/ServiceTicket/${id}/status/adjusted`, data)
+  }
+
+  /**
+   * Chuyển Status - InProgress (2)
+   * PUT /api/ServiceTicket/{id}/status/in-progress
+   */
+  async setStatusInProgress(id, data) {
+    return await api.put(`/ServiceTicket/${id}/status/in-progress`, data)
+  }
+
+  /**
+   * Chuyển Status - Completed (3)
+   * PUT /api/ServiceTicket/{id}/status/completed
+   */
+  async setStatusCompleted(id, data) {
+    return await api.put(`/ServiceTicket/${id}/status/completed`, data)
+  }
+
+  /**
+   * Chuyển Status - Cancelled (4)
+   * PUT /api/ServiceTicket/{id}/status/cancelled
+   */
+  async setStatusCancelled(id, data) {
+    return await api.put(`/ServiceTicket/${id}/status/cancelled`, data)
+  }
+
+  /**
+   * Assign Service Ticket cho Technical Staff
+   * POST /api/ServiceTicket/{id}/assign
    */
   async assign(id, data) {
     return await api.post(`/ServiceTicket/${id}/assign`, data)
   }
 
-  /**
-   * Thêm Part vào Service Ticket
-   */
-  async addPart(id, data) {
-    return await api.post(`/ServiceTicket/${id}/parts`, data)
-  }
 
-  /**
-   * Thêm Garage Service vào Service Ticket
-   */
-  async addGarageService(id, data) {
-    return await api.post(`/ServiceTicket/${id}/garage-services`, data)
-  }
-
-  /**
-   * Xóa Part/Service khỏi Service Ticket
-   */
-  async deleteDetail(id, detailId) {
-    return await api.delete(`/ServiceTicket/${id}/details/${detailId}`)
-  }
-
-  /**
-   * Duyệt đề xuất của Mechanic (Staff)
-   */
-  async approveProposal(technicalTaskId, staffId, data) {
-    return await api.post(
-      `/ServiceTicket/technical-tasks/${technicalTaskId}/approve?staffId=${staffId}`,
-      data,
-    )
-  }
-
-  /**
-   * Lấy danh sách Tasks của Mechanic
-   */
-  async getMechanicTasks(mechanicId, params) {
-    return await api.post(`/ServiceTicket/mechanic/${mechanicId}/tasks`, params)
-  }
-
-  /**
-   * Lấy chi tiết Task của Mechanic
-   */
-  async getMechanicTaskDetail(mechanicId, technicalTaskId) {
-    return await api.get(`/ServiceTicket/mechanic/${mechanicId}/tasks/${technicalTaskId}`)
-  }
-
-  /**
-   * Đề xuất Parts/Services (Mechanic)
-   */
-  async proposePartsServices(technicalTaskId, mechanicId, data) {
-    return await api.post(
-      `/ServiceTicket/technical-tasks/${technicalTaskId}/propose?mechanicId=${mechanicId}`,
-      data,
-    )
-  }
-
-  /**
-   * Bắt đầu Task (Mechanic)
-   */
-  async startTask(technicalTaskId, mechanicId) {
-    return await api.post(
-      `/ServiceTicket/technical-tasks/${technicalTaskId}/start?mechanicId=${mechanicId}`,
-    )
-  }
-
-  /**
-   * Confirm Task hoàn thành (Mechanic)
-   */
-  async confirmTask(technicalTaskId, mechanicId) {
-    return await api.post(
-      `/ServiceTicket/technical-tasks/${technicalTaskId}/confirm?mechanicId=${mechanicId}`,
-    )
-  }
 
   /**
    * Xóa Service Ticket
@@ -122,3 +94,4 @@ class ServiceTicketService {
 }
 
 export default new ServiceTicketService()
+

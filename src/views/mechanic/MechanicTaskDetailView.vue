@@ -29,20 +29,20 @@
               Bắt đầu công việc
             </GmsButton>
             <GmsButton
-              v-else-if="task?.taskStatus === TASK_STATUS.IN_PROGRESS"
+              v-if="canComplete"
               variant="success"
               icon="fa-check"
-              @click="handleConfirmTask"
+              @click="handleCompleteTask"
             >
-              Xác nhận hoàn thành
+              Hoàn thành công việc
             </GmsButton>
             <GmsButton
-              v-if="canPropose"
+              v-if="canAdjust"
               variant="info"
-              icon="fa-lightbulb"
-              @click="showProposeDialog = true"
+              icon="fa-edit"
+              @click="showAdjustDialog = true"
             >
-              Đề xuất phụ tùng/dịch vụ
+              Điều chỉnh phụ tùng/dịch vụ
             </GmsButton>
           </div>
         </div>
@@ -186,50 +186,58 @@
       </main>
     </div>
 
-    <!-- Propose Dialog -->
-    <GmsDialog v-model="showProposeDialog" title="Đề xuất phụ tùng/dịch vụ" size="large">
-      <form @submit.prevent="handlePropose">
-        <div class="propose-section">
-          <h6>Phụ tùng cần dùng:</h6>
-          <div
-            v-for="(part, index) in proposeForm.parts"
-            :key="index"
-            class="propose-item"
-          >
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label>Chọn phụ tùng:</label>
-                <select
-                  v-model="part.partId"
-                  class="form-select"
-                  @change="updatePartPrice(index)"
-                >
-                  <option value="">-- Chọn phụ tùng --</option>
-                  <option
-                    v-for="p in availableParts"
-                    :key="p.partId"
-                    :value="p.partId"
-                  >
-                    {{ p.partName }} - Tồn kho: {{ p.partStock }} {{ p.partUnit }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <GmsInput
-                  v-model.number="part.quantity"
-                  label="Số lượng"
-                  type="number"
-                  :min="1"
-                  :required="!!part.partId"
-                />
-              </div>
-              <div class="col-md-2">
-                <label>Giá:</label>
-                <div class="price-display">
-                  {{ formatPrice(part.price || 0) }}
+    <!-- Adjust Dialog -->
+    <GmsDialog v-model="showAdjustDialog" title="Điều chỉnh phụ tùng/dịch vụ" size="large">
+      <div class="adjust-content">
+        <!-- Parts Section -->
+        <div class="adjust-section">
+          <h6>Phụ tùng:</h6>
+          
+          <!-- Search Part -->
+          <div class="search-wrapper">
+            <GmsInput
+              v-model="partSearchQuery"
+              placeholder="Tìm kiếm phụ tùng..."
+              prefix-icon="fa-search"
+              :clearable="true"
+              @input="searchParts"
+            />
+            <div v-if="partSearchResults.length > 0" class="search-results">
+              <div
+                v-for="part in partSearchResults"
+                :key="part.partId"
+                class="search-result-item"
+                @click="addPart(part)"
+              >
+                <div class="result-info">
+                  <strong>{{ part.partName }}</strong>
+                  <span class="result-meta">
+                    Mã: {{ part.partCode }} | Tồn: {{ part.partStock }} {{ part.partUnit }} | 
+                    Giá: {{ formatPrice(part.inventoryPrice) }}
+                  </span>
                 </div>
               </div>
-              <div class="col-md-1">
+            </div>
+          </div>
+
+          <!-- Selected Parts -->
+          <div v-if="selectedParts.length > 0" class="selected-items">
+            <div
+              v-for="(part, index) in selectedParts"
+              :key="index"
+              class="selected-item"
+            >
+              <div class="item-info">
+                <strong>{{ part.partName }}</strong>
+                <span class="item-meta">{{ formatPrice(part.price) }}</span>
+              </div>
+              <div class="item-actions">
+                <GmsInput
+                  v-model.number="part.quantity"
+                  type="number"
+                  :min="1"
+                  style="width: 100px; margin-right: 0.5rem;"
+                />
                 <GmsButton
                   variant="danger"
                   size="small"
@@ -239,58 +247,50 @@
               </div>
             </div>
           </div>
-          <GmsButton
-            variant="outline"
-            size="small"
-            icon="fa-plus"
-            @click="addPart"
-            class="mt-2"
-          >
-            Thêm phụ tùng
-          </GmsButton>
         </div>
 
-        <div class="propose-section mt-4">
-          <h6>Dịch vụ cần thực hiện:</h6>
-          <div
-            v-for="(service, index) in proposeForm.garageServices"
-            :key="index"
-            class="propose-item"
-          >
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label>Chọn dịch vụ:</label>
-                <select
-                  v-model="service.garageServiceId"
-                  class="form-select"
-                  @change="updateServicePrice(index)"
-                >
-                  <option value="">-- Chọn dịch vụ --</option>
-                  <option
-                    v-for="s in availableServices"
-                    :key="s.garageServiceId"
-                    :value="s.garageServiceId"
-                  >
-                    {{ s.garageServiceName }} - {{ formatPrice(s.garageServicePrice) }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <GmsInput
-                  v-model.number="service.quantity"
-                  label="Số lượng"
-                  type="number"
-                  :min="1"
-                  :required="!!service.garageServiceId"
-                />
-              </div>
-              <div class="col-md-2">
-                <label>Giá:</label>
-                <div class="price-display">
-                  {{ formatPrice(service.price || 0) }}
+        <!-- Services Section -->
+        <div class="adjust-section mt-4">
+          <h6>Dịch vụ:</h6>
+          
+          <!-- Search Service -->
+          <div class="search-wrapper">
+            <GmsInput
+              v-model="garageServiceSearchQuery"
+              placeholder="Tìm kiếm dịch vụ..."
+              prefix-icon="fa-search"
+              :clearable="true"
+              @input="searchGarageServices"
+            />
+            <div v-if="garageServiceSearchResults.length > 0" class="search-results">
+              <div
+                v-for="service in garageServiceSearchResults"
+                :key="service.garageServiceId"
+                class="search-result-item"
+                @click="addService(service)"
+              >
+                <div class="result-info">
+                  <strong>{{ service.garageServiceName }}</strong>
+                  <span class="result-meta">
+                    Giá: {{ formatPrice(service.garageServicePrice) }}
+                  </span>
                 </div>
               </div>
-              <div class="col-md-1">
+            </div>
+          </div>
+
+          <!-- Selected Services -->
+          <div v-if="selectedServices.length > 0" class="selected-items">
+            <div
+              v-for="(service, index) in selectedServices"
+              :key="index"
+              class="selected-item"
+            >
+              <div class="item-info">
+                <strong>{{ service.garageServiceName }}</strong>
+                <span class="item-meta">{{ formatPrice(service.price) }}</span>
+              </div>
+              <div class="item-actions">
                 <GmsButton
                   variant="danger"
                   size="small"
@@ -300,24 +300,15 @@
               </div>
             </div>
           </div>
-          <GmsButton
-            variant="outline"
-            size="small"
-            icon="fa-plus"
-            @click="addService"
-            class="mt-2"
-          >
-            Thêm dịch vụ
-          </GmsButton>
         </div>
+      </div>
 
-        <template #footer>
-          <GmsButton variant="outline" @click="showProposeDialog = false">Hủy</GmsButton>
-          <GmsButton type="submit" variant="primary" :loading="proposeLoading">
-            Gửi đề xuất
-          </GmsButton>
-        </template>
-      </form>
+      <template #footer>
+        <GmsButton variant="outline" @click="showAdjustDialog = false">Hủy</GmsButton>
+        <GmsButton @click="handleAdjust" variant="primary" :loading="adjustLoading">
+          Điều chỉnh
+        </GmsButton>
+      </template>
     </GmsDialog>
 
     <GmsToast ref="toastRef" />
@@ -332,8 +323,9 @@ import { GmsInput, GmsButton, GmsTable, GmsDialog, GmsToast } from '@/components
 import { useToast } from '@/composables/useToast'
 import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
-import serviceTicketService from '@/services/serviceTicket'
-import api from '@/services/api'
+import technicalTaskService from '@/services/technicalTask'
+import partService from '@/services/part'
+import garageServiceService from '@/services/garageService'
 import {
   SERVICE_TICKET_STATUS,
   SERVICE_TICKET_STATUS_LABELS,
@@ -351,34 +343,48 @@ const toast = useToast()
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
 const task = ref(null)
-const availableParts = ref([])
-const availableServices = ref([])
 const menuItems = ref([])
-const showProposeDialog = ref(false)
-const proposeLoading = ref(false)
+const showAdjustDialog = ref(false)
+const adjustLoading = ref(false)
 
-const proposeForm = ref({
-  parts: [{ partId: '', quantity: 1, price: 0 }],
-  garageServices: [{ garageServiceId: '', quantity: 1, price: 0 }]
-})
+// Search states
+const partSearchQuery = ref('')
+const partSearchResults = ref([])
+const partSearchLoading = ref(false)
+const selectedParts = ref([])
+
+const garageServiceSearchQuery = ref('')
+const garageServiceSearchResults = ref([])
+const garageServiceSearchLoading = ref(false)
+const selectedServices = ref([])
 
 const partsColumns = ref([
-  { key: 'part.partName', label: 'Tên phụ tùng' },
-  { key: 'part.partCode', label: 'Mã' },
+  { key: 'partName', label: 'Tên phụ tùng', formatter: (val, row) => row.part?.partName || val },
+  { key: 'partCode', label: 'Mã', formatter: (val, row) => row.part?.partCode || val },
   { key: 'quantity', label: 'Số lượng' },
-  { key: 'part.partUnit', label: 'Đơn vị' },
-  { key: 'part.inventoryPrice', label: 'Giá', formatter: (val) => formatPrice(val) }
+  { key: 'partUnit', label: 'Đơn vị', formatter: (val, row) => row.part?.partUnit || val },
+  { key: 'inventoryPrice', label: 'Giá', formatter: (val, row) => formatPrice(row.part?.inventoryPrice || val) }
 ])
 
 const servicesColumns = ref([
-  { key: 'garageService.garageServiceName', label: 'Tên dịch vụ' },
-  { key: 'quantity', label: 'Số lượng' },
-  { key: 'garageService.garageServicePrice', label: 'Giá', formatter: (val) => formatPrice(val) }
+  { key: 'garageServiceName', label: 'Tên dịch vụ', formatter: (val, row) => row.garageService?.garageServiceName || val },
+  { key: 'garageServicePrice', label: 'Giá', formatter: (val, row) => formatPrice(row.garageService?.garageServicePrice || val) }
 ])
 
-const canPropose = computed(() => {
+const canAdjust = computed(() => {
   if (!task.value) return false
-  return task.value.taskStatus === TASK_STATUS.PENDING || task.value.taskStatus === TASK_STATUS.IN_PROGRESS
+  // Có thể điều chỉnh khi service ticket status là PENDING_TECHNICAL_CONFIRMATION
+  return task.value.serviceTicket?.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION
+})
+
+const canStart = computed(() => {
+  if (!task.value) return false
+  return task.value.taskStatus === TASK_STATUS.PENDING
+})
+
+const canComplete = computed(() => {
+  if (!task.value) return false
+  return task.value.taskStatus === TASK_STATUS.IN_PROGRESS
 })
 
 const getTaskStatusLabel = (status) => {
@@ -410,35 +416,114 @@ const formatPrice = (price) => {
 const loadTask = async () => {
   try {
     loading.value = true
-    const currentUser = authService.getCurrentUser()
-    const response = await serviceTicketService.getMechanicTaskDetail(
-      currentUser.userId,
-      route.params.id
-    )
+    const response = await technicalTaskService.getById(route.params.id)
     task.value = response.data
+    
+    // Initialize selected parts and services from task
+    if (task.value.parts) {
+      selectedParts.value = task.value.parts.map(p => ({
+        partId: p.part?.partId || p.partId,
+        partName: p.part?.partName || '',
+        quantity: p.quantity || 1,
+        price: p.part?.inventoryPrice || 0
+      }))
+    }
+    
+    if (task.value.garageServices) {
+      selectedServices.value = task.value.garageServices.map(s => ({
+        garageServiceId: s.garageService?.garageServiceId || s.garageServiceId,
+        garageServiceName: s.garageService?.garageServiceName || '',
+        price: s.garageService?.garageServicePrice || 0
+      }))
+    }
   } catch (error) {
-    toast.error('Lỗi khi tải chi tiết công việc', error.message)
+    toast.error('Lỗi khi tải chi tiết công việc', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
 }
 
-const loadParts = async () => {
+const searchParts = async () => {
+  if (!partSearchQuery.value || partSearchQuery.value.trim().length < 2) {
+    partSearchResults.value = []
+    return
+  }
+  
   try {
-    const response = await api.get('/parts')
-    availableParts.value = response.data || response
+    partSearchLoading.value = true
+    const response = await partService.search(partSearchQuery.value.trim(), 20)
+    partSearchResults.value = response.data || response || []
   } catch (error) {
-    console.error('Error loading parts:', error)
+    console.error('Error searching parts:', error)
+    partSearchResults.value = []
+  } finally {
+    partSearchLoading.value = false
   }
 }
 
-const loadServices = async () => {
-  try {
-    const response = await api.get('/garage-services')
-    availableServices.value = response.data || response
-  } catch (error) {
-    console.error('Error loading services:', error)
+const searchGarageServices = async () => {
+  if (!garageServiceSearchQuery.value || garageServiceSearchQuery.value.trim().length < 2) {
+    garageServiceSearchResults.value = []
+    return
   }
+  
+  try {
+    garageServiceSearchLoading.value = true
+    const response = await garageServiceService.search(garageServiceSearchQuery.value.trim(), 20)
+    garageServiceSearchResults.value = response.data || response || []
+  } catch (error) {
+    console.error('Error searching garage services:', error)
+    garageServiceSearchResults.value = []
+  } finally {
+    garageServiceSearchLoading.value = false
+  }
+}
+
+const addPart = (part) => {
+  if (!part || !part.partId) return
+  
+  const exists = selectedParts.value.find(p => p.partId === part.partId)
+  if (exists) {
+    toast.error('Phụ tùng này đã được thêm')
+    return
+  }
+  
+  selectedParts.value.push({
+    partId: part.partId,
+    partName: part.partName,
+    quantity: 1,
+    price: part.inventoryPrice || 0
+  })
+  
+  partSearchQuery.value = ''
+  partSearchResults.value = []
+}
+
+const removePart = (index) => {
+  selectedParts.value.splice(index, 1)
+}
+
+const addService = (service) => {
+  if (!service || !service.garageServiceId) return
+  
+  const exists = selectedServices.value.find(s => s.garageServiceId === service.garageServiceId)
+  if (exists) {
+    toast.error('Dịch vụ này đã được thêm')
+    return
+  }
+  
+  selectedServices.value.push({
+    garageServiceId: service.garageServiceId,
+    garageServiceName: service.garageServiceName,
+    price: service.garageServicePrice || 0
+  })
+  
+  garageServiceSearchQuery.value = ''
+  garageServiceSearchResults.value = []
+}
+
+const removeService = (index) => {
+  selectedServices.value.splice(index, 1)
 }
 
 const handleStartTask = async () => {
@@ -446,115 +531,68 @@ const handleStartTask = async () => {
 
   try {
     loading.value = true
-    const currentUser = authService.getCurrentUser()
-    await serviceTicketService.startTask(task.value.technicalTaskId, currentUser.userId)
-    toast.success('Đã bắt đầu công việc!')
-    await loadTask()
+    // Khi bắt đầu task, service ticket status sẽ tự động chuyển sang IN_PROGRESS
+    // Thông qua việc staff xác nhận điều chỉnh (confirm adjustment)
+    // Ở đây, mechanic chỉ cần đợi staff xác nhận
+    toast.info('Vui lòng đợi staff xác nhận điều chỉnh để bắt đầu công việc')
   } catch (error) {
-    toast.error('Lỗi khi bắt đầu công việc', error.message)
+    toast.error('Lỗi khi bắt đầu công việc', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
 }
 
-const handleConfirmTask = async () => {
+const handleCompleteTask = async () => {
   if (!confirm('Bạn có chắc công việc đã hoàn thành?')) return
 
   try {
     loading.value = true
-    const currentUser = authService.getCurrentUser()
-    await serviceTicketService.confirmTask(task.value.technicalTaskId, currentUser.userId)
-    toast.success('Đã xác nhận hoàn thành công việc!')
+    await technicalTaskService.complete(task.value.technicalTaskId)
+    toast.success('Đã hoàn thành công việc!')
     await loadTask()
   } catch (error) {
-    toast.error('Lỗi khi xác nhận hoàn thành', error.message)
+    toast.error('Lỗi khi hoàn thành công việc', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
 }
 
-const addPart = () => {
-  proposeForm.value.parts.push({ partId: '', quantity: 1, price: 0 })
-}
-
-const removePart = (index) => {
-  proposeForm.value.parts.splice(index, 1)
-  if (proposeForm.value.parts.length === 0) {
-    proposeForm.value.parts.push({ partId: '', quantity: 1, price: 0 })
-  }
-}
-
-const addService = () => {
-  proposeForm.value.garageServices.push({ garageServiceId: '', quantity: 1, price: 0 })
-}
-
-const removeService = (index) => {
-  proposeForm.value.garageServices.splice(index, 1)
-  if (proposeForm.value.garageServices.length === 0) {
-    proposeForm.value.garageServices.push({ garageServiceId: '', quantity: 1, price: 0 })
-  }
-}
-
-const updatePartPrice = (index) => {
-  const partId = proposeForm.value.parts[index].partId
-  const part = availableParts.value.find(p => p.partId === parseInt(partId))
-  if (part) {
-    proposeForm.value.parts[index].price = part.inventoryPrice
-  }
-}
-
-const updateServicePrice = (index) => {
-  const serviceId = proposeForm.value.garageServices[index].garageServiceId
-  const service = availableServices.value.find(s => s.garageServiceId === parseInt(serviceId))
-  if (service) {
-    proposeForm.value.garageServices[index].price = service.garageServicePrice
-  }
-}
-
-const handlePropose = async () => {
-  // Validate
-  const hasParts = proposeForm.value.parts.some(p => p.partId)
-  const hasServices = proposeForm.value.garageServices.some(s => s.garageServiceId)
-
-  if (!hasParts && !hasServices) {
+const handleAdjust = async () => {
+  if (selectedParts.value.length === 0 && selectedServices.value.length === 0) {
     toast.error('Vui lòng chọn ít nhất một phụ tùng hoặc dịch vụ')
     return
   }
 
+  // Validate parts quantity
+  for (const part of selectedParts.value) {
+    if (!part.quantity || part.quantity < 1) {
+      toast.error(`Vui lòng nhập số lượng hợp lệ cho phụ tùng: ${part.partName}`)
+      return
+    }
+  }
+
   try {
-    proposeLoading.value = true
-    const currentUser = authService.getCurrentUser()
+    adjustLoading.value = true
     
     const data = {
-      parts: proposeForm.value.parts
-        .filter(p => p.partId)
-        .map(p => ({
-          serviceTicketDetailId: null,
-          partId: parseInt(p.partId),
-          quantity: p.quantity
-        })),
-      garageServices: proposeForm.value.garageServices
-        .filter(s => s.garageServiceId)
-        .map(s => ({
-          serviceTicketDetailId: null,
-          garageServiceId: parseInt(s.garageServiceId),
-          quantity: s.quantity
-        }))
+      parts: selectedParts.value.map(p => ({
+        partId: p.partId,
+        quantity: p.quantity
+      })),
+      garageServices: selectedServices.value.map(s => ({
+        garageServiceId: s.garageServiceId
+      }))
     }
 
-    await serviceTicketService.proposePartsServices(
-      task.value.technicalTaskId,
-      currentUser.userId,
-      data
-    )
+    await technicalTaskService.adjust(task.value.technicalTaskId, data)
     
-    toast.success('Đã gửi đề xuất! Chờ staff duyệt.')
-    showProposeDialog.value = false
+    toast.success('Đã điều chỉnh phụ tùng/dịch vụ! Chờ staff xác nhận.')
+    showAdjustDialog.value = false
     await loadTask()
   } catch (error) {
-    toast.error('Lỗi khi gửi đề xuất', error.message)
+    toast.error('Lỗi khi điều chỉnh', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
-    proposeLoading.value = false
+    adjustLoading.value = false
   }
 }
 
@@ -574,7 +612,7 @@ onMounted(async () => {
     menuItems.value = getMenuByRole(user.role)
   }
 
-  await Promise.all([loadTask(), loadParts(), loadServices()])
+  await loadTask()
 })
 </script>
 
@@ -687,12 +725,159 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
-.price-display {
-  padding: 0.5rem;
-  background: white;
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  font-size: 0.75rem;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-primary {
+  background: rgba(255, 122, 0, 0.1);
   color: var(--primary, #ff7a00);
 }
+
+.badge-success {
+  background: rgba(16, 172, 132, 0.1);
+  color: var(--success, #10ac84);
+}
+
+.badge-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: var(--warning, #ffc107);
+}
+
+.badge-danger {
+  background: rgba(220, 53, 69, 0.1);
+  color: var(--danger, #dc3545);
+}
+
+.badge-info {
+  background: rgba(13, 202, 240, 0.1);
+  color: var(--info, #0dcaf0);
+}
+
+.badge-secondary {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+.adjust-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.adjust-section {
+  margin-bottom: 1.5rem;
+}
+
+.adjust-section h6 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--dark, #2c3a47);
+}
+
+.search-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 0.25rem;
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.result-info strong {
+  color: var(--dark, #2c3a47);
+  font-size: 0.9rem;
+}
+
+.result-meta {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.selected-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.selected-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.item-info strong {
+  color: var(--dark, #2c3a47);
+  font-size: 0.9rem;
+}
+
+.item-meta {
+  font-size: 0.85rem;
+  color: var(--primary, #ff7a00);
+  font-weight: 600;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem;
+}
 </style>
+
 
