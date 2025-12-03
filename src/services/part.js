@@ -54,8 +54,20 @@ class PartService {
     if (excludeId) {
       params.excludeId = excludeId
     }
-    return await api.get('/Part/check-code', { params })
+    return await api.get('/Part/check-code', params)
+  }
+
+  /**
+   * Tìm kiếm Part cho Select
+   * GET /api/Part/search?searchKeyword=xxx&limit=50
+   */
+  async search(searchKeyword = '', limit = 50) {
+    return await api.get('/Part/search', {
+      searchKeyword,
+      limit
+    })
   }
 }
 
 export default new PartService()
+

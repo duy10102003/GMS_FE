@@ -51,3 +51,4 @@ export const API_ENDPOINTS = {
     SHIFT: '/mechanic/shift',
   },
 }
+

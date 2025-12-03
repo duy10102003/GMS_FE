@@ -39,6 +39,18 @@ class GarageServiceService {
   async delete(id) {
     return await api.delete(`/GarageService/${id}`)
   }
+
+  /**
+   * Tìm kiếm Garage Service cho Select
+   * POST /api/GarageService/search
+   */
+  async search(searchKeyword = '', limit = 50) {
+    return await api.post('/GarageService/search', {
+      searchKeyword,
+      limit
+    })
+  }
 }
 
 export default new GarageServiceService()
+
