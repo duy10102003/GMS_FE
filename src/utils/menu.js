@@ -139,6 +139,13 @@ export const MANAGER_MENU = [
     permission: PERMISSIONS.VIEW_REVENUE
   },
   {
+    key: 'garage-services',
+    label: 'Dịch vụ garage',
+    icon: 'fa-tools',
+    path: '/manager/garage-services',
+    permission: PERMISSIONS.VIEW_REPORTS
+  },
+  {
     key: 'settings',
     label: 'Cài đặt hệ thống',
     icon: 'fa-cog',
@@ -216,4 +223,5 @@ export function getMenuByRole(role) {
   
   return menuMap[role] || []
 }
+
 
