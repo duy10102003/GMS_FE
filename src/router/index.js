@@ -51,6 +51,17 @@ const router = createRouter({
       path: '/manager/garage-services',
       name: 'manager-garage-services',
       component: () => import('../views/manager/GarageServicesView.vue')
+    },
+    // Stocker routes
+    {
+      path: '/stocker/part-categories',
+      name: 'stocker-part-categories',
+      component: () => import('../views/stocker/PartCategoriesView.vue')
+    },
+    {
+      path: '/stocker/parts',
+      name: 'stocker-parts',
+      component: () => import('../views/stocker/PartsView.vue')
     }
   ],
 })

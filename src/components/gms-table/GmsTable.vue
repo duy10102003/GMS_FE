@@ -17,12 +17,21 @@
             >
               <div class="gms-table-th-content">
                 {{ column.label }}
-                <i
-                  v-if="column.sortable"
-                  :class="getSortIcon(column.key)"
-                  class="fas gms-table-sort-icon"
-                  @click="handleSort(column.key)"
-                ></i>
+                <div class="gms-table-th-actions">
+                  <i
+                    v-if="column.filterable"
+                    class="fas fa-filter gms-table-filter-icon"
+                    @click.stop="handleFilterClick(column)"
+                    title="Lọc"
+                  ></i>
+                  <i
+                    v-if="column.sortable"
+                    :class="getSortIcon(column.key)"
+                    class="fas gms-table-sort-icon"
+                    @click.stop="handleSort(column.key)"
+                    title="Sắp xếp"
+                  ></i>
+                </div>
               </div>
             </th>
           </tr>
@@ -161,7 +170,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['row-click', 'sort', 'page-change'])
+const emit = defineEmits(['row-click', 'sort', 'page-change', 'filter-click'])
 
 const currentPage = ref(1)
 const sortKey = ref(props.sortBy)
@@ -250,6 +259,10 @@ const handleSort = (key) => {
   emit('sort', { key: sortKey.value, order: sortOrder.value })
 }
 
+const handleFilterClick = (column) => {
+  emit('filter-click', column)
+}
+
 const getSortIcon = (key) => {
   if (sortKey.value !== key) return 'fa-sort'
   return sortOrder.value === 'asc' ? 'fa-sort-up' : 'fa-sort-down'
@@ -319,17 +332,31 @@ watch(() => props.data, () => {
 .gms-table-th-content {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
-.gms-table-sort-icon {
+.gms-table-th-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.gms-table-sort-icon,
+.gms-table-filter-icon {
   cursor: pointer;
   color: #999;
   transition: color 0.2s;
+  font-size: 0.875rem;
 }
 
-.gms-table-sort-icon:hover {
+.gms-table-sort-icon:hover,
+.gms-table-filter-icon:hover {
   color: var(--primary, #ff7a00);
+}
+
+.gms-table-filter-icon {
+  margin-right: 0.25rem;
 }
 
 .gms-table tbody tr {
