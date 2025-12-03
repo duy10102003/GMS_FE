@@ -33,7 +33,7 @@
             <GmsButton
               variant="primary"
               icon="fa-plus"
-              @click="showCreateDialog = true"
+              @click="router.push('/staff/service-tickets/create')"
             >
               Tạo phiếu mới
             </GmsButton>
@@ -46,13 +46,11 @@
             <label>Trạng thái:</label>
             <select v-model="filters.status" class="filter-select" @change="applyFilters">
               <option value="">Tất cả trạng thái</option>
-              <option value="New">Mới</option>
-              <option value="Assigned">Đã phân công</option>
-              <option value="In Progress">Đang xử lý</option>
-              <option value="Completed">Hoàn tất</option>
-              <option value="Invoiced">Đã tạo hóa đơn</option>
-              <option value="Paid">Đã thanh toán</option>
-              <option value="Cancelled">Đã hủy</option>
+              <option :value="SERVICE_TICKET_STATUS.PENDING">Chờ xử lý</option>
+              <option :value="SERVICE_TICKET_STATUS.ASSIGNED">Đã phân công</option>
+              <option :value="SERVICE_TICKET_STATUS.IN_PROGRESS">Đang xử lý</option>
+              <option :value="SERVICE_TICKET_STATUS.COMPLETED">Hoàn thành</option>
+              <option :value="SERVICE_TICKET_STATUS.CANCELLED">Đã hủy</option>
             </select>
           </div>
           
@@ -105,67 +103,45 @@
           :columns="tableColumns"
           title="Danh sách phiếu dịch vụ"
           :loading="loading"
-          :pagination="true"
-          :page-size="pageSize"
+          :pagination="false"
           @row-click="handleRowClick"
           @sort="handleSort"
-          @page-change="handlePageChange"
         >
           <template #cell-customer="{ row }">
             <div>
-              <div class="customer-name">{{ row.customerName }}</div>
-              <div class="customer-phone">{{ row.customerPhone }}</div>
+              <div class="customer-name">{{ row.customer?.customerName }}</div>
+              <div class="customer-phone">{{ row.customer?.customerPhone }}</div>
             </div>
           </template>
           
           <template #cell-mechanic="{ row }">
-            <div v-if="row.mechanic" class="mechanic-info">
+            <div v-if="row.technicalTasks && row.technicalTasks.length > 0" class="mechanic-info">
               <img
-                :src="getAvatarUrl(row.mechanic.name)"
-                :alt="row.mechanic.name"
+                :src="getAvatarUrl(row.technicalTasks[0].assignedTo?.fullName || 'Mechanic')"
+                :alt="row.technicalTasks[0].assignedTo?.fullName"
                 class="mechanic-avatar"
               />
-              <span>{{ row.mechanic.name }}</span>
+              <span>{{ row.technicalTasks[0].assignedTo?.fullName }}</span>
             </div>
             <span v-else class="text-muted">Chưa phân công</span>
           </template>
           
-          <template #cell-status="{ row }">
-            <span :class="getStatusClass(row.status)">
-              {{ getStatusLabel(row.status) }}
+          <template #cell-serviceTicketStatus="{ row }">
+            <span :class="`badge badge-${getStatusColor(row.serviceTicketStatus)}`">
+              {{ getStatusLabel(row.serviceTicketStatus) }}
             </span>
           </template>
           
           <template #cell-actions="{ row }">
             <div class="action-buttons">
               <GmsButton
-                v-if="row.status === 'New'"
+                v-if="row.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING"
                 variant="primary"
                 size="small"
                 icon="fa-user-plus"
                 @click.stop="openAssignDialog(row)"
               >
                 Phân công
-              </GmsButton>
-              
-              <GmsButton
-                v-else-if="row.status === 'Assigned' || row.status === 'In Progress'"
-                variant="success"
-                size="small"
-                icon="fa-check-circle"
-                @click.stop="openCompleteDialog(row)"
-              >
-                Hoàn thành
-              </GmsButton>
-              
-              <GmsButton
-                v-else-if="row.status === 'Completed'"
-                variant="info"
-                size="small"
-                icon="fa-file-invoice"
-                @click.stop="createInvoice(row)"
-              >
-                Tạo hóa đơn
               </GmsButton>
               
               <GmsButton
@@ -179,6 +155,27 @@
             </div>
           </template>
         </GmsTable>
+        
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="pagination mt-4">
+          <GmsButton
+            variant="outline"
+            :disabled="currentPage === 1"
+            @click="goToPage(currentPage - 1)"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </GmsButton>
+          <span class="page-info">
+            Trang {{ currentPage }} / {{ totalPages }} (Tổng: {{ totalItems }})
+          </span>
+          <GmsButton
+            variant="outline"
+            :disabled="currentPage === totalPages"
+            @click="goToPage(currentPage + 1)"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </GmsButton>
+        </div>
       </main>
     </div>
     
@@ -188,59 +185,48 @@
       title="Phân công thợ sửa"
       size="medium"
     >
-      <div v-if="selectedTicket">
-        <p class="mb-3">
-          Chọn thợ phụ trách phiếu <strong>#{{ selectedTicket.code }}</strong>
-        </p>
-        
-        <div class="mechanic-grid">
-          <div
-            v-for="mechanic in availableMechanics"
-            :key="mechanic.id"
-            :class="['mechanic-card', { selected: selectedMechanic === mechanic.id }]"
-            @click="selectMechanic(mechanic.id)"
-          >
-            <img
-              :src="getAvatarUrl(mechanic.name)"
-              :alt="mechanic.name"
-              class="mechanic-card-avatar"
-            />
-            <div class="mechanic-card-name">{{ mechanic.name }}</div>
-            <div class="mechanic-card-info">
-              <span :class="mechanic.status === 'available' ? 'text-success' : 'text-warning'">
-                {{ mechanic.status === 'available' ? '🟢 Rảnh' : '🟠 Đang làm' }}
-              </span>
-              <span class="text-muted">{{ mechanic.tickets }} phiếu</span>
-            </div>
+      <template v-if="selectedTicket">
+        <form @submit.prevent="confirmAssign">
+          <p class="mb-3">
+            Chọn thợ phụ trách phiếu <strong>#{{ selectedTicket.serviceTicketCode }}</strong>
+          </p>
+          
+          <div class="mb-3">
+            <label>Chọn thợ:</label>
+            <select
+              v-model="assignForm.assignedToTechnical"
+              class="form-select"
+              required
+            >
+              <option value="">-- Chọn thợ --</option>
+              <option
+                v-for="mechanic in mechanics"
+                :key="mechanic.id"
+                :value="mechanic.id"
+              >
+                {{ mechanic.name }}
+              </option>
+            </select>
           </div>
-        </div>
-      </div>
-      
-      <template #footer>
-        <GmsButton variant="outline" @click="showAssignDialog = false">Hủy</GmsButton>
-        <GmsButton
-          variant="primary"
-          :disabled="!selectedMechanic"
-          @click="confirmAssign"
-        >
-          Xác nhận phân công
-        </GmsButton>
-      </template>
-    </GmsDialog>
-    
-    <!-- Complete Dialog -->
-    <GmsDialog
-      v-model="showCompleteDialog"
-      title="Xác nhận hoàn thành"
-      size="small"
-    >
-      <div v-if="selectedTicket">
-        <p>Bạn có chắc chắn phiếu <strong>#{{ selectedTicket.code }}</strong> đã hoàn tất sửa chữa?</p>
-      </div>
-      
-      <template #footer>
-        <GmsButton variant="outline" @click="showCompleteDialog = false">Hủy</GmsButton>
-        <GmsButton variant="success" @click="confirmComplete">Xác nhận</GmsButton>
+          
+          <div class="mb-3">
+            <label class="form-label">Mô tả công việc *</label>
+            <textarea
+              v-model="assignForm.description"
+              class="form-control"
+              rows="3"
+              placeholder="Nhập mô tả công việc cho thợ..."
+              required
+            ></textarea>
+          </div>
+          
+          <div class="dialog-actions">
+            <GmsButton type="button" variant="outline" @click="showAssignDialog = false">Hủy</GmsButton>
+            <GmsButton type="submit" variant="primary" :loading="loading">
+              Xác nhận phân công
+            </GmsButton>
+          </div>
+        </form>
       </template>
     </GmsDialog>
     
@@ -257,8 +243,13 @@ import { GmsInput, GmsButton, GmsTable, GmsDialog, GmsToast } from '@/components
 import { useToast } from '@/composables/useToast'
 import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
+import serviceTicketService from '@/services/serviceTicket'
 import api from '@/services/api'
-import { API_ENDPOINTS } from '@/constant/api'
+import {
+  SERVICE_TICKET_STATUS,
+  SERVICE_TICKET_STATUS_LABELS,
+  SERVICE_TICKET_STATUS_COLORS
+} from '@/constant/serviceTicketStatus'
 
 const router = useRouter()
 const toastRef = ref(null)
@@ -266,11 +257,12 @@ const toast = useToast()
 
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
-const showCreateDialog = ref(false)
 const showAssignDialog = ref(false)
-const showCompleteDialog = ref(false)
 const selectedTicket = ref(null)
-const selectedMechanic = ref(null)
+const assignForm = ref({
+  assignedToTechnical: '',
+  description: ''
+})
 const searchQuery = ref('')
 const pageSize = ref(10)
 const currentPage = ref(1)
@@ -280,6 +272,7 @@ const tickets = ref([])
 const mechanics = ref([])
 const notifications = ref([])
 const menuItems = ref([])
+const totalItems = ref(0)
 
 const filters = ref({
   status: '',
@@ -288,80 +281,23 @@ const filters = ref({
   toDate: ''
 })
 
+
 const tableColumns = ref([
-  { key: 'code', label: 'Mã phiếu', sortable: true },
+  { key: 'serviceTicketCode', label: 'Mã phiếu', sortable: true },
   { key: 'customer', label: 'Khách hàng' },
-  { key: 'plateNumber', label: 'Biển số', sortable: true },
-  { key: 'service', label: 'Dịch vụ' },
+  { key: 'vehicle.vehicleLicensePlate', label: 'Biển số', sortable: true },
+  { key: 'initialIssue', label: 'Vấn đề' },
   { key: 'mechanic', label: 'Thợ phụ trách' },
-  { key: 'status', label: 'Trạng thái', sortable: true },
-  { key: 'createdAt', label: 'Ngày tạo', sortable: true },
+  { key: 'serviceTicketStatus', label: 'Trạng thái', sortable: true },
+  { key: 'createdDate', label: 'Ngày tạo', sortable: true },
   { key: 'actions', label: 'Hành động' }
 ])
 
 // Computed
 const filteredTickets = computed(() => {
-  let result = [...tickets.value]
-  
-  // Search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(ticket =>
-      ticket.code.toLowerCase().includes(query) ||
-      ticket.customerName.toLowerCase().includes(query) ||
-      ticket.customerPhone.includes(query) ||
-      ticket.plateNumber.toLowerCase().includes(query) ||
-      ticket.service.toLowerCase().includes(query)
-    )
-  }
-  
-  // Status filter
-  if (filters.value.status) {
-    result = result.filter(ticket => ticket.status === filters.value.status)
-  }
-  
-  // Mechanic filter
-  if (filters.value.mechanic) {
-    result = result.filter(ticket =>
-      ticket.mechanic && ticket.mechanic.id === parseInt(filters.value.mechanic)
-    )
-  }
-  
-  // Date filters
-  if (filters.value.fromDate) {
-    result = result.filter(ticket => {
-      const ticketDate = new Date(ticket.createdAt)
-      return ticketDate >= new Date(filters.value.fromDate)
-    })
-  }
-  
-  if (filters.value.toDate) {
-    result = result.filter(ticket => {
-      const ticketDate = new Date(ticket.createdAt)
-      const toDate = new Date(filters.value.toDate)
-      toDate.setHours(23, 59, 59, 999)
-      return ticketDate <= toDate
-    })
-  }
-  
-  // Sort
-  if (sortConfig.value.key) {
-    result.sort((a, b) => {
-      const aVal = getNestedValue(a, sortConfig.value.key)
-      const bVal = getNestedValue(b, sortConfig.value.key)
-      
-      if (aVal < bVal) return sortConfig.value.order === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortConfig.value.order === 'asc' ? 1 : -1
-      return 0
-    })
-  }
-  
-  return result
+  return tickets.value
 })
 
-const availableMechanics = computed(() => {
-  return mechanics.value.filter(m => m.status === 'available' || m.tickets < 5)
-})
 
 // Methods
 const getAvatarUrl = (name) => {
@@ -369,29 +305,11 @@ const getAvatarUrl = (name) => {
 }
 
 const getStatusLabel = (status) => {
-  const labels = {
-    'New': 'Mới',
-    'Assigned': 'Đã phân công',
-    'In Progress': 'Đang xử lý',
-    'Completed': 'Hoàn tất',
-    'Invoiced': 'Đã tạo hóa đơn',
-    'Paid': 'Đã thanh toán',
-    'Cancelled': 'Đã hủy'
-  }
-  return labels[status] || status
+  return SERVICE_TICKET_STATUS_LABELS[status] || 'N/A'
 }
 
-const getStatusClass = (status) => {
-  const classes = {
-    'New': 'badge badge-info',
-    'Assigned': 'badge badge-primary',
-    'In Progress': 'badge badge-warning',
-    'Completed': 'badge badge-success',
-    'Invoiced': 'badge badge-info',
-    'Paid': 'badge badge-success',
-    'Cancelled': 'badge badge-danger'
-  }
-  return classes[status] || 'badge'
+const getStatusColor = (status) => {
+  return SERVICE_TICKET_STATUS_COLORS[status] || 'secondary'
 }
 
 const getNestedValue = (obj, path) => {
@@ -405,10 +323,12 @@ const getNestedValue = (obj, path) => {
 
 const handleSearch = () => {
   currentPage.value = 1
+  loadTickets()
 }
 
 const applyFilters = () => {
   currentPage.value = 1
+  loadTickets()
 }
 
 const clearFilters = () => {
@@ -420,58 +340,60 @@ const clearFilters = () => {
   }
   searchQuery.value = ''
   currentPage.value = 1
+  loadTickets()
 }
 
 const handleSort = ({ key, order }) => {
   sortConfig.value = { key, order }
+  loadTickets()
 }
 
-const handlePageChange = (page) => {
-  currentPage.value = page
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    loadTickets()
+  }
 }
+
+const totalPages = computed(() => {
+  return Math.ceil(totalItems.value / pageSize.value)
+})
 
 const handleRowClick = (row) => {
   viewDetail(row)
 }
 
 const viewDetail = (ticket) => {
-  router.push(`/staff/service-tickets/${ticket.id}`)
+  router.push(`/staff/service-tickets/${ticket.serviceTicketId}`)
 }
 
 const openAssignDialog = (ticket) => {
   selectedTicket.value = ticket
-  selectedMechanic.value = null
+  assignForm.value = {
+    assignedToTechnical: '',
+    description: ''
+  }
   showAssignDialog.value = true
   loadMechanics()
 }
 
-const selectMechanic = (mechanicId) => {
-  selectedMechanic.value = mechanicId
-}
 
 const confirmAssign = async () => {
-  if (!selectedMechanic.value || !selectedTicket.value) return
+  if (!assignForm.value.assignedToTechnical || !selectedTicket.value) {
+    toast.error('Vui lòng chọn thợ và nhập mô tả')
+    return
+  }
   
   try {
     loading.value = true
-    await api.put(`${API_ENDPOINTS.STAFF.SERVICE_TICKETS}/${selectedTicket.value.id}/assign`, {
-      mechanicId: selectedMechanic.value
+    await serviceTicketService.assign(selectedTicket.value.serviceTicketId, {
+      assignedToTechnical: parseInt(assignForm.value.assignedToTechnical),
+      description: assignForm.value.description
     })
     
-    // Update local data
-    const ticket = tickets.value.find(t => t.id === selectedTicket.value.id)
-    if (ticket) {
-      const mechanic = mechanics.value.find(m => m.id === selectedMechanic.value)
-      ticket.mechanic = mechanic
-      ticket.status = 'Assigned'
-      if (mechanic) {
-        mechanic.tickets++
-        mechanic.status = 'busy'
-      }
-    }
-    
     showAssignDialog.value = false
-    toast.success('Phân công thành công!', `Đã giao phiếu #${selectedTicket.value.code} cho thợ`)
+    toast.success('Phân công thành công!', `Đã giao phiếu #${selectedTicket.value.serviceTicketCode} cho thợ`)
+    await loadTickets()
   } catch (error) {
     toast.error('Lỗi khi phân công', error.message)
   } finally {
@@ -479,63 +401,74 @@ const confirmAssign = async () => {
   }
 }
 
-const openCompleteDialog = (ticket) => {
-  selectedTicket.value = ticket
-  showCompleteDialog.value = true
-}
-
-const confirmComplete = async () => {
-  if (!selectedTicket.value) return
-  
-  try {
-    loading.value = true
-    await api.put(`${API_ENDPOINTS.STAFF.SERVICE_TICKETS}/${selectedTicket.value.id}/complete`)
-    
-    // Update local data
-    const ticket = tickets.value.find(t => t.id === selectedTicket.value.id)
-    if (ticket) {
-      ticket.status = 'Completed'
-      if (ticket.mechanic) {
-        ticket.mechanic.tickets = Math.max(0, ticket.mechanic.tickets - 1)
-        if (ticket.mechanic.tickets === 0) {
-          ticket.mechanic.status = 'available'
-        }
-      }
-    }
-    
-    showCompleteDialog.value = false
-    toast.success('Hoàn thành!', `Phiếu #${selectedTicket.value.code} đã hoàn tất`)
-  } catch (error) {
-    toast.error('Lỗi khi hoàn thành', error.message)
-  } finally {
-    loading.value = false
-  }
-}
-
-const createInvoice = async (ticket) => {
-  try {
-    loading.value = true
-    await api.post(`${API_ENDPOINTS.STAFF.SERVICE_TICKETS}/${ticket.id}/invoice`)
-    
-    // Update local data
-    const t = tickets.value.find(t => t.id === ticket.id)
-    if (t) {
-      t.status = 'Invoiced'
-    }
-    
-    toast.success('Tạo hóa đơn thành công!', `Phiếu #${ticket.code} đã có hóa đơn`)
-  } catch (error) {
-    toast.error('Lỗi khi tạo hóa đơn', error.message)
-  } finally {
-    loading.value = false
-  }
-}
 
 const loadTickets = async () => {
   try {
     loading.value = true
-    const response = await api.get(API_ENDPOINTS.STAFF.SERVICE_TICKETS)
-    tickets.value = response.data || response
+    
+    // Build column filters
+    const columnFilters = []
+    
+    // Search filter
+    if (searchQuery.value) {
+      columnFilters.push({
+        columnName: 'ServiceTicketCode',
+        operator: 'contains',
+        value: searchQuery.value
+      })
+    }
+    
+    // Status filter
+    if (filters.value.status !== '') {
+      columnFilters.push({
+        columnName: 'ServiceTicketStatus',
+        operator: 'equals',
+        value: filters.value.status
+      })
+    }
+    
+    // Date filters
+    if (filters.value.fromDate) {
+      columnFilters.push({
+        columnName: 'CreatedDate',
+        operator: 'greater_or_equal',
+        value: filters.value.fromDate
+      })
+    }
+    
+    if (filters.value.toDate) {
+      columnFilters.push({
+        columnName: 'CreatedDate',
+        operator: 'less_or_equal',
+        value: filters.value.toDate
+      })
+    }
+    
+    // Build sort
+    const columnSorts = []
+    if (sortConfig.value.key) {
+      columnSorts.push({
+        columnName: sortConfig.value.key,
+        sortDirection: sortConfig.value.order === 'asc' ? 'ASC' : 'DESC'
+      })
+    } else {
+      // Default sort by created date DESC
+      columnSorts.push({
+        columnName: 'CreatedDate',
+        sortDirection: 'DESC'
+      })
+    }
+    
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      columnFilters,
+      columnSorts
+    }
+    
+    const response = await serviceTicketService.getPaging(params)
+    tickets.value = response.data.items || []
+    totalItems.value = response.data.total || 0
   } catch (error) {
     toast.error('Lỗi khi tải danh sách phiếu', error.message)
   } finally {
@@ -745,6 +678,33 @@ onMounted(async () => {
 
 .text-warning {
   color: var(--warning, #f7b731);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.page-info {
+  font-weight: 600;
+  color: var(--dark, #2c3a47);
+  min-width: 200px;
+  text-align: center;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
 }
 </style>
 

@@ -1,11 +1,23 @@
-<script setup></script>
-
 <template>
-   <TheHeader></TheHeader>
-   <TheSideBar></TheSideBar>
+  <router-view />
 </template>
+
 <script setup>
-import TheHeader from './layout/TheHeader.vue'
-import TheSideBar from './layout/TheSideBar.vue'
+// App.vue chỉ render router-view
+// Mỗi view sẽ tự quản lý layout của mình
 </script>
-<style scoped></style>
+
+<style>
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+</style>
