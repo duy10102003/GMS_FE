@@ -19,6 +19,16 @@ const router = createRouter({
       name: 'staff-service-ticket-detail',
       component: () => import('../views/staff/ServiceTicketDetailView.vue'),
       beforeEnter: [requireAuth, requireStaff]
+    },
+    {
+      path: '/customer/bookings',
+      name: 'customer-bookings',
+      component: () => import('../views/customer/BookingManagementView.vue')
+    },
+    {
+      path: '/customer/bookings/create',
+      name: 'customer-bookings-create',
+      component: () => import('../views/customer/BookingCreateView.vue')
     }
   ],
 })

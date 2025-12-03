@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaragePro - Booking Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #ff7a00;
+      --primary-dark: #e66d00;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 32px;
+    }
+
+    .menu {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .menu a {
+      display: block;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #ffe6d0;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .menu a.active,
+    .menu a:hover {
+      background: #ef6f00;
+      color: #fff;
+    }
+
+    .menu a i {
+      margin-right: 10px;
+    }
+
+    .sidebar-footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffe6d0;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #ffb36b;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #a84c00;
+    }
+
+    .logout-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 0;
+      text-align: center;
+      border-radius: 10px;
+      border: 1px solid #ffd6ad;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      background: #ffb36b;
+      color: #a84c00;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 28px 32px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .title-block h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .title-block p {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 12px 30px rgba(255, 122, 0, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* Card Table */
+    .table-card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .table-head,
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr 1fr 1fr 0.8fr;
+      padding: 16px 20px;
+      align-items: center;
+      column-gap: 12px;
+    }
+
+    .table-head {
+      background: #f3f4f6;
+      color: #475467;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+    }
+
+    .table-row {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s ease;
+    }
+
+    .table-row:hover {
+      background: #fdf7f2;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #111827;
+      font-weight: 600;
+    }
+
+    .cell.sub {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      font-weight: 700;
+    }
+
+    .cell .muted {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 999px;
+    }
+
+    .status.confirmed { background: #e7f7ed; color: #199853; }
+    .status.pending   { background: #fff3d8; color: #a47306; }
+    .status.completed { background: #e7edff; color: #3454c0; }
+
+    .action-link {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-link:hover {
+      color: var(--primary-dark);
+    }
+
+    @media (max-width: 1024px) {
+      .table-head,
+      .table-row {
+        grid-template-columns: 1.3fr 1.1fr 1fr;
+        row-gap: 12px;
+      }
+      .table-head span:nth-child(4),
+      .table-head span:nth-child(5),
+      .table-row .cell:nth-child(4),
+      .table-row .cell:nth-child(5) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { position: relative; width: 100%; height: auto; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; }
+      .main { padding: 20px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .table-head { display: none; }
+      .table-row {
+        grid-template-columns: 1fr;
+        border-radius: 14px;
+        margin-bottom: 12px;
+        box-shadow: var(--shadow);
+      }
+      .cell.sub { gap: 6px; }
+      .cell.sub .muted { font-size: 14px; }
+      .table-card { border: none; box-shadow: none; background: transparent; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div>
+      <div class="logo">GaragePro</div>
+      <ul class="menu">
+        <li><a class="active" href="#"><i class="fa-solid fa-calendar-check"></i>Bookings</a></li>
+        <li><a href="#"><i class="fa-solid fa-car"></i>Vehicles</a></li>
+        <li><a href="#"><i class="fa-solid fa-user"></i>Customers</a></li>
+        <li><a href="#"><i class="fa-solid fa-chart-column"></i>Reports</a></li>
+      </ul>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-box">
+        <div class="avatar">US</div>
+        <div>
+          <div class="muted" style="color:#fff;font-weight:700;">User</div>
+        </div>
+      </div>
+      <a class="logout-btn" href="#">Đăng xuất</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div class="title-block">
+        <h1>Booking Management</h1>
+        <p>Manage all vehicle bookings and reservations</p>
+      </div>
+      <button class="btn-primary"><i class="fa-solid fa-plus"></i>New Booking</button>
+    </div>
+
+    <section class="table-card">
+      <div class="table-head">
+        <span>Booking Time</span>
+        <span>Vehicle</span>
+        <span>Customer</span>
+        <span>Status</span>
+        <span>Actions</span>
+      </div>
+
+      <div class="table-row">
+        <div class="cell sub">
+          <span><i class="fa-regular fa-calendar"></i> 2025-01-15 14:30</span>
+        </div>
+        <div class="cell sub">
+          <span><i class="fa-solid fa-car-side"></i> Toyota Camry</span>
+          <span class="muted">2023</span>
+        </div>
+        <div class="cell sub">
+          <span>John Doe</span>
+          <span class="muted">+84 909 123 456</span>
+        </div>
+        <div class="cell">
+          <span class="status confirmed"><i class="fa-solid fa-circle-check"></i>Confirmed</span>
+        </div>
+        <div class="cell">
+          <a class="action-link" href="#">Details <i class="fa-solid fa-angle-down"></i></a>
+        </div>
+      </div>
+
+      <div class="table-row">
+        <div class="cell sub">
+          <span><i class="fa-regular fa-calendar"></i> 2025-01-16 10:00</span>
+        </div>
+        <div class="cell sub">
+          <span><i class="fa-solid fa-car-side"></i> Honda CR-V</span>
+          <span class="muted">2022</span>
+        </div>
+        <div class="cell sub">
+          <span>Jane Smith</span>
+          <span class="muted">+84 912 345 789</span>
+        </div>
+        <div class="cell">
+          <span class="status pending"><i class="fa-regular fa-clock"></i>Pending</span>
+        </div>
+        <div class="cell">
+          <a class="action-link" href="#">Details <i class="fa-solid fa-angle-down"></i></a>
+        </div>
+      </div>
+
+      <div class="table-row">
+        <div class="cell sub">
+          <span><i class="fa-regular fa-calendar"></i> 2025-01-17 16:45</span>
+        </div>
+        <div class="cell sub">
+          <span><i class="fa-solid fa-car-side"></i> BMW 328i</span>
+          <span class="muted">2024</span>
+        </div>
+        <div class="cell sub">
+          <span>Michael Johnson</span>
+          <span class="muted">+84 898 765 432</span>
+        </div>
+        <div class="cell">
+          <span class="status completed"><i class="fa-solid fa-circle-check"></i>Completed</span>
+        </div>
+        <div class="cell">
+          <a class="action-link" href="#">Details <i class="fa-solid fa-angle-down"></i></a>
+        </div>
+      </div>
+
+      <div class="table-row">
+        <div class="cell sub">
+          <span><i class="fa-regular fa-calendar"></i> 2025-01-18 09:15</span>
+        </div>
+        <div class="cell sub">
+          <span><i class="fa-solid fa-car-side"></i> Ford Focus</span>
+          <span class="muted">2021</span>
+        </div>
+        <div class="cell sub">
+          <span>Sarah Williams</span>
+          <span class="muted">+84 908 234 567</span>
+        </div>
+        <div class="cell">
+          <span class="status confirmed"><i class="fa-solid fa-circle-check"></i>Confirmed</span>
+        </div>
+        <div class="cell">
+          <a class="action-link" href="#">Details <i class="fa-solid fa-angle-down"></i></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

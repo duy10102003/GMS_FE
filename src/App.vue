@@ -1,11 +1,9 @@
-<script setup></script>
+<script setup>
+import { RouterView } from 'vue-router'
+</script>
 
 <template>
-   <TheHeader></TheHeader>
-   <TheSideBar></TheSideBar>
+  <RouterView />
 </template>
-<script setup>
-import TheHeader from './layout/TheHeader.vue'
-import TheSideBar from './layout/TheSideBar.vue'
-</script>
+
 <style scoped></style>
