@@ -104,6 +104,10 @@
         <GmsButton variant="primary" size="large" @click="scrollTo('service')">
           Khám phá ngay
         </GmsButton>
+        <GmsButton variant="primary" size="large" class="ms-2" @click="goToPublicBooking">
+          Đặt lịch sửa xe
+          <i class="fa-solid fa-arrow-right ms-2"></i>
+        </GmsButton>        
       </div>
     </section>
 
@@ -798,6 +802,9 @@ const goToHistory = () => {
 
 const goToSettings = () => {
   router.push('/customer/settings')
+}
+const goToPublicBooking = () => {
+  router.push('/customer/bookings/create')
 }
 
 onMounted(async () => {

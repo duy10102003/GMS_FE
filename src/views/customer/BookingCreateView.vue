@@ -1,6 +1,7 @@
 <template>
   <div class="booking-create">
     <TheSideBar
+      v-if="isAuthenticated"
       :collapsed="sidebarCollapsed"
       :menu-items="sidebarMenu"
       :collapsible="true"
@@ -8,34 +9,37 @@
       @logout="handleLogout"
     />
 
-    <div class="booking-create__content" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
+    <div
+      class="booking-create__content"
+      :style="isAuthenticated ? { marginLeft: sidebarCollapsed ? '80px' : '260px' } : { marginLeft: '0' }"
+    >
       <header class="page-header">
-        <button class="back-btn" @click="goBack">
+        <!-- <button class="back-btn" @click="goBack">
           <i class="fa-solid fa-arrow-left"></i>
           Back
-        </button>
+        </button> -->
         <div>
           <h1>Create New Booking</h1>
           <p>Add a new vehicle booking to the system</p>
         </div>
       </header>
 
-      <section class="form-card">
-        <h3>Customer Information</h3>
-        <div class="form-grid">
-          <div class="form-control">
-            <label>Customer Name</label>
-            <input v-model="form.customerName" type="text" placeholder="Enter customer name" />
-          </div>
-          <div class="form-control">
-            <label>Phone <span class="required">*</span></label>
-            <input v-model="form.phone" type="tel" placeholder="Enter phone number" />
-          </div>
-          <div class="form-control full">
-            <label>Email</label>
-            <input v-model="form.email" type="email" placeholder="Enter email address" />
-          </div>
-        </div>
+<section class="form-card">
+  <h3>Customer Information</h3>
+  <div class="form-grid">
+    <div class="form-control">
+      <label>Customer Name</label>
+      <input v-model="form.customerName" type="text" placeholder="Enter customer name" />
+    </div>
+    <div class="form-control">
+      <label>Phone <span class="required">*</span></label>
+      <input v-model="form.phone" type="tel" placeholder="Enter phone number" />
+    </div>
+    <div class="form-control full">
+      <label>Email</label>
+      <input v-model="form.email" type="email" placeholder="Enter email address" />
+    </div>
+  </div>
 
         <div class="divider"></div>
 
@@ -53,14 +57,6 @@
             <input v-model="form.vehicleName" type="text" placeholder="Enter vehicle name or model" />
           </div>
           <div class="form-control full">
-            <label>Booking Status</label>
-            <select v-model="form.status">
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
-          <div class="form-control full">
             <label>Notes</label>
             <textarea
               v-model="form.notes"
@@ -72,20 +68,32 @@
 
         <div class="form-actions">
           <button class="btn-outline" @click="goBack">Cancel</button>
-          <button class="btn-primary" @click="handleSubmit">Create Booking</button>
+          <button class="btn-primary" :disabled="submitting" @click="handleSubmit">
+            <span v-if="submitting">Saving...</span>
+            <span v-else>Create Booking</span>
+          </button>
         </div>
       </section>
+      <GmsToast ref="toastRef" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TheSideBar from '../../layout/TheSideBar.vue'
+import authService from '@/services/auth'
+import bookingService from '@/services/booking'
+import { useToast } from '@/composables/useToast'
+import { GmsToast } from '@/components'
 
 const router = useRouter()
+const toast = useToast()
+const toastRef = ref(null)
 const sidebarCollapsed = ref(false)
+const isAuthenticated = computed(() => authService.isAuthenticated())
+const submitting = ref(false)
 
 const sidebarMenu = [
   { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check', path: '/customer/bookings', exact: true },
@@ -100,23 +108,87 @@ const form = reactive({
   email: '',
   bookingTime: '',
   vehicleName: '',
-  status: 'pending',
   notes: ''
 })
 
 const goBack = () => {
-  router.push('/customer/bookings')
+  router.push('/home')
 }
 
-const handleSubmit = () => {
-  // Hook for future integration; for now just log payload
-  console.log('Create booking payload', { ...form })
-  goBack()
+const validateForm = () => {
+  if (!form.customerName.trim()) {
+    toast.error('Vui lòng nhập tên khách hàng')
+    return false
+  }
+  if (!form.phone.trim()) {
+    toast.error('Vui lòng nhập số điện thoại')
+    return false
+  }
+  if (!form.email.trim()) {
+    toast.error('Vui lòng nhập email')
+    return false
+  }
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailPattern.test(form.email.trim())) {
+    toast.error('Email không hợp lệ')
+    return false
+  }
+  if (!form.bookingTime) {
+    toast.error('Vui lòng chọn thời gian đặt lịch')
+    return false
+  }
+  if (!form.vehicleName.trim()) {
+    toast.error('Vui lòng nhập tên xe')
+    return false
+  }
+  return true
 }
 
-const handleLogout = () => {
-  console.log('logout clicked')
+const handleSubmit = async () => {
+  if (!validateForm()) return
+  try {
+    submitting.value = true
+    const payload = {
+      customerName: form.customerName?.trim() || 'Guest',
+      customerPhone: form.phone.trim(),
+      customerEmail: form.email?.trim() || null,
+      vehicleName: form.vehicleName?.trim() || null,
+      bookingTime: form.bookingTime ? new Date(form.bookingTime).toISOString() : null,
+      notes: form.notes?.trim() || null
+    }
+
+    if (isAuthenticated.value) {
+      await bookingService.createByUser(payload)
+    } else {
+      await bookingService.createByGuest(payload)
+    }
+
+    toast.success('Đặt lịch thành công. Vui lòng đăng nhập bằng email để xem danh sách booking.')
+    // Reset form fields
+    form.customerName = ''
+    form.phone = ''
+    form.email = ''
+    form.bookingTime = ''
+    form.vehicleName = ''
+    form.notes = ''
+  } catch (error) {
+    toast.error('Failed to create booking', error.message || error.userMsg || '')
+  } finally {
+    submitting.value = false
+  }
 }
+
+const handleLogout = async () => {
+  await authService.logout()
+  router.push('/')
+}
+
+onMounted(async () => {
+  if (toastRef.value) {
+    const { setToastInstance } = await import('@/composables/useToast')
+    setToastInstance(toastRef.value)
+  }
+})
 </script>
 
 <style scoped>
