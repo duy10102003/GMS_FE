@@ -1,278 +1,115 @@
 <template>
-  <header class="the-header">
-    <div class="the-header-left">
-      <h4 v-if="title" class="the-header-title">{{ title }}</h4>
-      <slot name="left"></slot>
+  <header class="main-header">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tim kiem bao cao hoac nhan su..." />
     </div>
-    
-    <div class="the-header-right">
-      <div v-if="showSearch" class="the-header-search">
-        <i class="fas fa-search"></i>
-        <input
-          v-model="searchQuery"
-          type="text"
-          :placeholder="searchPlaceholder"
-          @input="handleSearch"
-        />
-      </div>
-      
-      <!-- Notifications -->
-      <div v-if="showNotifications" class="the-header-notifications">
+
+    <div class="d-flex align-items-center">
+      <div class="dropdown me-3 position-relative">
         <button
-          class="the-header-notification-btn"
-          @click="toggleNotifications"
+          class="notification-btn"
+          id="notifDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
         >
           <i class="fas fa-bell"></i>
-          <span v-if="notificationCount > 0" class="the-header-notification-badge">
-            {{ notificationCount > 99 ? '99+' : notificationCount }}
-          </span>
+          <span class="notification-badge">5</span>
         </button>
-        
-        <div
-          v-if="notificationsOpen"
-          class="the-header-notification-dropdown"
-          @click.stop
+
+        <ul
+          class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 p-0"
+          aria-labelledby="notifDropdown"
         >
-          <div class="the-header-notification-header">
-            <h6>Thông báo</h6>
-            <button
-              v-if="notifications.length > 0"
-              class="the-header-notification-clear"
-              @click="clearNotifications"
-            >
-              Xóa tất cả
-            </button>
-          </div>
-          
-          <div v-if="notifications.length === 0" class="the-header-notification-empty">
-            <i class="fas fa-inbox"></i>
-            <p>Không có thông báo</p>
-          </div>
-          
-          <div v-else class="the-header-notification-list">
-            <div
-              v-for="notification in notifications"
-              :key="notification.id"
-              :class="['the-header-notification-item', { unread: !notification.read }]"
-              @click="handleNotificationClick(notification)"
-            >
-              <div :class="['the-header-notification-icon', `bg-${notification.type}`]">
-                <i :class="getNotificationIcon(notification.type)"></i>
+          <li class="dropdown-header py-3 px-3 border-bottom bg-light fw-semibold text-dark">
+            Thong bao quan ly
+          </li>
+
+          <li>
+            <a href="#" class="dropdown-item">
+              <div class="d-flex align-items-start">
+                <div class="notif-icon bg-success text-white me-3">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                  <strong>Doanh thu tang 12%</strong>
+                  <div class="small text-muted">So voi thang truoc.</div>
+                  <div class="notif-time">5 phut truoc</div>
+                </div>
               </div>
-              <div class="the-header-notification-content">
-                <strong>{{ notification.title }}</strong>
-                <p>{{ notification.message }}</p>
-                <span class="the-header-notification-time">{{ formatTime(notification.time) }}</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="#" class="dropdown-item">
+              <div class="d-flex align-items-start">
+                <div class="notif-icon bg-warning text-white me-3">
+                  <i class="fas fa-box"></i>
+                </div>
+                <div>
+                  <strong>Kho phu tung sap het hang</strong>
+                  <div class="small text-muted">Dau 5W30, loc nhot...</div>
+                  <div class="notif-time">20 phut truoc</div>
+                </div>
               </div>
-            </div>
-          </div>
-          
-          <div v-if="notifications.length > 0" class="the-header-notification-footer">
-            <a href="#" @click.prevent="viewAllNotifications">Xem tất cả</a>
-          </div>
-        </div>
+            </a>
+          </li>
+
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a href="#" class="dropdown-item text-center text-primary fw-semibold view-all">
+              Xem tat ca
+            </a>
+          </li>
+        </ul>
       </div>
-      
-      <!-- User Menu -->
-      <div v-if="user" class="the-header-user">
-        <button
-          class="the-header-user-btn"
-          @click="toggleUserMenu"
+
+      <div class="dropdown user-menu">
+        <a
+          href="#"
+          class="d-flex align-items-center text-decoration-none dropdown-toggle"
+          id="userDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
         >
           <img
-            :src="user.avatar || getAvatarUrl(user.name)"
-            :alt="user.name"
-            class="the-header-user-avatar"
+            src="https://ui-avatars.com/api/?name=K&background=FF7A00&color=fff"
+            alt="Avatar"
+            class="rounded-circle me-2"
+            width="40"
+            height="40"
           />
-          <span v-if="showUserName" class="the-header-user-name">{{ user.name }}</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        
-        <div
-          v-if="userMenuOpen"
-          class="the-header-user-dropdown"
-          @click.stop
-        >
-          <div class="the-header-user-info">
-            <img
-              :src="user.avatar || getAvatarUrl(user.name)"
-              :alt="user.name"
-            />
-            <div>
-              <strong>{{ user.name }}</strong>
-              <small>{{ getUserRoleLabel(user.role) }}</small>
-            </div>
-          </div>
-          
-          <div class="the-header-user-menu">
-            <a href="#" class="the-header-user-menu-item" @click.prevent="goToProfile">
-              <i class="fas fa-user"></i>
-              <span>Hồ sơ cá nhân</span>
+          <span class="fw-semibold text-dark d-none d-md-inline">{{ auth.user?.fullName }}</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="userDropdown">
+          <li>
+            <a class="dropdown-item" href="#"><i class="fas fa-user me-2 text-primary"></i> Ho so ca nhan</a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#"><i class="fas fa-cog me-2 text-secondary"></i> Cai dat</a>
+          </li>
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a class="dropdown-item text-danger" href="#" @click.prevent="emitLogout">
+              <i class="fas fa-sign-out-alt me-2"></i> Dang xuat
             </a>
-            <a href="#" class="the-header-user-menu-item" @click.prevent="goToSettings">
-              <i class="fas fa-cog"></i>
-              <span>Cài đặt</span>
-            </a>
-            <hr />
-            <a href="#" class="the-header-user-menu-item text-danger" @click.prevent="handleLogout">
-              <i class="fas fa-sign-out-alt"></i>
-              <span>Đăng xuất</span>
-            </a>
-          </div>
-        </div>
+          </li>
+        </ul>
       </div>
-      
-      <slot name="right"></slot>
     </div>
-    
-    <!-- Click outside to close dropdowns -->
-    <div
-      v-if="notificationsOpen || userMenuOpen"
-      class="the-header-overlay"
-      @click="closeAllDropdowns"
-    ></div>
   </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import authService from '../services/auth.js'
-import { ROLES } from '../constant/roles.js'
 
-const props = defineProps({
-  title: {
-    type: String,
-    default: ''
-  },
-  showSearch: {
-    type: Boolean,
-    default: false
-  },
-  searchPlaceholder: {
-    type: String,
-    default: 'Tìm kiếm...'
-  },
-  showNotifications: {
-    type: Boolean,
-    default: true
-  },
-  showUserName: {
-    type: Boolean,
-    default: true
-  },
-  notifications: {
-    type: Array,
-    default: () => []
-  }
-})
+import { useAuthStore } from '../stores/auth'
+const auth = useAuthStore()
 
-const emit = defineEmits(['search', 'notification-click', 'logout'])
+const emit = defineEmits(['logout'])
 
-const user = ref(authService.getCurrentUser())
-const searchQuery = ref('')
-const notificationsOpen = ref(false)
-const userMenuOpen = ref(false)
-
-const notificationCount = computed(() => {
-  return props.notifications.filter(n => !n.read).length
-})
-
-const getAvatarUrl = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=FF7A00&color=fff`
-}
-
-const getUserRoleLabel = (role) => {
-  const labels = {
-    [ROLES.CUSTOMER]: 'Khách hàng',
-    [ROLES.STAFF]: 'Nhân viên',
-    [ROLES.MANAGER]: 'Quản lý',
-    [ROLES.STOCKER]: 'Thủ kho',
-    [ROLES.MECHANIC]: 'Thợ sửa chữa',
-    [ROLES.ADMIN]: 'Quản trị viên'
-  }
-  return labels[role] || role
-}
-
-const getNotificationIcon = (type) => {
-  const icons = {
-    success: 'fa-check-circle',
-    warning: 'fa-exclamation-triangle',
-    info: 'fa-info-circle',
-    error: 'fa-exclamation-circle'
-  }
-  return `fas ${icons[type] || icons.info}`
-}
-
-const formatTime = (time) => {
-  if (!time) return ''
-  const now = new Date()
-  const timeDate = new Date(time)
-  const diff = now - timeDate
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  
-  if (minutes < 1) return 'Vừa xong'
-  if (minutes < 60) return `${minutes} phút trước`
-  if (hours < 24) return `${hours} giờ trước`
-  return `${days} ngày trước`
-}
-
-const handleSearch = () => {
-  emit('search', searchQuery.value)
-}
-
-const toggleNotifications = () => {
-  notificationsOpen.value = !notificationsOpen.value
-  userMenuOpen.value = false
-}
-
-const toggleUserMenu = () => {
-  userMenuOpen.value = !userMenuOpen.value
-  notificationsOpen.value = false
-}
-
-const closeAllDropdowns = () => {
-  notificationsOpen.value = false
-  userMenuOpen.value = false
-}
-
-const handleNotificationClick = (notification) => {
-  emit('notification-click', notification)
-}
-
-const clearNotifications = () => {
-  // Emit event to parent to clear notifications
-  emit('clear-notifications')
-}
-
-const viewAllNotifications = () => {
-  // Navigate to notifications page
-  closeAllDropdowns()
-}
-
-const goToProfile = () => {
-  closeAllDropdowns()
-  // Navigate to profile
-}
-
-const goToSettings = () => {
-  closeAllDropdowns()
-  // Navigate to settings
-}
-
-const handleLogout = () => {
-  closeAllDropdowns()
+const emitLogout = () => {
   emit('logout')
 }
-
-onMounted(() => {
-  document.addEventListener('click', closeAllDropdowns)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', closeAllDropdowns)
-})
 </script>
 
 <style scoped>

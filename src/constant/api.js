@@ -1,54 +1,59 @@
 /**
  * API Configuration
  */
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:8080/api'
+const DEFAULT_NODE_API = 'http://localhost:8080/api'
+const DEFAULT_SPRINGBOOT_API = 'http://localhost:8888/api'
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_NODE_API
+
+export const API_BASE_URL_SPRINGBOOT = import.meta.env.VITE_API_BASE_URL_SPRINGBOOT?.trim() || import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_SPRINGBOOT_API
 
 export const API_ENDPOINTS = {
-  // Auth
-  AUTH: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-    REGISTER: '/auth/register',
-    PROFILE: '/auth/profile',
-  },
+	// Auth
+	AUTH: {
+		LOGIN: '/auth/login',
+		LOGOUT: '/auth/logout',
+		REFRESH: '/auth/refresh',
+		REGISTER: '/auth/register',
+		PROFILE: '/auth/profile'
+	},
 
-  // Customer
-  CUSTOMER: {
-    VEHICLES: '/customers/vehicles',
-    SERVICE_TICKETS: '/customers/service-tickets',
-    INVOICES: '/customers/invoices',
-    PROFILE: '/customers/profile',
-  },
+	// Customer
+	CUSTOMER: {
+		VEHICLES: '/customers/vehicles',
+		SERVICE_TICKETS: '/customers/service-tickets',
+		INVOICES: '/customers/invoices',
+		PROFILE: '/customers/profile'
+	},
 
-  // Staff
-  STAFF: {
-    SERVICE_TICKETS: '/staff/service-tickets',
-    PAYMENTS: '/staff/payments',
-    INVENTORY_ALERTS: '/staff/inventory-alerts',
-  },
+	// Staff
+	STAFF: {
+		SERVICE_TICKETS: '/staff/service-tickets',
+		PAYMENTS: '/staff/payments',
+		INVENTORY_ALERTS: '/staff/inventory-alerts'
+	},
 
-  // Manager
-  MANAGER: {
-    REPORTS: '/manager/reports',
-    STAFF: '/manager/staff',
-    INVENTORY: '/manager/inventory',
-    REVENUE: '/manager/revenue',
-    RESTOCK_APPROVALS: '/manager/restock-approvals',
-  },
+	// Manager
+	MANAGER: {
+		REPORTS: '/manager/reports',
+		STAFF: '/manager/staff',
+		INVENTORY: '/manager/inventory',
+		REVENUE: '/manager/revenue',
+		RESTOCK_APPROVALS: '/manager/restock-approvals'
+	},
 
-  // Stoker
-  STOCKER: {
-    INVENTORY: '/stocker/inventory',
-    PARTS: '/stocker/parts',
-    RESTOCK_REQUESTS: '/stocker/restock-requests',
-  },
+	// Stoker
+	STOCKER: {
+		INVENTORY: '/stocker/inventory',
+		PARTS: '/stocker/parts',
+		RESTOCK_REQUESTS: '/stocker/restock-requests'
+	},
 
-  // Mechanic
-  MECHANIC: {
-    TICKETS: '/mechanic/tickets',
-    HISTORY: '/mechanic/history',
-    SHIFT: '/mechanic/shift',
-  },
+	// Mechanic
+	MECHANIC: {
+		TICKETS: '/mechanic/tickets',
+		HISTORY: '/mechanic/history',
+		SHIFT: '/mechanic/shift'
+	}
 }
 
