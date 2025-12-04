@@ -114,3 +114,73 @@ onBeforeUnmount(() => {
   }
 })
 </script>
+
+<style scoped>
+.verify-otp-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.otp-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.otp-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.otp-header h2 {
+  color: var(--primary, #ff7a00);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.otp-header p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.otp-inputs {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.otp-input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.otp-input:focus {
+  border-color: var(--primary, #ff7a00);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+}
+
+.text-center a {
+  color: var(--primary, #ff7a00);
+  text-decoration: none;
+}
+
+.text-center a.disabled {
+  color: #999;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+</style>
+
+
