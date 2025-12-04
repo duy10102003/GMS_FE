@@ -26,7 +26,7 @@
             <!-- Thông tin khách hàng -->
             <div class="form-section">
               <h5 class="section-title">
-                <i class="fas fa-user me-2"></i>Thông tin khách hàng *
+                <i class="fas fa-user me-2"></i>Thông tin khách hàng
               </h5>
 
               <div class="search-container">
@@ -725,10 +725,13 @@ const clearTechnical = () => {
 }
 
 const handleSubmit = async () => {
-  // Validation
-  if (!selectedCustomer.value && (!newCustomer.value.customerName || !newCustomer.value.customerPhone)) {
-    toast.error('Vui lòng chọn hoặc nhập thông tin khách hàng')
-    return
+  // Validation - Không bắt buộc chọn customer, có thể tạo mới khi nhập thông tin
+  // Nếu không chọn customer, phải nhập thông tin mới
+  if (!selectedCustomer.value) {
+    if (!newCustomer.value.customerName?.trim() || !newCustomer.value.customerPhone?.trim()) {
+      toast.error('Vui lòng chọn khách hàng hoặc nhập đầy đủ thông tin khách hàng mới (Tên và Số điện thoại)')
+      return
+    }
   }
 
   if (!selectedVehicle.value && (!newVehicle.value.vehicleName || !newVehicle.value.vehicleLicensePlate)) {

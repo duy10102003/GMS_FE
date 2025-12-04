@@ -21,12 +21,20 @@
           </GmsButton>
           <div class="header-actions">
             <GmsButton
-              v-if="task?.taskStatus === TASK_STATUS.PENDING"
+              v-if="canAdjust"
+              variant="info"
+              icon="fa-edit"
+              @click="showAdjustDialog = true"
+            >
+              Điều chỉnh phụ tùng/dịch vụ
+            </GmsButton>
+            <GmsButton
+              v-if="canStartInProgress"
               variant="primary"
               icon="fa-play"
-              @click="handleStartTask"
+              @click="handleStartInProgress"
             >
-              Bắt đầu công việc
+              Bắt đầu xử lý
             </GmsButton>
             <GmsButton
               v-if="canComplete"
@@ -35,14 +43,6 @@
               @click="handleCompleteTask"
             >
               Hoàn thành công việc
-            </GmsButton>
-            <GmsButton
-              v-if="canAdjust"
-              variant="info"
-              icon="fa-edit"
-              @click="showAdjustDialog = true"
-            >
-              Điều chỉnh phụ tùng/dịch vụ
             </GmsButton>
           </div>
         </div>
@@ -88,17 +88,17 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>Mã phiếu:</label>
-                <span class="value">{{ task.serviceTicket?.serviceTicketCode }}</span>
+                <span class="value">{{ task.serviceTicketCode || task.serviceTicket?.serviceTicketCode || `#${task.serviceTicketId}` }}</span>
               </div>
               <div class="info-item">
                 <label>Trạng thái phiếu:</label>
-                <span :class="`badge badge-${getServiceTicketStatusColor(task.serviceTicket?.serviceTicketStatus)}`">
-                  {{ getServiceTicketStatusLabel(task.serviceTicket?.serviceTicketStatus) }}
+                <span :class="`badge badge-${getServiceTicketStatusColor(task.serviceTicketStatus || task.serviceTicket?.serviceTicketStatus)}`">
+                  {{ getServiceTicketStatusLabel(task.serviceTicketStatus || task.serviceTicket?.serviceTicketStatus) }}
                 </span>
               </div>
               <div class="info-item">
                 <label>Vấn đề ban đầu:</label>
-                <span class="value">{{ task.serviceTicket?.initialIssue }}</span>
+                <span class="value">{{ task.serviceTicket?.initialIssue || 'Chưa có mô tả' }}</span>
               </div>
             </div>
           </div>
@@ -111,15 +111,15 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>Tên:</label>
-                <span class="value">{{ task.serviceTicket?.customer?.customerName }}</span>
+                <span class="value">{{ task.customer?.customerName || task.serviceTicket?.customer?.customerName }}</span>
               </div>
               <div class="info-item">
                 <label>Số điện thoại:</label>
-                <span class="value">{{ task.serviceTicket?.customer?.customerPhone }}</span>
+                <span class="value">{{ task.customer?.customerPhone || task.serviceTicket?.customer?.customerPhone }}</span>
               </div>
               <div class="info-item">
                 <label>Email:</label>
-                <span class="value">{{ task.serviceTicket?.customer?.customerEmail || 'N/A' }}</span>
+                <span class="value">{{ task.customer?.customerEmail || task.serviceTicket?.customer?.customerEmail || 'N/A' }}</span>
               </div>
             </div>
           </div>
@@ -132,19 +132,19 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>Tên xe:</label>
-                <span class="value">{{ task.serviceTicket?.vehicle?.vehicleName }}</span>
+                <span class="value">{{ task.vehicle?.vehicleName || task.serviceTicket?.vehicle?.vehicleName }}</span>
               </div>
               <div class="info-item">
                 <label>Biển số:</label>
-                <span class="value">{{ task.serviceTicket?.vehicle?.vehicleLicensePlate }}</span>
+                <span class="value">{{ task.vehicle?.vehicleLicensePlate || task.serviceTicket?.vehicle?.vehicleLicensePlate }}</span>
               </div>
               <div class="info-item">
                 <label>Hãng/Model:</label>
-                <span class="value">{{ task.serviceTicket?.vehicle?.make }} {{ task.serviceTicket?.vehicle?.model }}</span>
+                <span class="value">{{ (task.vehicle?.make || task.serviceTicket?.vehicle?.make) }} {{ (task.vehicle?.model || task.serviceTicket?.vehicle?.model) }}</span>
               </div>
               <div class="info-item">
                 <label>Số km:</label>
-                <span class="value">{{ task.serviceTicket?.vehicle?.currentKm?.toLocaleString() }} km</span>
+                <span class="value">{{ (task.vehicle?.currentKm || task.serviceTicket?.vehicle?.currentKm)?.toLocaleString() || 'N/A' }} km</span>
               </div>
             </div>
           </div>
@@ -189,6 +189,17 @@
     <!-- Adjust Dialog -->
     <GmsDialog v-model="showAdjustDialog" title="Điều chỉnh phụ tùng/dịch vụ" size="large">
       <div class="adjust-content">
+        <!-- Initial Issue Section -->
+        <div class="adjust-section">
+          <h6>Mô tả vấn đề ban đầu:</h6>
+          <textarea
+            v-model="adjustForm.initialIssue"
+            class="form-textarea"
+            rows="4"
+            placeholder="Nhập mô tả vấn đề ban đầu..."
+          ></textarea>
+        </div>
+
         <!-- Parts Section -->
         <div class="adjust-section">
           <h6>Phụ tùng:</h6>
@@ -289,6 +300,7 @@
               <div class="item-info">
                 <strong>{{ service.garageServiceName }}</strong>
                 <span class="item-meta">{{ formatPrice(service.price) }}</span>
+                <span class="text-muted small">(Số lượng: 1)</span>
               </div>
               <div class="item-actions">
                 <GmsButton
@@ -316,7 +328,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { TheHeader, TheSideBar } from '@/layout'
 import { GmsInput, GmsButton, GmsTable, GmsDialog, GmsToast } from '@/components'
@@ -324,8 +336,10 @@ import { useToast } from '@/composables/useToast'
 import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
 import technicalTaskService from '@/services/technicalTask'
+import serviceTicketService from '@/services/serviceTicket'
 import partService from '@/services/part'
 import garageServiceService from '@/services/garageService'
+import { useAuthStore } from '@/stores/auth'
 import {
   SERVICE_TICKET_STATUS,
   SERVICE_TICKET_STATUS_LABELS,
@@ -339,6 +353,7 @@ const route = useRoute()
 const router = useRouter()
 const toastRef = ref(null)
 const toast = useToast()
+const authStore = useAuthStore()
 
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
@@ -346,6 +361,13 @@ const task = ref(null)
 const menuItems = ref([])
 const showAdjustDialog = ref(false)
 const adjustLoading = ref(false)
+
+// Adjust form
+const adjustForm = ref({
+  initialIssue: '',
+  parts: [],
+  garageServices: []
+})
 
 // Search states
 const partSearchQuery = ref('')
@@ -373,18 +395,41 @@ const servicesColumns = ref([
 
 const canAdjust = computed(() => {
   if (!task.value) return false
-  // Có thể điều chỉnh khi service ticket status là PENDING_TECHNICAL_CONFIRMATION
-  return task.value.serviceTicket?.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION
+  // API trả về serviceTicketStatus trực tiếp trong task object
+  const status = task.value.serviceTicketStatus || task.value.serviceTicket?.serviceTicketStatus
+  if (status === undefined || status === null) return false
+  // Normalize status to number for comparison
+  const statusNum = Number(status)
+  // Có thể điều chỉnh khi service ticket status là PENDING_TECHNICAL_CONFIRMATION (0)
+  return statusNum === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION ||
+         status === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION ||
+         status === 0 || status === '0'
 })
 
-const canStart = computed(() => {
+const canStartInProgress = computed(() => {
   if (!task.value) return false
-  return task.value.taskStatus === TASK_STATUS.PENDING
+  // API trả về serviceTicketStatus trực tiếp trong task object
+  const status = task.value.serviceTicketStatus || task.value.serviceTicket?.serviceTicketStatus
+  if (status === undefined || status === null) return false
+  // Normalize status to number for comparison
+  const statusNum = Number(status)
+  // Có thể bắt đầu xử lý khi service ticket status là ADJUSTED_BY_TECHNICAL (1)
+  return statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         status === 1 || status === '1'
 })
 
 const canComplete = computed(() => {
   if (!task.value) return false
-  return task.value.taskStatus === TASK_STATUS.IN_PROGRESS
+  // API trả về serviceTicketStatus trực tiếp trong task object
+  const status = task.value.serviceTicketStatus || task.value.serviceTicket?.serviceTicketStatus
+  if (status === undefined || status === null) return false
+  // Normalize status to number for comparison
+  const statusNum = Number(status)
+  // Có thể hoàn thành khi service ticket status là IN_PROGRESS (2)
+  return statusNum === SERVICE_TICKET_STATUS.IN_PROGRESS ||
+         status === SERVICE_TICKET_STATUS.IN_PROGRESS ||
+         status === 2 || status === '2'
 })
 
 const getTaskStatusLabel = (status) => {
@@ -417,7 +462,54 @@ const loadTask = async () => {
   try {
     loading.value = true
     const response = await technicalTaskService.getById(route.params.id)
-    task.value = response.data
+    
+    // Debug: Log raw response
+    console.log('=== RAW API RESPONSE ===')
+    console.log('Full response:', response)
+    console.log('Response.data:', response.data)
+    console.log('Response.data type:', typeof response.data)
+    console.log('========================')
+    
+    task.value = response.data || response
+
+    // Debug: Log full task object structure
+    console.log('=== MECHANIC TASK DETAIL DEBUG ===')
+    console.log('Task ID:', task.value?.technicalTaskId)
+    console.log('Task Status:', task.value?.taskStatus)
+    console.log('Service Ticket ID:', task.value?.serviceTicketId)
+    console.log('Service Ticket Status (direct):', task.value?.serviceTicketStatus, '(type:', typeof task.value?.serviceTicketStatus, ')')
+    console.log('Status values:', {
+      PENDING_TECHNICAL_CONFIRMATION: SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION,
+      ADJUSTED_BY_TECHNICAL: SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL,
+      IN_PROGRESS: SERVICE_TICKET_STATUS.IN_PROGRESS,
+      COMPLETED: SERVICE_TICKET_STATUS.COMPLETED
+    })
+    console.log('Computed values:', {
+      canAdjust: canAdjust.value,
+      canStartInProgress: canStartInProgress.value,
+      canComplete: canComplete.value
+    })
+    console.log('===================================')
+
+    // If service ticket is not nested, try to load it separately for full details
+    if (!task.value.serviceTicket && task.value.serviceTicketId) {
+      try {
+        const ticketResponse = await serviceTicketService.getById(task.value.serviceTicketId)
+        task.value.serviceTicket = ticketResponse.data || ticketResponse
+      } catch (error) {
+        console.error('Error loading service ticket:', error)
+      }
+    }
+
+    // Initialize adjust form with current data
+    // API có thể trả về initialIssue trong serviceTicket hoặc cần load riêng
+    if (task.value.serviceTicket?.initialIssue) {
+      adjustForm.value.initialIssue = task.value.serviceTicket.initialIssue
+    } else if (task.value.serviceTicketId) {
+      // Nếu chưa có initialIssue, có thể load từ service ticket
+      // Hoặc để user nhập mới
+      adjustForm.value.initialIssue = ''
+    }
 
     // Initialize selected parts and services from task
     if (task.value.parts) {
@@ -434,6 +526,7 @@ const loadTask = async () => {
         garageServiceId: s.garageService?.garageServiceId || s.garageServiceId,
         garageServiceName: s.garageService?.garageServiceName || '',
         price: s.garageService?.garageServicePrice || 0
+        // Không cần quantity, mặc định là 1
       }))
     }
   } catch (error) {
@@ -452,7 +545,8 @@ const searchParts = async () => {
   try {
     partSearchLoading.value = true
     const response = await partService.search(partSearchQuery.value.trim(), 20)
-    partSearchResults.value = response.data || response || []
+    // API trả về { success: true, data: [], message: "..." }
+    partSearchResults.value = response?.data || response || []
   } catch (error) {
     console.error('Error searching parts:', error)
     partSearchResults.value = []
@@ -516,6 +610,7 @@ const addService = (service) => {
     garageServiceId: service.garageServiceId,
     garageServiceName: service.garageServiceName,
     price: service.garageServicePrice || 0
+    // Không cần quantity, mặc định là 1
   })
 
   garageServiceSearchQuery.value = ''
@@ -526,17 +621,37 @@ const removeService = (index) => {
   selectedServices.value.splice(index, 1)
 }
 
-const handleStartTask = async () => {
-  if (!confirm('Bạn có chắc muốn bắt đầu công việc này?')) return
+const handleStartInProgress = async () => {
+  if (!confirm('Bạn có chắc muốn bắt đầu xử lý công việc này?')) return
+
+  // API trả về serviceTicketId trực tiếp trong task object
+  const serviceTicketId = task.value?.serviceTicketId || task.value?.serviceTicket?.serviceTicketId
+  if (!serviceTicketId) {
+    toast.error('Không tìm thấy service ticket ID')
+    return
+  }
 
   try {
     loading.value = true
-    // Khi bắt đầu task, service ticket status sẽ tự động chuyển sang IN_PROGRESS
-    // Thông qua việc staff xác nhận điều chỉnh (confirm adjustment)
-    // Ở đây, mechanic chỉ cần đợi staff xác nhận
-    toast.info('Vui lòng đợi staff xác nhận điều chỉnh để bắt đầu công việc')
+    
+    // Lấy userId từ auth store hoặc authService
+    const currentUser = authStore.user || authService.getCurrentUser()
+    const modifiedBy = currentUser?.userId
+    
+    if (!modifiedBy || modifiedBy === 0) {
+      toast.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.')
+      return
+    }
+
+    await serviceTicketService.setStatusInProgress(serviceTicketId, {
+      modifiedBy,
+      note: 'Mechanic bắt đầu xử lý công việc'
+    })
+
+    toast.success('Đã bắt đầu xử lý công việc!')
+    await loadTask()
   } catch (error) {
-    toast.error('Lỗi khi bắt đầu công việc', error.message || error.userMsg || 'Có lỗi xảy ra')
+    toast.error('Lỗi khi bắt đầu xử lý', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
@@ -545,9 +660,28 @@ const handleStartTask = async () => {
 const handleCompleteTask = async () => {
   if (!confirm('Bạn có chắc công việc đã hoàn thành?')) return
 
+  // API trả về serviceTicketId trực tiếp trong task object
+  const serviceTicketId = task.value?.serviceTicketId || task.value?.serviceTicket?.serviceTicketId
+  if (!serviceTicketId) {
+    toast.error('Không tìm thấy service ticket ID')
+    return
+  }
+
   try {
     loading.value = true
+    
+    // Lấy userId từ auth store hoặc authService
+    const currentUser = authStore.user || authService.getCurrentUser()
+    const modifiedBy = currentUser?.userId
+    
+    if (!modifiedBy || modifiedBy === 0) {
+      toast.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.')
+      return
+    }
+
+    // Hoàn thành technical task - API tự động cập nhật serviceTicketStatus thành Completed (3)
     await technicalTaskService.complete(task.value.technicalTaskId)
+
     toast.success('Đã hoàn thành công việc!')
     await loadTask()
   } catch (error) {
@@ -558,8 +692,8 @@ const handleCompleteTask = async () => {
 }
 
 const handleAdjust = async () => {
-  if (selectedParts.value.length === 0 && selectedServices.value.length === 0) {
-    toast.error('Vui lòng chọn ít nhất một phụ tùng hoặc dịch vụ')
+  if (selectedParts.value.length === 0 && selectedServices.value.length === 0 && !adjustForm.value.initialIssue?.trim()) {
+    toast.error('Vui lòng chỉnh sửa ít nhất một thông tin (mô tả vấn đề, phụ tùng hoặc dịch vụ)')
     return
   }
 
@@ -571,20 +705,60 @@ const handleAdjust = async () => {
     }
   }
 
+  // Services không cần validate quantity, mặc định là 1
+
+  // API trả về serviceTicketId trực tiếp trong task object
+  const serviceTicketId = task.value?.serviceTicketId || task.value?.serviceTicket?.serviceTicketId
+  if (!serviceTicketId) {
+    toast.error('Không tìm thấy service ticket ID')
+    return
+  }
+
   try {
     adjustLoading.value = true
+    
+    // Lấy userId từ auth store hoặc authService
+    const currentUser = authStore.user || authService.getCurrentUser()
+    const modifiedBy = currentUser?.userId
+    
+    if (!modifiedBy || modifiedBy === 0) {
+      toast.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.')
+      return
+    }
 
-    const data = {
+    // Điều chỉnh parts và services qua technicalTaskService.adjust
+    const adjustData = {
       parts: selectedParts.value.map(p => ({
         partId: p.partId,
         quantity: p.quantity
       })),
       garageServices: selectedServices.value.map(s => ({
-        garageServiceId: s.garageServiceId
+        garageServiceId: s.garageServiceId,
+        quantity: 1  // Mặc định quantity = 1 cho garage services
       }))
     }
 
-    await technicalTaskService.adjust(task.value.technicalTaskId, data)
+    // API adjust tự động cập nhật serviceTicketStatus thành AdjustedByTechnical (1)
+    await technicalTaskService.adjust(task.value.technicalTaskId, adjustData)
+
+    // Cập nhật service ticket với initialIssue và garageServiceIds (nếu có thay đổi)
+    const updatePayload = {
+      modifiedBy,
+      serviceTicketCode: task.value.serviceTicketCode || '', // Giữ ServiceTicketCode
+      parts: selectedParts.value.map(p => ({
+        partId: p.partId,
+        quantity: p.quantity
+      })),
+      garageServiceIds: selectedServices.value.map(s => s.garageServiceId) // Gửi garageServiceIds, không cần quantity
+    }
+
+    // Thêm initialIssue nếu có
+    if (adjustForm.value.initialIssue?.trim()) {
+      updatePayload.initialIssue = adjustForm.value.initialIssue.trim()
+    }
+
+    // Cập nhật service ticket (giữ nguyên ServiceTicketCode và các thông tin khác)
+    await serviceTicketService.update(serviceTicketId, updatePayload)
 
     toast.success('Đã điều chỉnh phụ tùng/dịch vụ! Chờ staff xác nhận.')
     showAdjustDialog.value = false
@@ -877,6 +1051,27 @@ onMounted(async () => {
 
 .me-2 {
   margin-right: 0.5rem;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary, #ff7a00);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+}
+
+.form-textarea::placeholder {
+  color: #999;
 }
 </style>
 

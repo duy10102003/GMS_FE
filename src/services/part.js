@@ -59,12 +59,13 @@ class PartService {
 
 	/**
 	 * Tìm kiếm Part cho Select
-	 * GET /api/Part/search?searchKeyword=xxx&limit=50
+	 * POST /api/Part/search
+	 * Request Body: { "searchKeyword": "string", "limit": 0 }
 	 */
 	async search(searchKeyword = '', limit = 50) {
-		return await api.get('/Part/search', {
-			searchKeyword,
-			limit
+		return await api.post('/Part/search', {
+			searchKeyword: searchKeyword || '',
+			limit: limit || 0
 		})
 	}
 }

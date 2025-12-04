@@ -34,15 +34,23 @@
 					<GmsTable :data="tickets" :columns="tableColumns" title="Danh sách phiếu dịch vụ" :loading="loading" :pagination="false" :scrollable="true" @sort="handleSort" @filter-click="openFilterModal">
 						<template #cell-customer="{ row }">
 							<div>
-								<div class="customer-name">{{ row.customer?.customerName || 'N/A' }}</div>
-								<div class="customer-phone">{{ row.customer?.customerPhone || '' }}</div>
+								<div class="customer-name">
+									{{ row.customer?.customerName || row.customerName || 'N/A' }}
+								</div>
+								<div class="customer-phone">
+									{{ row.customer?.customerPhone || row.customerPhone || '' }}
+								</div>
 							</div>
 						</template>
 
 						<template #cell-vehicle="{ row }">
 							<div>
-								<div class="vehicle-name">{{ row.vehicle?.vehicleName || 'N/A' }}</div>
-								<div class="vehicle-plate">{{ row.vehicle?.vehicleLicensePlate || '' }}</div>
+								<div class="vehicle-name">
+									{{ row.vehicle?.vehicleName || row.vehicleName || 'N/A' }}
+								</div>
+								<div class="vehicle-plate">
+									{{ row.vehicle?.vehicleLicensePlate || row.vehicleLicensePlate || '' }}
+								</div>
 							</div>
 						</template>
 
@@ -61,6 +69,14 @@
 
 						<template #cell-createdDate="{ row }">
 							{{ formatDate(row.createdDate) }}
+						</template>
+
+						<template #cell-createdBy="{ row }">
+							{{ row.createdByUser?.fullName || row.createdByName || 'N/A' }}
+						</template>
+
+						<template #cell-modifiedDate="{ row }">
+							{{ formatDate(row.modifiedDate) }}
 						</template>
 
 						<template #cell-actions="{ row }">
@@ -240,6 +256,8 @@
 		{ key: 'mechanic', label: 'Thợ phụ trách', sortable: false, filterable: false },
 		{ key: 'serviceTicketStatus', label: 'Trạng thái', sortable: true, filterable: true, isNumeric: true },
 		{ key: 'createdDate', label: 'Ngày tạo', sortable: true, filterable: true, isDate: true },
+		{ key: 'createdBy', label: 'Người tạo', sortable: false, filterable: false },
+		{ key: 'modifiedDate', label: 'Ngày cập nhật', sortable: true, filterable: true, isDate: true },
 		{ key: 'actions', label: 'Hành động', filterable: false }
 	])
 
@@ -562,8 +580,21 @@
 			}
 
 			const response = await serviceTicketService.getPaging(params)
-			tickets.value = response.data.items || []
-			totalItems.value = response.data.total || 0
+			const items = response.data?.items || response.data || []
+			
+			// Debug: Log response để kiểm tra cấu trúc
+			console.log('=== SERVICE TICKETS LIST DEBUG ===')
+			console.log('Full response:', response)
+			console.log('Items:', items)
+			if (items.length > 0) {
+				console.log('First item structure:', items[0])
+				console.log('First item customer:', items[0].customer)
+				console.log('First item vehicle:', items[0].vehicle)
+			}
+			console.log('===================================')
+			
+			tickets.value = items
+			totalItems.value = response.data?.total || 0
 		} catch (error) {
 			toast.error('Lỗi khi tải danh sách phiếu', error.message || error.userMsg || 'Có lỗi xảy ra')
 		} finally {

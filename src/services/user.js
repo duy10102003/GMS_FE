@@ -5,10 +5,10 @@ import api from './api.js'
  */
 class UserService {
   /**
-   * Lấy danh sách Technical Staff với trạng thái
-   * GET /api/User/technical-staff?roleName=TechnicalStaff
+   * Lấy danh sách Technical Staff với trạng thái (role MECHANIC)
+   * GET /api/User/technical-staff?roleName=MECHANIC
    */
-  async getTechnicalStaff(roleName = 'TechnicalStaff') {
+  async getTechnicalStaff(roleName = 'MECHANIC') {
     return await api.get('/User/technical-staff', {
       roleName
     })
