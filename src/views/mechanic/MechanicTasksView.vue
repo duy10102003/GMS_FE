@@ -6,14 +6,14 @@
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
-    
+
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
         title="Danh sách công việc"
         :show-search="false"
         @logout="handleLogout"
       />
-      
+
       <main class="main-content" style="margin-top: 70px; padding: 2rem;">
         <!-- Toolbar -->
         <div class="toolbar">
@@ -40,7 +40,7 @@
               <option :value="TASK_STATUS.COMPLETED">Hoàn thành</option>
             </select>
           </div>
-          
+
           <div class="filter-group">
             <label>Trạng thái phiếu:</label>
             <select v-model="filters.serviceTicketStatus" class="filter-select" @change="loadTasks">
@@ -51,7 +51,7 @@
               <option :value="SERVICE_TICKET_STATUS.COMPLETED">Hoàn thành</option>
             </select>
           </div>
-          
+
           <GmsButton variant="outline" icon="fa-times" @click="clearFilters">
             Xóa bộ lọc
           </GmsButton>
@@ -157,7 +157,7 @@
             >
               <i class="fas fa-chevron-left"></i>
             </GmsButton>
-            
+
             <div class="pagination-pages">
               <button
                 v-for="page in visiblePages"
@@ -169,7 +169,7 @@
                 {{ page }}
               </button>
             </div>
-            
+
             <GmsButton
               variant="outline"
               size="small"
@@ -239,15 +239,15 @@ const visiblePages = computed(() => {
   const maxVisible = 5
   let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
   let end = Math.min(totalPages.value, start + maxVisible - 1)
-  
+
   if (end - start < maxVisible - 1) {
     start = Math.max(1, end - maxVisible + 1)
   }
-  
+
   for (let i = start; i <= end; i++) {
     pages.push(i)
   }
-  
+
   return pages
 })
 

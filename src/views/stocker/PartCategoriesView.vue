@@ -6,7 +6,7 @@
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
-    
+
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
         title="Quản lý danh mục phụ tùng"
@@ -14,7 +14,7 @@
         :notifications="notifications"
         @logout="handleLogout"
       />
-      
+
       <main class="main-content" style="margin-top: 70px; padding: 2rem;">
         <!-- Toolbar -->
         <div class="toolbar">
@@ -28,7 +28,7 @@
               @input="handleSearch"
             />
           </div>
-          
+
           <div class="toolbar-right">
             <GmsButton
               variant="primary"
@@ -39,7 +39,7 @@
             </GmsButton>
           </div>
         </div>
-        
+
         <!-- Active Filters -->
         <div v-if="activeFilters.length > 0" class="active-filters">
           <span class="filter-label">Bộ lọc đang áp dụng:</span>
@@ -62,7 +62,7 @@
             Xóa tất cả
           </GmsButton>
         </div>
-        
+
         <!-- Table -->
         <div class="table-container">
           <GmsTable
@@ -80,7 +80,7 @@
                 {{ row.status || 'N/A' }}
               </span>
             </template>
-            
+
             <template #cell-actions="{ row }">
               <div class="action-buttons">
                 <GmsButton
@@ -91,7 +91,7 @@
                 >
                   Sửa
                 </GmsButton>
-                
+
                 <GmsButton
                   variant="danger"
                   size="small"
@@ -104,7 +104,7 @@
             </template>
           </GmsTable>
         </div>
-        
+
         <!-- Pagination -->
         <div v-if="totalItems > 0" class="pagination mt-4">
           <div class="pagination-left">
@@ -130,7 +130,7 @@
             >
               <i class="fas fa-chevron-left"></i>
             </GmsButton>
-            
+
             <div class="pagination-pages">
               <button
                 v-for="page in visiblePages"
@@ -142,7 +142,7 @@
                 {{ page }}
               </button>
             </div>
-            
+
             <GmsButton
               variant="outline"
               size="small"
@@ -155,7 +155,7 @@
         </div>
       </main>
     </div>
-    
+
     <!-- Column Filter Modal -->
     <GmsDialog
       v-model="showFilterModal"
@@ -176,7 +176,7 @@
             <option value="not_empty">Không rỗng</option>
           </select>
         </div>
-        
+
         <div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
           <label class="form-label">Giá trị:</label>
           <GmsInput
@@ -184,7 +184,7 @@
             :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`"
           />
         </div>
-        
+
         <div class="dialog-actions">
           <GmsButton type="button" variant="outline" @click="closeFilterModal">Hủy</GmsButton>
           <GmsButton type="button" variant="outline" @click="clearCurrentFilter">Xóa bộ lọc</GmsButton>
@@ -192,7 +192,7 @@
         </div>
       </div>
     </GmsDialog>
-    
+
     <!-- Create/Edit Dialog -->
     <GmsDialog
       v-model="showFormDialog"
@@ -211,7 +211,7 @@
           />
           <small v-if="codeExists" class="text-danger">Mã danh mục đã tồn tại</small>
         </div>
-        
+
         <div class="mb-3">
           <label class="form-label">Tên danh mục</label>
           <GmsInput
@@ -220,7 +220,7 @@
             :maxlength="100"
           />
         </div>
-        
+
         <div class="mb-3">
           <label class="form-label">Mô tả</label>
           <textarea
@@ -231,7 +231,7 @@
             :maxlength="255"
           ></textarea>
         </div>
-        
+
         <div class="mb-3">
           <label class="form-label">Số điện thoại</label>
           <GmsInput
@@ -240,7 +240,7 @@
             :maxlength="50"
           />
         </div>
-        
+
         <div class="mb-3">
           <label class="form-label">Trạng thái</label>
           <select v-model="formData.status" class="form-select">
@@ -249,7 +249,7 @@
             <option value="Inactive">Inactive</option>
           </select>
         </div>
-        
+
         <div class="dialog-actions">
           <GmsButton type="button" variant="outline" @click="closeFormDialog">Hủy</GmsButton>
           <GmsButton type="submit" variant="primary" :loading="submitting" :disabled="codeExists">
@@ -258,7 +258,7 @@
         </div>
       </form>
     </GmsDialog>
-    
+
     <!-- Delete Confirmation Dialog -->
     <GmsDialog
       v-model="showDeleteDialog"
@@ -268,7 +268,7 @@
       <template v-if="selectedCategory">
         <p>Bạn có chắc chắn muốn xóa danh mục <strong>{{ selectedCategory.partCategoryName || selectedCategory.partCategoryCode }}</strong>?</p>
         <p class="text-muted small">Danh mục sẽ bị xóa mềm (soft delete) và có thể khôi phục sau.</p>
-        
+
         <div class="dialog-actions">
           <GmsButton type="button" variant="outline" @click="showDeleteDialog = false">Hủy</GmsButton>
           <GmsButton variant="danger" :loading="deleting" @click="confirmDelete">
@@ -277,7 +277,7 @@
         </div>
       </template>
     </GmsDialog>
-    
+
     <!-- Toast -->
     <GmsToast ref="toastRef" />
   </div>
@@ -363,21 +363,21 @@ const visiblePages = computed(() => {
   const maxVisible = 5
   let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
   let end = Math.min(totalPages.value, start + maxVisible - 1)
-  
+
   if (end - start < maxVisible - 1) {
     start = Math.max(1, end - maxVisible + 1)
   }
-  
+
   for (let i = start; i <= end; i++) {
     pages.push(i)
   }
-  
+
   return pages
 })
 
 // Methods
 const getFilterLabel = (filter) => {
-  const column = tableColumns.value.find(col => col.key === filter.columnName || 
+  const column = tableColumns.value.find(col => col.key === filter.columnName ||
     col.key.toLowerCase() === filter.columnName.toLowerCase())
   const columnLabel = column ? column.label : filter.columnName
   const operatorLabels = {
@@ -400,15 +400,15 @@ const getFilterLabel = (filter) => {
 
 const openFilterModal = (column) => {
   if (!column.filterable) return
-  
+
   currentFilterColumn.value = column
-  
+
   // Check if filter already exists for this column
   const existingFilter = columnFilters.value.find(f => {
     const colKey = column.key.charAt(0).toUpperCase() + column.key.slice(1).replace(/([A-Z])/g, '_$1').toUpperCase()
     return f.columnName === colKey || f.columnName === column.key
   })
-  
+
   if (existingFilter) {
     filterForm.value = {
       operator: existingFilter.operator,
@@ -420,7 +420,7 @@ const openFilterModal = (column) => {
       value: ''
     }
   }
-  
+
   showFilterModal.value = true
 }
 
@@ -435,22 +435,22 @@ const closeFilterModal = () => {
 
 const applyColumnFilter = () => {
   if (!currentFilterColumn.value) return
-  
+
   if (['empty', 'not_empty'].includes(filterForm.value.operator) && !filterForm.value.value) {
     // Empty/not_empty doesn't need value
   } else if (!filterForm.value.value && filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty') {
     toast.error('Vui lòng nhập giá trị')
     return
   }
-  
+
   // Remove existing filter for this column
-  const columnKey = currentFilterColumn.value.key.charAt(0).toUpperCase() + 
+  const columnKey = currentFilterColumn.value.key.charAt(0).toUpperCase() +
     currentFilterColumn.value.key.slice(1).replace(/([A-Z])/g, '_$1').toUpperCase()
-  
-  columnFilters.value = columnFilters.value.filter(f => 
+
+  columnFilters.value = columnFilters.value.filter(f =>
     f.columnName !== columnKey && f.columnName !== currentFilterColumn.value.key
   )
-  
+
   // Add new filter
   if (filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty' && filterForm.value.value) {
     columnFilters.value.push({
@@ -465,7 +465,7 @@ const applyColumnFilter = () => {
       value: null
     })
   }
-  
+
   updateActiveFilters()
   currentPage.value = 1
   loadCategories()
@@ -474,14 +474,14 @@ const applyColumnFilter = () => {
 
 const clearCurrentFilter = () => {
   if (!currentFilterColumn.value) return
-  
-  const columnKey = currentFilterColumn.value.key.charAt(0).toUpperCase() + 
+
+  const columnKey = currentFilterColumn.value.key.charAt(0).toUpperCase() +
     currentFilterColumn.value.key.slice(1).replace(/([A-Z])/g, '_$1').toUpperCase()
-  
-  columnFilters.value = columnFilters.value.filter(f => 
+
+  columnFilters.value = columnFilters.value.filter(f =>
     f.columnName !== columnKey && f.columnName !== currentFilterColumn.value.key
   )
-  
+
   updateActiveFilters()
   currentPage.value = 1
   loadCategories()
@@ -491,9 +491,9 @@ const clearCurrentFilter = () => {
 const removeFilter = (index) => {
   const filter = activeFilters.value[index]
   const columnKey = filter.columnName
-  
+
   columnFilters.value = columnFilters.value.filter(f => f.columnName !== columnKey)
-  
+
   updateActiveFilters()
   currentPage.value = 1
   loadCategories()
@@ -580,10 +580,10 @@ const checkCode = async () => {
     codeExists.value = false
     return
   }
-  
+
   try {
-    const excludeId = isEditing.value && selectedCategory.value 
-      ? selectedCategory.value.partCategoryId 
+    const excludeId = isEditing.value && selectedCategory.value
+      ? selectedCategory.value.partCategoryId
       : null
     const response = await partCategoryService.checkCode(formData.value.partCategoryCode, excludeId)
     codeExists.value = response.data.exists
@@ -597,15 +597,15 @@ const handleSubmit = async () => {
     toast.error('Vui lòng nhập mã danh mục')
     return
   }
-  
+
   if (codeExists.value) {
     toast.error('Mã danh mục đã tồn tại')
     return
   }
-  
+
   try {
     submitting.value = true
-    
+
     const data = {
       partCategoryCode: formData.value.partCategoryCode.trim(),
       partCategoryName: formData.value.partCategoryName?.trim() || null,
@@ -613,7 +613,7 @@ const handleSubmit = async () => {
       partCategoryPhone: formData.value.partCategoryPhone?.trim() || null,
       status: formData.value.status || null
     }
-    
+
     if (isEditing.value && selectedCategory.value) {
       await partCategoryService.update(selectedCategory.value.partCategoryId, data)
       toast.success('Cập nhật thành công!', `Đã cập nhật danh mục "${data.partCategoryCode}"`)
@@ -621,7 +621,7 @@ const handleSubmit = async () => {
       await partCategoryService.create(data)
       toast.success('Tạo mới thành công!', `Đã tạo danh mục "${data.partCategoryCode}"`)
     }
-    
+
     closeFormDialog()
     await loadCategories()
   } catch (error) {
@@ -638,7 +638,7 @@ const openDeleteDialog = (category) => {
 
 const confirmDelete = async () => {
   if (!selectedCategory.value) return
-  
+
   try {
     deleting.value = true
     await partCategoryService.delete(selectedCategory.value.partCategoryId)
@@ -656,10 +656,10 @@ const confirmDelete = async () => {
 const loadCategories = async () => {
   try {
     loading.value = true
-    
+
     // Build column filters
     const filters = [...columnFilters.value]
-    
+
     // Search filter
     if (searchQuery.value && searchQuery.value.trim()) {
       filters.push({
@@ -668,11 +668,11 @@ const loadCategories = async () => {
         value: searchQuery.value.trim()
       })
     }
-    
+
     // Build sort
     const columnSorts = []
     if (sortConfig.value.key) {
-      const sortKey = sortConfig.value.key.charAt(0).toUpperCase() + 
+      const sortKey = sortConfig.value.key.charAt(0).toUpperCase() +
         sortConfig.value.key.slice(1).replace(/([A-Z])/g, '_$1').toUpperCase()
       columnSorts.push({
         columnName: sortKey,
@@ -685,14 +685,14 @@ const loadCategories = async () => {
         sortDirection: 'DESC'
       })
     }
-    
+
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
       columnFilters: filters,
       columnSorts
     }
-    
+
     const response = await partCategoryService.getPaging(params)
     categories.value = response.data.items || []
     totalItems.value = response.data.total || 0
@@ -714,13 +714,13 @@ onMounted(async () => {
     const { setToastInstance } = await import('@/composables/useToast')
     setToastInstance(toastRef.value)
   }
-  
+
   // Get menu
   const user = authService.getCurrentUser()
   if (user) {
     menuItems.value = getMenuByRole(user.role)
   }
-  
+
   // Load data
   await loadCategories()
 })

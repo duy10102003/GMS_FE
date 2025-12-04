@@ -6,14 +6,14 @@
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
-    
+
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
         :title="`Chi tiết phiếu dịch vụ #${serviceTicket?.serviceTicketCode || ''}`"
         :show-search="false"
         @logout="handleLogout"
       />
-      
+
       <main class="main-content" style="margin-top: 70px; padding: 2rem;">
         <div class="detail-header">
           <GmsButton variant="outline" icon="fa-arrow-left" @click="$router.back()">
@@ -28,7 +28,7 @@
             >
               Cập nhật
             </GmsButton>
-            
+
             <GmsButton
               v-if="canAssign"
               variant="success"
@@ -37,7 +37,7 @@
             >
               Phân công thợ
             </GmsButton>
-            
+
             <GmsButton
               v-if="canConfirmAdjustment"
               variant="warning"
@@ -46,7 +46,16 @@
             >
               Xác nhận điều chỉnh
             </GmsButton>
-            
+
+            <GmsButton
+              v-if="canStartInProgress"
+              variant="primary"
+              icon="fa-play"
+              @click="handleStartInProgress"
+            >
+              Bắt đầu xử lý
+            </GmsButton>
+
             <GmsButton
               v-if="canCreateInvoice"
               variant="info"
@@ -55,7 +64,7 @@
             >
               Tạo hóa đơn
             </GmsButton>
-            
+
             <GmsButton
               v-if="canCancel"
               variant="danger"
@@ -96,6 +105,22 @@
               <div class="info-item">
                 <label>Ngày tạo:</label>
                 <span class="value">{{ formatDate(serviceTicket.createdDate) }}</span>
+              </div>
+              <div class="info-item">
+                <label>Người tạo:</label>
+                <span class="value">{{ serviceTicket.createdByUser?.fullName || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <label>Ngày cập nhật:</label>
+                <span class="value">{{ formatDate(serviceTicket.modifiedDate) }}</span>
+              </div>
+              <div class="info-item">
+                <label>Người cập nhật:</label>
+                <span class="value">{{ serviceTicket.modifiedByUser?.fullName || 'N/A' }}</span>
+              </div>
+              <div v-if="serviceTicket.bookingId" class="info-item">
+                <label>Booking ID:</label>
+                <span class="value">{{ serviceTicket.bookingId }}</span>
               </div>
             </div>
           </div>
@@ -189,8 +214,8 @@
               <i class="fas fa-wrench me-2"></i>Dịch vụ
             </h5>
             <GmsTable
-              v-if="serviceTicket.garageServices && serviceTicket.garageServices.length > 0"
-              :data="serviceTicket.garageServices"
+              v-if="validGarageServices && validGarageServices.length > 0"
+              :data="validGarageServices"
               :columns="servicesColumns"
               :pagination="false"
             >
@@ -199,6 +224,9 @@
               </template>
               <template #cell-servicePrice="{ row }">
                 {{ formatPrice(row.garageService?.garageServicePrice || row.garageServicePrice || 0) }}
+              </template>
+              <template #cell-quantity="{ row }">
+                {{ row.quantity || 1 }}
               </template>
             </GmsTable>
             <div v-else class="empty-state">
@@ -355,6 +383,7 @@
             >
               <div class="selected-info">
                 <strong>{{ getServiceName(serviceId) }}</strong>
+                <span class="text-muted small">(Số lượng: 1)</span>
               </div>
               <GmsButton variant="outline" size="small" icon="fa-times" @click="removeServiceFromUpdate(index)">
                 Xóa
@@ -520,6 +549,7 @@ const showCancelDialog = ref(false)
 // Update form
 const updateForm = ref({
   initialIssue: '',
+  serviceTicketCode: '', // Thêm ServiceTicketCode
   parts: [],
   garageServiceIds: []
 })
@@ -555,8 +585,30 @@ const partsColumns = ref([
 
 const servicesColumns = ref([
   { key: 'serviceName', label: 'Tên dịch vụ' },
+  { key: 'quantity', label: 'Số lượng' },
   { key: 'servicePrice', label: 'Giá' }
 ])
+
+// Computed để lọc bỏ các garage services không hợp lệ
+const validGarageServices = computed(() => {
+  if (!serviceTicket.value || !serviceTicket.value.garageServices) {
+    console.log('validGarageServices: No serviceTicket or garageServices')
+    return []
+  }
+  
+  const filtered = serviceTicket.value.garageServices.filter(s => {
+    const serviceId = s.garageService?.garageServiceId || s.garageServiceId
+    const isValid = serviceId && serviceId !== 0 && serviceId !== null && serviceId !== undefined
+    if (!isValid) {
+      console.log('validGarageServices: Filtered out invalid service:', s, 'serviceId:', serviceId)
+    }
+    return isValid
+  })
+  
+  console.log('validGarageServices: Original:', serviceTicket.value.garageServices.length, 'Filtered:', filtered.length)
+  console.log('validGarageServices: Result:', filtered)
+  return filtered
+})
 
 // Computed
 const canUpdate = computed(() => {
@@ -573,8 +625,23 @@ const canAssign = computed(() => {
 
 const canConfirmAdjustment = computed(() => {
   if (!serviceTicket.value) return false
-  return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
-         serviceTicket.value.serviceTicketStatus === 1
+  const status = serviceTicket.value.serviceTicketStatus
+  const statusNum = Number(status)
+  const can = statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         status === 1 || status === '1'
+  return can
+})
+
+const canStartInProgress = computed(() => {
+  if (!serviceTicket.value) return false
+  const status = serviceTicket.value.serviceTicketStatus
+  const statusNum = Number(status)
+  // Staff có thể chuyển status thành InProgress từ AdjustedByTechnical (1)
+  const can = statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
+         status === 1 || status === '1'
+  return can
 })
 
 const canCreateInvoice = computed(() => {
@@ -628,8 +695,32 @@ const getTaskStatusColor = (status) => {
 }
 
 const getServiceName = (serviceId) => {
-  const service = availableServices.value.find(s => s.garageServiceId === serviceId)
-  return service ? service.garageServiceName : `Service #${serviceId}`
+  if (!serviceId || serviceId === 0) {
+    return 'Service không hợp lệ'
+  }
+  
+  // Tìm trong availableServices
+  const service = availableServices.value.find(s => {
+    const id = s.garageServiceId
+    return id && (id === serviceId || Number(id) === Number(serviceId))
+  })
+  
+  if (service && service.garageServiceName) {
+    return service.garageServiceName
+  }
+  
+  // Nếu không tìm thấy, thử tìm trong serviceTicket.garageServices
+  if (serviceTicket.value && serviceTicket.value.garageServices) {
+    const ticketService = serviceTicket.value.garageServices.find(s => {
+      const id = s.garageService?.garageServiceId || s.garageServiceId
+      return id && (id === serviceId || Number(id) === Number(serviceId))
+    })
+    if (ticketService && ticketService.garageService?.garageServiceName) {
+      return ticketService.garageService.garageServiceName
+    }
+  }
+  
+  return `Service #${serviceId}`
 }
 
 const searchParts = async () => {
@@ -637,10 +728,10 @@ const searchParts = async () => {
     partSearchResults.value = []
     return
   }
-  
+
   try {
     const response = await partService.search(partSearch.value)
-    partSearchResults.value = (response.data || []).filter(part => 
+    partSearchResults.value = (response.data || []).filter(part =>
       !updateForm.value.parts.find(p => p.partId === part.partId)
     )
   } catch (error) {
@@ -654,12 +745,12 @@ const addPartToUpdate = (part) => {
     toast.warning('Phụ tùng đã được thêm')
     return
   }
-  
+
   updateForm.value.parts.push({
     ...part,
     quantity: 1
   })
-  
+
   partSearch.value = ''
   showPartDropdown.value = false
   partSearchResults.value = []
@@ -674,12 +765,16 @@ const searchServices = async () => {
     serviceSearchResults.value = []
     return
   }
-  
+
   try {
     const response = await garageServiceService.search(serviceSearch.value)
-    serviceSearchResults.value = (response.data || []).filter(service => 
-      !updateForm.value.garageServiceIds.find(s => s.garageServiceId === service.garageServiceId)
-    )
+    const services = response.data || response || []
+    // Filter: loại bỏ các service đã được thêm vào form (so sánh ID)
+    serviceSearchResults.value = Array.isArray(services) ? services.filter(service => {
+      const serviceId = service.garageServiceId
+      // Kiểm tra xem serviceId đã có trong updateForm.garageServiceIds chưa
+      return !updateForm.value.garageServiceIds.includes(serviceId)
+    }) : []
   } catch (error) {
     console.error('Error searching services:', error)
     serviceSearchResults.value = []
@@ -687,28 +782,86 @@ const searchServices = async () => {
 }
 
 const addServiceToUpdate = (service) => {
-  if (updateForm.value.garageServiceIds.includes(service.garageServiceId)) {
-    toast.warning('Dịch vụ đã được thêm')
+  const serviceId = service.garageServiceId
+  
+  if (!serviceId || serviceId === 0) {
+    toast.error('Service không hợp lệ')
     return
   }
   
-  updateForm.value.garageServiceIds.push(service.garageServiceId)
-  availableServices.value.push(service)
+  // Kiểm tra xem service đã được thêm chưa (so sánh cả number và string)
+  const alreadyAdded = updateForm.value.garageServiceIds.some(id => 
+    id === serviceId || Number(id) === Number(serviceId)
+  )
   
+  if (alreadyAdded) {
+    toast.warning('Dịch vụ đã được thêm')
+    return
+  }
+
+  // Thêm service ID vào form
+  updateForm.value.garageServiceIds.push(serviceId)
+  
+  // Đảm bảo service có trong availableServices để hiển thị tên
+  const existingService = availableServices.value.find(av => {
+    const avId = av.garageServiceId
+    return avId && (avId === serviceId || Number(avId) === Number(serviceId))
+  })
+  
+  if (!existingService) {
+    availableServices.value.push(service)
+    console.log('Added new service to availableServices:', service)
+  }
+
   serviceSearch.value = ''
   showServiceDropdown.value = false
   serviceSearchResults.value = []
+  
+  console.log('Current garageServiceIds:', updateForm.value.garageServiceIds)
 }
 
 const removeServiceFromUpdate = (index) => {
   updateForm.value.garageServiceIds.splice(index, 1)
 }
 
-const openUpdateDialog = () => {
+const openUpdateDialog = async () => {
   if (!serviceTicket.value) return
-  
+
+  // Load available services trước để có thể hiển thị tên
+  await loadAvailableServices()
+
+  // Lấy danh sách service IDs hợp lệ từ serviceTicket
+  const validServiceIds = (serviceTicket.value.garageServices || [])
+    .map(s => {
+      const serviceId = s.garageService?.garageServiceId || s.garageServiceId
+      // Chỉ lấy service có ID hợp lệ (không phải 0, null, undefined)
+      if (!serviceId || serviceId === 0) {
+        return null
+      }
+      
+      // Đảm bảo service đã có trong availableServices để hiển thị tên
+      const existingService = availableServices.value.find(av => {
+        const avId = av.garageServiceId
+        return avId && (avId === serviceId || Number(avId) === Number(serviceId))
+      })
+      
+      if (!existingService) {
+        // Thêm service vào availableServices nếu chưa có
+        const serviceInfo = {
+          garageServiceId: serviceId,
+          garageServiceName: s.garageService?.garageServiceName || `Service #${serviceId}`,
+          garageServicePrice: s.garageService?.garageServicePrice || 0
+        }
+        availableServices.value.push(serviceInfo)
+        console.log('Added service to availableServices:', serviceInfo)
+      }
+      return serviceId
+    })
+    .filter(id => id && id !== 0) // Lọc bỏ undefined/null/0
+
   updateForm.value = {
     initialIssue: serviceTicket.value.initialIssue || '',
+    serviceTicketCode: serviceTicket.value.serviceTicketCode || '', // Giữ ServiceTicketCode
     parts: (serviceTicket.value.parts || []).map(p => ({
       partId: p.part?.partId || p.partId,
       partName: p.part?.partName || '',
@@ -717,13 +870,11 @@ const openUpdateDialog = () => {
       partUnit: p.part?.partUnit || '',
       quantity: p.quantity || 1
     })),
-    garageServiceIds: (serviceTicket.value.garageServices || []).map(s => 
-      s.garageService?.garageServiceId || s.garageServiceId
-    )
+    garageServiceIds: validServiceIds
   }
-  
-  // Load available services for display
-  loadAvailableServices()
+
+  console.log('Update form garageServiceIds:', updateForm.value.garageServiceIds)
+  console.log('Available services:', availableServices.value)
   showUpdateDialog.value = true
 }
 
@@ -731,6 +882,7 @@ const closeUpdateDialog = () => {
   showUpdateDialog.value = false
   updateForm.value = {
     initialIssue: '',
+    serviceTicketCode: '',
     parts: [],
     garageServiceIds: []
   }
@@ -747,7 +899,7 @@ const handleUpdate = async () => {
     toast.error('Vui lòng nhập mô tả vấn đề')
     return
   }
-  
+
   // Validate part quantities
   for (const part of updateForm.value.parts) {
     if (!part.quantity || part.quantity < 1) {
@@ -759,23 +911,24 @@ const handleUpdate = async () => {
       return
     }
   }
-  
+
   try {
     updating.value = true
     const currentUser = authService.getCurrentUser()
-    
+
     const payload = {
       modifiedBy: currentUser?.userId,
       initialIssue: updateForm.value.initialIssue.trim(),
+      serviceTicketCode: updateForm.value.serviceTicketCode || serviceTicket.value.serviceTicketCode, // Giữ ServiceTicketCode
       parts: updateForm.value.parts.map(p => ({
         partId: p.partId,
         quantity: p.quantity
       })),
-      garageServiceIds: updateForm.value.garageServiceIds
+      garageServiceIds: updateForm.value.garageServiceIds // Gửi garageServiceIds, không cần quantity
     }
-    
+
     await serviceTicketService.update(route.params.id, payload)
-    
+
     toast.success('Cập nhật thành công!')
     closeUpdateDialog()
     await loadServiceTicket()
@@ -800,14 +953,14 @@ const handleAssign = async () => {
     toast.error('Vui lòng chọn thợ và nhập mô tả công việc')
     return
   }
-  
+
   try {
     assignLoading.value = true
     await serviceTicketService.assign(route.params.id, {
       assignedToTechnical: assignForm.value.assignedToTechnical,
       description: assignForm.value.description.trim()
     })
-    
+
     toast.success('Phân công thành công!')
     showAssignDialog.value = false
     await loadServiceTicket()
@@ -823,21 +976,46 @@ const confirmAdjustment = async () => {
     toast.error('Không tìm thấy technical task')
     return
   }
-  
+
   const task = serviceTicket.value.technicalTasks[0]
   if (!task.technicalTaskId) {
     toast.error('Không tìm thấy technical task ID')
     return
   }
-  
+
   try {
     const currentUser = authService.getCurrentUser()
+    // API confirm tự động cập nhật serviceTicketStatus thành InProgress (2)
     await technicalTaskService.confirm(task.technicalTaskId, currentUser?.userId)
-    
+
     toast.success('Xác nhận điều chỉnh thành công!')
     await loadServiceTicket()
   } catch (error) {
     toast.error('Lỗi khi xác nhận điều chỉnh', error.message || error.userMsg || 'Có lỗi xảy ra')
+  }
+}
+
+const handleStartInProgress = async () => {
+  if (!serviceTicket.value?.serviceTicketId) {
+    toast.error('Không tìm thấy service ticket')
+    return
+  }
+
+  if (!confirm('Bạn có chắc muốn bắt đầu xử lý phiếu dịch vụ này?')) return
+
+  try {
+    const currentUser = authService.getCurrentUser()
+    const modifiedBy = currentUser?.userId || 1
+
+    await serviceTicketService.setStatusInProgress(serviceTicket.value.serviceTicketId, {
+      modifiedBy,
+      note: 'Staff bắt đầu xử lý phiếu dịch vụ'
+    })
+
+    toast.success('Đã bắt đầu xử lý phiếu dịch vụ!')
+    await loadServiceTicket()
+  } catch (error) {
+    toast.error('Lỗi khi bắt đầu xử lý', error.message || error.userMsg || 'Có lỗi xảy ra')
   }
 }
 
@@ -851,7 +1029,7 @@ const openInvoiceDialog = () => {
 
 const handleCreateInvoice = async () => {
   if (!serviceTicket.value) return
-  
+
   try {
     creatingInvoice.value = true
     const payload = {
@@ -860,9 +1038,9 @@ const handleCreateInvoice = async () => {
       taxAmount: invoiceForm.value.taxAmount || 0,
       discountAmount: invoiceForm.value.discountAmount || 0
     }
-    
+
     const response = await invoiceService.create(payload)
-    
+
     toast.success('Tạo hóa đơn thành công!', `Invoice ID: ${response.data.invoiceId}`)
     showInvoiceDialog.value = false
     // Navigate to invoice detail if needed
@@ -880,16 +1058,16 @@ const openCancelDialog = () => {
 
 const handleCancel = async () => {
   if (!serviceTicket.value) return
-  
+
   try {
     cancelling.value = true
     const currentUser = authService.getCurrentUser()
-    
+
     await serviceTicketService.setStatusCancelled(route.params.id, {
       modifiedBy: currentUser?.userId,
       note: 'Hủy phiếu dịch vụ'
     })
-    
+
     toast.success('Hủy phiếu thành công!')
     showCancelDialog.value = false
     await loadServiceTicket()
@@ -905,6 +1083,37 @@ const loadServiceTicket = async () => {
     loading.value = true
     const response = await serviceTicketService.getById(route.params.id)
     serviceTicket.value = response.data
+
+    // Debug: Log service ticket data after loading
+    const status = serviceTicket.value?.serviceTicketStatus
+    console.log('=== STAFF SERVICE TICKET DETAIL DEBUG ===')
+    console.log('Service Ticket ID:', serviceTicket.value?.serviceTicketId)
+    console.log('Service Ticket Status:', status, '(type:', typeof status, ')')
+    console.log('Garage Services:', serviceTicket.value?.garageServices)
+    console.log('Garage Services length:', serviceTicket.value?.garageServices?.length || 0)
+    if (serviceTicket.value?.garageServices && serviceTicket.value.garageServices.length > 0) {
+      console.log('First garage service:', serviceTicket.value.garageServices[0])
+      console.log('First garage service ID:', serviceTicket.value.garageServices[0]?.garageService?.garageServiceId)
+      console.log('First garage service structure:', JSON.stringify(serviceTicket.value.garageServices[0], null, 2))
+    }
+    console.log('Valid Garage Services (computed):', validGarageServices.value)
+    console.log('Valid Garage Services length:', validGarageServices.value.length)
+    console.log('Status values:', {
+      PENDING_TECHNICAL_CONFIRMATION: SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION,
+      ADJUSTED_BY_TECHNICAL: SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL,
+      IN_PROGRESS: SERVICE_TICKET_STATUS.IN_PROGRESS,
+      COMPLETED: SERVICE_TICKET_STATUS.COMPLETED
+    })
+    console.log('Computed values:', {
+      canUpdate: canUpdate.value,
+      canAssign: canAssign.value,
+      canConfirmAdjustment: canConfirmAdjustment.value,
+      canStartInProgress: canStartInProgress.value,
+      canCreateInvoice: canCreateInvoice.value,
+      canCancel: canCancel.value
+    })
+    console.log('Full Service Ticket:', JSON.stringify(serviceTicket.value, null, 2))
+    console.log('=========================================')
   } catch (error) {
     toast.error('Lỗi khi tải chi tiết phiếu', error.message || error.userMsg || 'Có lỗi xảy ra')
   } finally {
@@ -924,9 +1133,13 @@ const loadTechnicalStaff = async () => {
 
 const loadAvailableServices = async () => {
   try {
-    // Load all services for display names
+    // Load all services for display names - search với empty string để lấy tất cả
     const response = await garageServiceService.search('', 1000)
-    availableServices.value = response.data || []
+    const services = response.data || response || []
+    availableServices.value = Array.isArray(services) ? services : []
+    
+    console.log('Loaded available services:', availableServices.value.length, 'services')
+    console.log('Available services list:', availableServices.value)
   } catch (error) {
     console.error('Error loading services:', error)
     availableServices.value = []
@@ -1244,7 +1457,13 @@ onMounted(async () => {
   font-size: 0.875rem;
 }
 
+.text-muted.small {
+  font-size: 0.8rem;
+  color: #999;
+  font-style: italic;
+}
+
 .me-2 {
   margin-right: 0.5rem;
 }
-</style>     
+</style>

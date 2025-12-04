@@ -4,7 +4,7 @@
       <h4 v-if="title" class="the-header-title">{{ title }}</h4>
       <slot name="left"></slot>
     </div>
-    
+
     <div class="the-header-right">
       <div v-if="showSearch" class="the-header-search">
         <i class="fas fa-search"></i>
@@ -15,7 +15,7 @@
           @input="handleSearch"
         />
       </div>
-      
+
       <!-- Notifications -->
       <div v-if="showNotifications" class="the-header-notifications">
         <button
@@ -27,7 +27,7 @@
             {{ notificationCount > 99 ? '99+' : notificationCount }}
           </span>
         </button>
-        
+
         <div
           v-if="notificationsOpen"
           class="the-header-notification-dropdown"
@@ -43,12 +43,12 @@
               Xóa tất cả
             </button>
           </div>
-          
+
           <div v-if="notifications.length === 0" class="the-header-notification-empty">
             <i class="fas fa-inbox"></i>
             <p>Không có thông báo</p>
           </div>
-          
+
           <div v-else class="the-header-notification-list">
             <div
               v-for="notification in notifications"
@@ -66,13 +66,13 @@
               </div>
             </div>
           </div>
-          
+
           <div v-if="notifications.length > 0" class="the-header-notification-footer">
             <a href="#" @click.prevent="viewAllNotifications">Xem tất cả</a>
           </div>
         </div>
       </div>
-      
+
       <!-- User Menu -->
       <div v-if="user" class="the-header-user">
         <button
@@ -87,7 +87,7 @@
           <span v-if="showUserName" class="the-header-user-name">{{ user.name }}</span>
           <i class="fas fa-chevron-down"></i>
         </button>
-        
+
         <div
           v-if="userMenuOpen"
           class="the-header-user-dropdown"
@@ -103,7 +103,7 @@
               <small>{{ getUserRoleLabel(user.role) }}</small>
             </div>
           </div>
-          
+
           <div class="the-header-user-menu">
             <a href="#" class="the-header-user-menu-item" @click.prevent="goToProfile">
               <i class="fas fa-user"></i>
@@ -121,10 +121,10 @@
           </div>
         </div>
       </div>
-      
+
       <slot name="right"></slot>
     </div>
-    
+
     <!-- Click outside to close dropdowns -->
     <div
       v-if="notificationsOpen || userMenuOpen"
@@ -211,7 +211,7 @@ const formatTime = (time) => {
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
-  
+
   if (minutes < 1) return 'Vừa xong'
   if (minutes < 60) return `${minutes} phút trước`
   if (hours < 24) return `${hours} giờ trước`

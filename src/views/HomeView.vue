@@ -1,841 +1,601 @@
 <template>
-  <div class="home-view" :data-theme="theme">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg fixed-top">
-      <div class="container">
-        <router-link class="navbar-brand" to="/">
-          <span>Garage</span>Pro
-        </router-link>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#menu"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <button class="theme-toggle" @click="toggleTheme">
-          <i :class="theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i>
-        </button>
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="menu">
-          <div class="offcanvas-header">
-            <h5 class="offcanvas-title">GaragePro</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-          </div>
-          <div class="offcanvas-body">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link" href="#hero" @click="scrollTo('hero')">Trang chủ</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#about" @click="scrollTo('about')">Giới thiệu</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#service" @click="scrollTo('service')">Dịch vụ</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#cars" @click="scrollTo('cars')">Xe</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#reviews" @click="scrollTo('reviews')">Đánh giá</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#contact" @click="scrollTo('contact')">Liên hệ</a>
-              </li>
-              <li v-if="isAuthenticated" class="nav-item dropdown">
-                <a
-                  class="nav-link dropdown-toggle"
-                  href="#"
-                  id="userDropdown"
-                  data-bs-toggle="dropdown"
-                >
-                  Tài khoản
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                  <li class="dropdown-item user-info">Khách hàng: {{ currentUser?.name }}</li>
-                  <li>
-                    <a class="dropdown-item" href="#" @click.prevent="goToProfile">
-                      <i class="fas fa-user me-2"></i>Hồ sơ
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="#" @click.prevent="goToHistory">
-                      <i class="fas fa-history me-2"></i>Lịch sử
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="#" @click.prevent="goToSettings">
-                      <i class="fas fa-cog me-2"></i>Cài đặt
-                    </a>
-                  </li>
-                  <li><hr class="dropdown-divider" /></li>
-                  <li>
-                    <a class="dropdown-item" href="#" @click.prevent="handleLogout">
-                      <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
-                    </a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-            <div v-if="!isAuthenticated" class="d-flex mt-3 mt-lg-0 gap-2">
-              <GmsButton
-                variant="outline"
-                @click="showLoginModal = true"
-              >
-                Đăng nhập
-              </GmsButton>
-              <GmsButton
-                variant="primary"
-                @click="showRegisterModal = true"
-              >
-                Đăng ký
-              </GmsButton>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
+	<div class="home-view">
+		<!-- Header -->
+		<header>
+			<nav class="navbar navbar-expand-lg fixed-top">
+				<div class="container">
+					<a class="navbar-brand" href="#">
+						<span>Garage</span>
+						Pro
+					</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<button class="theme-toggle" id="themeToggle"><i class="fa-solid fa-sun"></i></button>
+					<div class="offcanvas offcanvas-end" tabindex="-1" id="menu">
+						<div class="offcanvas-header">
+							<h5 class="offcanvas-title">GaragePro</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+						</div>
+						<div class="offcanvas-body">
+							<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+								<li class="nav-item"><a class="nav-link" href="#hero">Trang chủ</a></li>
+								<li class="nav-item"><a class="nav-link" href="#about">Giới thiệu</a></li>
+								<li class="nav-item"><a class="nav-link" href="#service">Dịch vụ</a></li>
+								<li class="nav-item"><a class="nav-link" href="#cars">Xe</a></li>
+								<li class="nav-item"><a class="nav-link" href="#reviews">Đánh giá</a></li>
+								<li class="nav-item"><a class="nav-link" href="#booking">Đặt lịch</a></li>
+								<li class="nav-item dropdown">
+									<a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">Tài khoản</a>
+									<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+										<li class="dropdown-item user-info">Khách hàng: Nguyễn Văn A</li>
+										<li>
+											<a class="dropdown-item" href="#profile">
+												<i class="fas fa-user me-2"></i>
+												Hồ sơ
+											</a>
+										</li>
+										<li>
+											<a class="dropdown-item" href="#history">
+												<i class="fas fa-history me-2"></i>
+												Lịch sử
+											</a>
+										</li>
+										<li>
+											<a class="dropdown-item" href="#settings">
+												<i class="fas fa-cog me-2"></i>
+												Cài đặt
+											</a>
+										</li>
+										<li><hr class="dropdown-divider" /></li>
+										<li>
+											<a class="dropdown-item" href="#logout">
+												<i class="fas fa-sign-out-alt me-2"></i>
+												Đăng xuất
+											</a>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<div class="d-flex mt-3 mt-lg-0 gap-2">
+								<a href="#" class="btn-login" data-bs-toggle="modal" data-bs-target="#login-modal">Đăng nhập</a>
+								<a href="#" class="btn-register" data-bs-toggle="modal" data-bs-target="#register-modal">Đăng ký</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</nav>
+      
+      
+      
+      
+  
+		</header>
 
-    <!-- Hero Section -->
-    <section class="hero" id="hero">
-      <div class="hero-content">
-        <h1>Trải nghiệm Dịch vụ Ô tô Cao cấp cùng GaragePro</h1>
-        <p>Mua bán, sửa chữa, bảo dưỡng – tất cả trong một nền tảng chuyên nghiệp và tận tâm.</p>
-        <GmsButton variant="primary" size="large" @click="scrollTo('service')">
-          Khám phá ngay
-        </GmsButton>
-        <GmsButton variant="primary" size="large" class="ms-2" @click="goToPublicBooking">
-          Đặt lịch sửa xe
-          <i class="fa-solid fa-arrow-right ms-2"></i>
-        </GmsButton>        
-      </div>
-    </section>
+		<!-- Hero -->
+		<section class="hero" id="hero">
+			<div class="hero-content">
+				<h1>Trải nghiệm Dịch vụ Ô tô Cao cấp cùng GaragePro</h1>
+				<p>Mua bán, sửa chữa, bảo dưỡng – tất cả trong một nền tảng chuyên nghiệp và tận tâm.</p>
+				<a href="#booking" class="btn-cta">Đặt lịch ngay</a>
+			</div>
+		</section>
 
-    <!-- About Section -->
-    <section id="about" class="about-section">
-      <div class="container">
-        <div class="about-content">
-          <div class="about-image">
-            <img
-              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80"
-              alt="Luxury Car"
-            />
-          </div>
-          <div class="about-text">
-            <h2>GaragePro</h2>
-            <p>
-              GaragePro là nền tảng hàng đầu cung cấp giải pháp toàn diện cho xe hơi, từ mua bán,
-              sửa chữa đến bảo dưỡng định kỳ. Với đội ngũ kỹ thuật viên chuyên nghiệp và công nghệ
-              tiên tiến, chúng tôi cam kết mang đến trải nghiệm dịch vụ cao cấp, minh bạch và đáng
-              tin cậy.
-            </p>
-            <p>
-              Mục tiêu của chúng tôi là giúp khách hàng quản lý và chăm sóc xe hơi một cách dễ dàng,
-              tiết kiệm thời gian và chi phí, đồng thời đảm bảo chất lượng dịch vụ luôn đạt tiêu
-              chuẩn cao nhất.
-            </p>
-            <div class="about-stats">
-              <div class="stat-item">
-                <h3>10K+</h3>
-                <p>Khách hàng tin cậy</p>
-              </div>
-              <div class="stat-item">
-                <h3>500+</h3>
-                <p>Xe được phục vụ</p>
-              </div>
-              <div class="stat-item">
-                <h3>50+</h3>
-                <p>Kỹ thuật viên chuyên nghiệp</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+		<!-- Login Modal -->
+		<div class="modal fade" id="login-modal" tabindex="-1">
+			<div class="modal-dialog modal-lg modal-dialog-centered">
+				<div class="modal-content border-0 shadow-lg">
+					<div class="custom-modal-content">
+						<div class="modal-image" style="background: url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat">
+							<div class="modal-image-text">
+								<h4>Chào mừng trở lại!</h4>
+								<p>Cùng GaragePro chăm sóc chiếc xe của bạn dễ dàng hơn.</p>
+							</div>
+						</div>
+						<div class="modal-form">
+							<button type="button" class="modal-close" data-bs-dismiss="modal">
+								<i class="fa-solid fa-xmark"></i>
+							</button>
+							<div class="form-header">
+								<h3>Đăng nhập</h3>
+								<p>Nhập email để tiếp tục</p>
+							</div>
+							<form id="loginForm" data-vue-handled="true" @submit.prevent="sendOtp">
+								<div class="floating-label-group">
+									<input v-model.trim="email" type="email" id="loginEmail" placeholder=" " :disabled="auth.loading" />
+									<label for="loginEmail">Email</label>
+								</div>
+								<button type="submit" :disabled="auth.loading" class="btn btn-primary w-100">
+									{{ auth.loading ? 'Đang gửi...' : 'Đăng nhập' }}
+								</button>
+								<!-- <p v-if="localError" class="error">{{ localError }}</p> -->
+								<!-- <p v-else-if="auth.error" class="error">{{ auth.error }}</p> -->
+							</form>
+							<div class="text-center mt-3">
+								<span>Chưa có tài khoản?</span>
+								<a href="#" data-bs-toggle="modal" data-bs-target="#register-modal" data-bs-dismiss="modal">Đăng ký</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
-    <!-- Services Section -->
-    <section id="service" class="py-5">
-      <div class="container">
-        <h2 class="section-title">Dịch vụ nổi bật</h2>
-        <div class="row g-4">
-          <div v-for="service in services" :key="service.id" class="col-md-3">
-            <div class="service-card">
-              <img :src="service.icon" :alt="service.title" />
-              <h5>{{ service.title }}</h5>
-              <p>{{ service.description }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+		<!-- Register Modal -->
+		<div class="modal fade" id="register-modal" tabindex="-1">
+			<div class="modal-dialog modal-lg modal-dialog-centered">
+				<div class="modal-content border-0 shadow-lg">
+					<div class="custom-modal-content">
+						<div class="modal-image" style="background: url('https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat">
+							<div class="modal-image-text">
+								<h4>Gia nhập GaragePro</h4>
+								<p>Tận hưởng dịch vụ chăm sóc, sửa chữa và mua bán xe toàn diện.</p>
+							</div>
+						</div>
+						<div class="modal-form">
+							<button type="button" class="modal-close" data-bs-dismiss="modal">
+								<i class="fa-solid fa-xmark"></i>
+							</button>
+							<div class="form-header">
+								<h3>Đăng ký</h3>
+								<p>Chỉ mất 1 phút để bắt đầu</p>
+							</div>
+							<form id="registerForm">
+								<!-- Họ và tên -->
+								<div class="floating-label-group mb-3">
+									<input type="text" id="registerFullName" class="form-control" placeholder="" required />
+									<label for="registerFullName">Họ và tên</label>
+								</div>
 
-    <!-- Featured Cars Section -->
-    <section id="cars" class="py-5 bg-light">
-      <div class="container text-center">
-        <h2 class="section-title mb-4">Bộ sưu tập xe nổi bật</h2>
-        <div class="position-relative">
-          <GmsButton
-            variant="outline"
-            class="position-absolute top-50 start-0 translate-middle-y rounded-circle"
-            icon="fa-chevron-left"
-            @click="prevCars"
-          />
-          <div class="row g-4 justify-content-center" id="carList">
-            <div
-              v-for="car in displayedCars"
-              :key="car.id"
-              class="col-md-4"
-            >
-              <div class="car-card">
-                <img :src="car.img" :alt="car.name" />
-                <div class="car-info">
-                  <h5>{{ car.name }}</h5>
-                  <p>{{ car.price }}</p>
-                  <GmsButton variant="primary" size="small" @click="viewCarDetail(car)">
-                    Xem chi tiết
-                  </GmsButton>
-                </div>
-              </div>
-            </div>
-          </div>
-          <GmsButton
-            variant="outline"
-            class="position-absolute top-50 end-0 translate-middle-y rounded-circle"
-            icon="fa-chevron-right"
-            icon-right
-            @click="nextCars"
-          />
-        </div>
-        <div class="mt-5">
-          <GmsButton variant="primary" size="large" @click="viewAllCars">
-            Xem tất cả xe
-            <i class="fa-solid fa-arrow-right ms-2"></i>
-          </GmsButton>
-        </div>
-      </div>
-    </section>
+								<!-- Email -->
+								<div class="floating-label-group mb-3">
+									<input type="email" id="registerEmail" class="form-control" placeholder="" required />
+									<label for="registerEmail">Email</label>
+								</div>
 
-    <!-- Reviews Section -->
-    <section id="reviews" class="py-5">
-      <div class="container">
-        <h2 class="section-title">Đánh giá khách hàng</h2>
-        <div class="row g-4">
-          <div v-for="review in reviews" :key="review.id" class="col-md-4">
-            <div class="testimonial-card">
-              <img :src="review.avatar" :alt="review.name" />
-              <div class="stars">★★★★★</div>
-              <p>"{{ review.comment }}"</p>
-              <strong>- {{ review.name }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+								<!-- Số điện thoại -->
+								<div class="floating-label-group mb-3">
+									<input type="tel" id="registerPhone" class="form-control" placeholder="" required />
+									<label for="registerPhone">Số điện thoại</label>
+								</div>
 
-    <!-- Contact Section -->
-    <section id="contact" class="py-5 bg-light">
-      <div class="container text-center">
-        <h2 class="section-title fw-bold text-dark">Liên hệ ngay</h2>
-        <p class="lead text-muted">
-          Sẵn sàng hỗ trợ bạn 24/7. Liên hệ ngay để được tư vấn và nhận ưu đãi tốt nhất.
-        </p>
-        <GmsButton
-          variant="primary"
-          size="large"
-          icon="fa-paper-plane"
-          @click="showContactModal = true"
-        >
-          Gửi yêu cầu
-        </GmsButton>
-      </div>
-    </section>
+								<!-- Địa chỉ -->
+								<div class="floating-label-group mb-3">
+									<input type="text" id="registerAddress" class="form-control" placeholder="" required />
+									<label for="registerAddress">Địa chỉ</label>
+								</div>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-md-4">
-            <h4>GaragePro</h4>
-            <p>Giải pháp toàn diện cho ô tô của bạn – Uy tín, minh bạch, tận tâm.</p>
-            <p>© 2025 GaragePro. All rights reserved.</p>
-          </div>
-          <div class="col-md-4">
-            <h5>Liên hệ</h5>
-            <p>
-              <i class="fas fa-map-marker-alt me-2"></i> Khu Giáo dục và Đào tạo - Khu Công nghệ cao
-              Hòa Lạc - Km29 Đại lộ Thăng Long, xã Hòa Lạc, TP. Hà Nội
-            </p>
-            <p><i class="fas fa-phone me-2"></i> (024) 7300 5588</p>
-            <p><i class="fas fa-envelope me-2"></i> support@garagepro.vn</p>
-          </div>
-          <div class="col-md-4">
-            <h5>Đăng ký nhận tin</h5>
-            <p>Nhận thông tin mới nhất về các mẫu xe và ưu đãi đặc biệt.</p>
-            <form class="newsletter-form" @submit.prevent="handleNewsletter">
-              <GmsInput
-                v-model="newsletterEmail"
-                type="email"
-                placeholder="Nhập email của bạn"
-                :required="true"
-              />
-              <GmsButton type="submit" variant="primary">Đăng ký</GmsButton>
-            </form>
-            <h5 class="mt-4">Theo dõi chúng tôi</h5>
-            <div class="d-flex gap-3">
-              <a href="#"><i class="fab fa-facebook-f"></i></a>
-              <a href="#"><i class="fab fa-instagram"></i></a>
-              <a href="#"><i class="fab fa-youtube"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
+								<!-- Button -->
+								<button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+							</form>
 
-    <!-- Back to Top Button -->
-    <button
-      v-show="showBackToTop"
-      id="backToTopBtn"
-      class="back-to-top"
-      @click="scrollToTop"
-    >
-      <i class="fa-solid fa-arrow-up"></i>
-    </button>
+							<div class="text-center mt-3">
+								<span>Đã có tài khoản?</span>
+								<a href="#" data-bs-toggle="modal" data-bs-target="#login-modal" data-bs-dismiss="modal">Đăng nhập</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
-    <!-- Login Modal -->
-    <GmsDialog v-model="showLoginModal" title="Đăng nhập" size="large" :closable="true">
-      <div class="login-modal-content">
-        <div
-          class="modal-image"
-          style="background: url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;"
-        >
-          <div class="modal-image-text">
-            <h4>Chào mừng trở lại!</h4>
-            <p>Cùng GaragePro chăm sóc chiếc xe của bạn dễ dàng hơn.</p>
-          </div>
-        </div>
-        <div class="modal-form">
-          <div class="form-header">
-            <h3>Đăng nhập</h3>
-            <p>Nhập email để tiếp tục</p>
-          </div>
-          <form @submit.prevent="handleLogin">
-            <GmsInput
-              v-model="loginForm.email"
-              label="Email"
-              type="email"
-              placeholder="Nhập email của bạn"
-              prefix-icon="fa-envelope"
-              :required="true"
-            />
-            <GmsButton type="submit" variant="primary" block :loading="loginLoading">
-              Đăng nhập
-            </GmsButton>
-          </form>
-          <div class="text-center mt-3">
-            <span>Chưa có tài khoản? </span>
-            <a href="#" @click.prevent="switchToRegister">Đăng ký</a>
-          </div>
-        </div>
-      </div>
-    </GmsDialog>
+		<!-- About -->
+		<section id="about" class="about-section">
+			<div class="container">
+				<div class="about-content">
+					<div class="about-image">
+						<img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80" alt="Luxury Car" />
+					</div>
+					<div class="about-text">
+						<h2>GaragePro</h2>
+						<p>
+							GaragePro là nền tảng hàng đầu cung cấp giải pháp toàn diện cho xe hơi, từ mua bán, sửa chữa đến bảo dưỡng định kỳ. Với đội ngũ kỹ thuật viên chuyên nghiệp và công nghệ tiên tiến, chúng
+							tôi cam kết mang đến trải nghiệm dịch vụ cao cấp, minh bạch và đáng tin cậy.
+						</p>
+						<p>
+							Mục tiêu của chúng tôi là giúp khách hàng quản lý và chăm sóc xe hơi một cách dễ dàng, tiết kiệm thời gian và chi phí, đồng thời đảm bảo chất lượng dịch vụ luôn đạt tiêu chuẩn cao nhất.
+						</p>
+						<div class="about-stats">
+							<div class="stat-item">
+								<h3>10K+</h3>
+								<p>Khách hàng tin cậy</p>
+							</div>
+							<div class="stat-item">
+								<h3>500+</h3>
+								<p>Xe được phục vụ</p>
+							</div>
+							<div class="stat-item">
+								<h3>50+</h3>
+								<p>Kỹ thuật viên chuyên nghiệp</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 
-    <!-- Register Modal -->
-    <GmsDialog v-model="showRegisterModal" title="Đăng ký" size="large" :closable="true">
-      <div class="register-modal-content">
-        <div
-          class="modal-image"
-          style="background: url('https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;"
-        >
-          <div class="modal-image-text">
-            <h4>Gia nhập GaragePro</h4>
-            <p>Tận hưởng dịch vụ chăm sóc, sửa chữa và mua bán xe toàn diện.</p>
-          </div>
-        </div>
-        <div class="modal-form">
-          <div class="form-header">
-            <h3>Đăng ký</h3>
-            <p>Chỉ mất 1 phút để bắt đầu</p>
-          </div>
-          <form @submit.prevent="handleRegister">
-            <GmsInput
-              v-model="registerForm.fullName"
-              label="Họ và tên"
-              type="text"
-              placeholder="Nhập họ tên của bạn"
-              prefix-icon="fa-user"
-              :required="true"
-            />
-            <GmsInput
-              v-model="registerForm.email"
-              label="Email"
-              type="email"
-              placeholder="Nhập email của bạn"
-              prefix-icon="fa-envelope"
-              :required="true"
-            />
-            <GmsButton type="submit" variant="primary" block :loading="registerLoading">
-              Đăng ký
-            </GmsButton>
-          </form>
-          <div class="text-center mt-3">
-            <span>Đã có tài khoản? </span>
-            <a href="#" @click.prevent="switchToLogin">Đăng nhập</a>
-          </div>
-        </div>
-      </div>
-    </GmsDialog>
+		<!-- Services -->
+		<section id="service" class="py-5">
+			<div class="container">
+				<h2 class="section-title">Dịch vụ nổi bật</h2>
+				<div class="row g-4">
+					<div class="col-md-3">
+						<div class="service-card">
+							<img src="https://cdn-icons-png.flaticon.com/512/2598/2598799.png" alt="repair" />
+							<h5>Sửa chữa chuyên nghiệp</h5>
+							<p>Đội ngũ kỹ thuật viên chứng nhận, phục hồi mọi dòng xe.</p>
+						</div>
+					</div>
+					<div class="col-md-3">
+						<div class="service-card">
+							<img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" alt="maintenance" />
+							<h5>Bảo dưỡng định kỳ</h5>
+							<p>Giữ xe vận hành ổn định, tiết kiệm chi phí dài hạn.</p>
+						</div>
+					</div>
+					<div class="col-md-3">
+						<div class="service-card">
+							<img src="https://cdn-icons-png.flaticon.com/512/3094/3094855.png" alt="sale" />
+							<h5>Mua bán xe</h5>
+							<p>Giao dịch minh bạch, giá trị thật, bảo hành rõ ràng.</p>
+						</div>
+					</div>
+					<div class="col-md-3">
+						<div class="service-card">
+							<img src="https://cdn-icons-png.flaticon.com/512/2331/2331942.png" alt="finance" />
+							<h5>Tư vấn tài chính</h5>
+							<p>Hỗ trợ trả góp linh hoạt, lãi suất ưu đãi nhất thị trường.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
 
-    <!-- Contact Modal -->
-    <GmsDialog v-model="showContactModal" title="Gửi yêu cầu tư vấn mua xe" size="large">
-      <form @submit.prevent="handleContact">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <GmsInput
-              v-model="contactForm.fullName"
-              label="Họ và tên"
-              placeholder="Nhập họ tên của bạn"
-              :required="true"
-            />
-          </div>
-          <div class="col-md-6">
-            <GmsInput
-              v-model="contactForm.email"
-              label="Email"
-              type="email"
-              placeholder="Nhập email liên hệ"
-              :required="true"
-            />
-          </div>
-          <div class="col-md-6">
-            <GmsInput
-              v-model="contactForm.phone"
-              label="Số điện thoại"
-              type="tel"
-              placeholder="Nhập số điện thoại"
-              :required="true"
-            />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Dòng xe quan tâm</label>
-            <GmsInput
-              v-model="contactForm.carSearch"
-              placeholder="Nhập tên hoặc hãng xe (VD: VinFast)"
-              prefix-icon="fa-car"
-              :clearable="true"
-              @input="handleCarSearch"
-            />
-            <ul v-if="carDropdownVisible && filteredCars.length > 0" class="car-dropdown">
-              <li
-                v-for="car in filteredCars"
-                :key="car.name"
-                @click="selectCar(car)"
-              >
-                {{ car.name }} – {{ car.price }}
-              </li>
-            </ul>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Nội dung yêu cầu</label>
-            <textarea
-              v-model="contactForm.message"
-              class="form-control"
-              rows="4"
-              placeholder="Nhập yêu cầu hoặc thắc mắc của bạn..."
-              required
-            ></textarea>
-          </div>
-        </div>
-        <div class="text-end mt-4">
-          <GmsButton type="submit" variant="primary" :loading="contactLoading">
-            <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
-          </GmsButton>
-        </div>
-        <div v-if="contactSuccess" class="alert alert-success mt-4">
-          <i class="fas fa-check-circle me-2"></i> Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ lại
-          sớm nhất.
-        </div>
-      </form>
-    </GmsDialog>
+		<!-- Featured Cars -->
+		<section id="cars" class="py-5 bg-light">
+			<div class="container text-center">
+				<h2 class="section-title mb-4">Bộ sưu tập xe nổi bật</h2>
+				<div class="position-relative">
+					<button id="prevCar" class="btn btn-outline-secondary rounded-circle position-absolute top-50 start-0 translate-middle-y shadow">
+						<i class="fa-solid fa-chevron-left"></i>
+					</button>
+					<div class="row g-4 justify-content-center" id="carList"></div>
+					<button id="nextCar" class="btn btn-outline-secondary rounded-circle position-absolute top-50 end-0 translate-middle-y shadow">
+						<i class="fa-solid fa-chevron-right"></i>
+					</button>
+				</div>
+				<div class="mt-5">
+					<a href="#" class="btn btn-cta px-5">
+						Xem tất cả xe
+						<i class="fa-solid fa-arrow-right ms-2"></i>
+					</a>
+				</div>
+			</div>
+		</section>
 
-    <!-- Toast -->
-    <GmsToast ref="toastRef" />
-  </div>
+		<!-- Reviews -->
+		<section id="reviews" class="py-5">
+			<div class="container">
+				<h2 class="section-title">Đánh giá khách hàng</h2>
+				<div class="row g-4">
+					<div class="col-md-4">
+						<div class="testimonial-card">
+							<img src="https://randomuser.me/api/portraits/men/11.jpg" alt="Customer 1" />
+							<div class="stars">★★★★★</div>
+							<p>“Dịch vụ tuyệt vời, nhân viên thân thiện và chuyên nghiệp.”</p>
+							<strong>- Minh Nguyễn</strong>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="testimonial-card">
+							<img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Customer 2" />
+							<div class="stars">★★★★★</div>
+							<p>“Xe của tôi được bảo dưỡng nhanh chóng và tận tâm.”</p>
+							<strong>- Hương Trần</strong>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="testimonial-card">
+							<img src="https://randomuser.me/api/portraits/men/45.jpg" alt="Customer 3" />
+							<div class="stars">★★★★★</div>
+							<p>“Mua xe tại đây rất yên tâm, mọi thứ rõ ràng và uy tín.”</p>
+							<strong>- Tuấn Phạm</strong>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Contact Section -->
+		<section id="booking" class="py-5 bg-light">
+			<div class="container text-center">
+				<h2 class="section-title fw-bold text-dark">Đặt lịch ngay</h2>
+				<p class="lead text-muted">
+					<strong>Sẵn sàng hỗ trợ bạn 24/7. Đặt lịch ngay để được tư vấn và nhận ưu đãi tốt nhất.</strong>
+				</p>
+				<a href="#" class="btn btn-cta btn-warning px-4 py-2 fw-semibold text-white" data-bs-toggle="modal" data-bs-target="#bookingModal">
+					<i class="fas fa-paper-plane me-2"></i>
+					Gửi yêu cầu
+				</a>
+			</div>
+		</section>
+
+		<!-- MODAL: Liên hệ đặt lịch xe -->
+		<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+				<div class="modal-content border-0 shadow-lg">
+					<div class="modal-header bg-light border-0">
+						<h5 class="modal-title fw-bold text-dark" id="bookingModalLabel">
+							<i class="fas fa-wrench me-2"></i>
+							Gửi yêu cầu đặt lịch bảo dưỡng và sửa chữa xe
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+					</div>
+
+					<div class="modal-body">
+						<!-- Alert Messages -->
+						<div id="alertSuccess" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+							<i class="fas fa-check-circle me-2"></i>
+							<strong>Thành công!</strong>
+							Yêu cầu của bạn đã được gửi. Chúng tôi sẽ liên hệ lại trong thời gian sớm nhất.
+							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						</div>
+
+						<div id="alertError" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+							<i class="fas fa-exclamation-triangle me-2"></i>
+							<strong>Lỗi!</strong>
+							<span id="errorMessage">Có lỗi xảy ra, vui lòng thử lại.</span>
+							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						</div>
+
+						<!-- Contact Form -->
+						<form id="contactForm" novalidate>
+							<div class="row g-3">
+								<div class="col-md-6">
+									<label for="fullName" class="form-label">
+										Họ và tên
+										<span class="text-danger">*</span>
+									</label>
+									<input type="text" class="form-control" id="fullName" name="fullName" placeholder="Nguyễn Văn A" required minlength="2" maxlength="100" autocomplete="name" />
+									<div class="invalid-feedback">Vui lòng nhập họ tên (từ 2 ký tự)</div>
+								</div>
+
+								<div class="col-md-6">
+									<label for="phone" class="form-label">
+										Số điện thoại
+										<span class="text-danger">*</span>
+									</label>
+									<input type="tel" class="form-control" id="phone" name="phone" placeholder="0912345678" required pattern="^(0|\+84)[0-9]{9,10}$" autocomplete="tel" />
+									<div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
+								</div>
+
+								<div class="col-md-6">
+									<label for="email" class="form-label">
+										Email
+										<span class="text-danger">*</span>
+									</label>
+									<input type="email" class="form-control" id="email" name="email" placeholder="example@email.com" required autocomplete="email" />
+									<div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
+								</div>
+
+								<div class="col-md-6">
+									<label for="serviceType" class="form-label">
+										Loại dịch vụ
+										<span class="text-danger">*</span>
+									</label>
+									<select class="form-select" id="serviceType" name="serviceType" required>
+										<option value="">-- Chọn loại dịch vụ --</option>
+										<option value="maintenance">Bảo dưỡng định kỳ</option>
+										<option value="repair">Sửa chữa</option>
+										<option value="inspection">Kiểm tra tổng quát</option>
+										<option value="tire">Thay lốp xe</option>
+										<option value="oil">Thay dầu động cơ</option>
+										<option value="brake">Hệ thống phanh</option>
+										<option value="battery">Ắc quy - Bình điện</option>
+										<option value="other">Dịch vụ khác</option>
+									</select>
+									<div class="invalid-feedback">Vui lòng chọn loại dịch vụ</div>
+								</div>
+
+								<div class="col-md-6 position-relative" id="carSearchWrapper">
+									<label for="carSearch" class="form-label">HAœng xe</label>
+									<input type="text" class="form-control" id="carSearch" name="carBrand" placeholder="Toyota, Honda, Mazda..." maxlength="50" autocomplete="off" />
+									<ul class="list-group position-absolute w-100 shadow-sm mt-2" id="carDropdown"></ul>
+									<small class="text-muted">TA1y ch ¯?n</small>
+								</div>
+
+								<div class="col-md-6">
+									<label for="preferredDate" class="form-label">Ngày mong muốn</label>
+									<input type="date" class="form-control" id="preferredDate" name="preferredDate" />
+									<small class="text-muted">Tùy chọn</small>
+								</div>
+
+								<div class="col-12">
+									<label for="message" class="form-label">
+										Nội dung yêu cầu
+										<span class="text-danger">*</span>
+									</label>
+									<textarea
+										class="form-control"
+										id="message"
+										name="message"
+										rows="4"
+										placeholder="Mô tả chi tiết vấn đề của xe hoặc dịch vụ bạn cần..."
+										required
+										minlength="10"
+										maxlength="1000"
+									></textarea>
+									<div class="invalid-feedback">Vui lòng nhập nội dung yêu cầu (từ 10 ký tự)</div>
+									<small class="text-muted">
+										<span id="charCount">0</span>
+										/1000 ký tự
+									</small>
+								</div>
+
+								<div class="col-12">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="agreeTerms" required />
+										<label class="form-check-label" for="agreeTerms">
+											Tôi đồng ý với
+											<a href="#" target="_blank">điều khoản sử dụng</a>
+											và
+											<a href="#" target="_blank">chính sách bảo mật</a>
+											<span class="text-danger">*</span>
+										</label>
+										<div class="invalid-feedback">Bạn cần đồng ý với điều khoản để tiếp tục</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="text-end mt-4">
+								<button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+									<i class="fas fa-times me-2"></i>
+									Hủy
+								</button>
+								<button type="submit" class="btn btn-garagepro fw-semibold px-4" id="submitBtn">
+									<span id="btnText">
+										<i class="fas fa-paper-plane me-2"></i>
+										Gửi yêu cầu
+									</span>
+									<span id="loadingSpinner" class="d-none">
+										<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+										Đang gửi...
+									</span>
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Footer -->
+		<footer class="footer">
+			<div class="container">
+				<div class="row g-4">
+					<div class="col-md-4">
+						<h4>GaragePro</h4>
+						<p>Giải pháp toàn diện cho ô tô của bạn – Uy tín, minh bạch, tận tâm.</p>
+						<p>© 2025 GaragePro. All rights reserved.</p>
+					</div>
+					<div class="col-md-4">
+						<h5>Liên hệ</h5>
+						<p>
+							<i class="fas fa-map-marker-alt me-2"></i>
+							Khu Giáo dục và Đào tạo - Khu Công nghệ cao Hòa Lạc - Km29 Đại lộ Thăng Long, xã Hòa Lạc, TP. Hà Nội
+						</p>
+						<p>
+							<i class="fas fa-phone me-2"></i>
+							(024) 7300 5588
+						</p>
+						<p>
+							<i class="fas fa-envelope me-2"></i>
+							support@garagepro.vn
+						</p>
+					</div>
+					<div class="col-md-4">
+						<h5>Đăng ký nhận tin</h5>
+						<p>Nhận thông tin mới nhất về các mẫu xe và ưu đãi đặc biệt.</p>
+						<form class="newsletter-form">
+							<input type="email" placeholder="Nhập email của bạn" required />
+							<button type="submit">Đăng ký</button>
+						</form>
+						<h5 class="mt-4">Theo dõi chúng tôi</h5>
+						<div class="d-flex gap-3">
+							<a href="#"><i class="fab fa-facebook-f"></i></a>
+							<a href="#"><i class="fab fa-instagram"></i></a>
+							<a href="#"><i class="fab fa-youtube"></i></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</footer>
+
+		<button id="backToTopBtn" class="back-to-top"><i class="fa-solid fa-arrow-up"></i></button>
+		<GmsToast ref="toastRef" />
+	</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { GmsInput, GmsButton, GmsDialog, GmsToast } from '@/components'
-import { useToast } from '@/composables/useToast'
-import authService from '@/services/auth'
-import api from '@/services/api'
-import { API_ENDPOINTS } from '@/constant/api'
+	import { initHomeInteractions } from '@/assets/js/home'
+	import '@/assets/style/home.css'
+	import { GmsToast } from '@/components'
+	import { useToast, setToastInstance } from '@/composables/useToast'
+	import { onBeforeUnmount, onMounted, ref } from 'vue'
+	import { useRouter } from 'vue-router'
+	import { useAuthStore } from '../stores/auth'
 
-const router = useRouter()
-const toastRef = ref(null)
-const toast = useToast()
+	const router = useRouter()
+	const auth = useAuthStore()
+	const toast = useToast()
 
-const theme = ref(localStorage.getItem('theme') || 'light')
-const showBackToTop = ref(false)
-const showLoginModal = ref(false)
-const showRegisterModal = ref(false)
-const showContactModal = ref(false)
-const loginLoading = ref(false)
-const registerLoading = ref(false)
-const contactLoading = ref(false)
-const contactSuccess = ref(false)
-const carDropdownVisible = ref(false)
+	const email = ref('')
+	const localError = ref('')
+	const toastRef = ref(null)
 
-const currentUser = ref(authService.getCurrentUser())
-const isAuthenticated = computed(() => authService.isAuthenticated())
+	const hideModal = (modalId) => {
+		if (typeof window 
+        
+        'undefined' || !window.bootstrap) {
+			return
+		}
 
-const loginForm = ref({
-  email: ''
-})
+		const modalEl = document.getElementById(modalId)
+		if (!modalEl) {
+			return
+		}
 
-const registerForm = ref({
-  fullName: '',
-  email: ''
-})
+		const modalInstance = window.bootstrap.Modal.getInstance(modalEl) ?? window.bootstrap.Modal.getOrCreateInstance(modalEl)
+		modalInstance.hide()
+	}
 
-const contactForm = ref({
-  fullName: '',
-  email: '',
-  phone: '',
-  carSearch: '',
-  message: ''
-})
+	const cleanupModalState = () => {
+		const body = document.body
+		if (body) {
+			body.classList.remove('modal-open')
+			body.style.removeProperty('padding-right')
+		}
+		document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+	}
 
-const newsletterEmail = ref('')
+	const sendOtp = async () => {
+		localError.value = ''
 
-const services = ref([
-  {
-    id: 1,
-    title: 'Sửa chữa chuyên nghiệp',
-    description: 'Đội ngũ kỹ thuật viên chứng nhận, phục hồi mọi dòng xe.',
-    icon: 'https://cdn-icons-png.flaticon.com/512/2598/2598799.png'
-  },
-  {
-    id: 2,
-    title: 'Bảo dưỡng định kỳ',
-    description: 'Giữ xe vận hành ổn định, tiết kiệm chi phí dài hạn.',
-    icon: 'https://cdn-icons-png.flaticon.com/512/854/854878.png'
-  },
-  {
-    id: 3,
-    title: 'Mua bán xe',
-    description: 'Giao dịch minh bạch, giá trị thật, bảo hành rõ ràng.',
-    icon: 'https://cdn-icons-png.flaticon.com/512/3094/3094855.png'
-  },
-  {
-    id: 4,
-    title: 'Tư vấn tài chính',
-    description: 'Hỗ trợ trả góp linh hoạt, lãi suất ưu đãi nhất thị trường.',
-    icon: 'https://cdn-icons-png.flaticon.com/512/2331/2331942.png'
-  }
-])
+		const trimmedEmail = email.value.trim()
+		if (!trimmedEmail) {
+			const message = 'Vui lòng nhập email để nhận OTP đăng nhập'
+			localError.value = message
+			toast.error(message, 'Lỗi đăng nhập')
+			return
+		}
 
-const cars = ref([
-  {
-    id: 1,
-    name: 'Honda CR-V 2023',
-    img: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80',
-    price: '720 triệu VNĐ'
-  },
-  {
-    id: 2,
-    name: 'Toyota Camry 2022',
-    img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
-    price: '850 triệu VNĐ'
-  },
-  {
-    id: 3,
-    name: 'Mercedes C200 2021',
-    img: 'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=800&q=80',
-    price: '1,2 tỷ VNĐ'
-  },
-  {
-    id: 4,
-    name: 'BMW 5 Series 2020',
-    img: 'https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=800&q=80',
-    price: '1,8 tỷ VNĐ'
-  },
-  {
-    id: 5,
-    name: 'Porsche Cayenne 2019',
-    img: 'https://images.unsplash.com/photo-1605559424840-4e0b86781b25?auto=format&fit=crop&w=800&q=80',
-    price: '3,5 tỷ VNĐ'
-  },
-  {
-    id: 6,
-    name: 'Rolls-Royce Ghost 2018',
-    img: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=800&q=80',
-    price: '10 tỷ VNĐ'
-  }
-])
+		email.value = trimmedEmail
+		const ok = await auth.requestOtp(trimmedEmail)
+		if (ok) {
+			hideModal('login-modal')
+			cleanupModalState()
+			router.push({ name: 'verifyOtp', query: { email: trimmedEmail } })
+			return
+		}
 
-const vehicleList = ref([
-  { name: 'Toyota Vios 2023', brand: 'Toyota', price: '520.000.000đ' },
-  { name: 'Mazda CX-5 2022', brand: 'Mazda', price: '850.000.000đ' },
-  { name: 'Hyundai Accent 2023', brand: 'Hyundai', price: '580.000.000đ' },
-  { name: 'Honda City 2024', brand: 'Honda', price: '610.000.000đ' },
-  { name: 'VinFast VF5 Plus 2024', brand: 'VinFast', price: '468.000.000đ' },
-  { name: 'VinFast Lux A2.0 2022', brand: 'VinFast', price: '890.000.000đ' },
-  { name: 'VinFast VF8 2023', brand: 'VinFast', price: '1.050.000.000đ' },
-  { name: 'Kia Seltos 2023', brand: 'Kia', price: '720.000.000đ' },
-  { name: 'Ford Ranger 2024', brand: 'Ford', price: '980.000.000đ' }
-])
+		const errorMessage = auth.error || 'Email không hợp lệ, vui lòng thử lại'
+		localError.value = errorMessage
+		toast.error(errorMessage, 'Lỗi đăng nhập', { duration: 4000 })
+	}
 
-const reviews = ref([
-  {
-    id: 1,
-    name: 'Minh Nguyễn',
-    avatar: 'https://randomuser.me/api/portraits/men/11.jpg',
-    comment: 'Dịch vụ tuyệt vời, nhân viên thân thiện và chuyên nghiệp.'
-  },
-  {
-    id: 2,
-    name: 'Hương Trần',
-    avatar: 'https://randomuser.me/api/portraits/women/32.jpg',
-    comment: 'Xe của tôi được bảo dưỡng nhanh chóng và tận tâm.'
-  },
-  {
-    id: 3,
-    name: 'Tuấn Phạm',
-    avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-    comment: 'Mua xe tại đây rất yên tâm, mọi thứ rõ ràng và uy tín.'
-  }
-])
+	let teardownFn
 
-const currentCarIndex = ref(0)
-const carsPerView = 3
+	onMounted(() => {
+		teardownFn = initHomeInteractions()
 
-const displayedCars = computed(() => {
-  const result = []
-  for (let i = 0; i < carsPerView; i++) {
-    const index = (currentCarIndex.value + i) % cars.value.length
-    result.push(cars.value[index])
-  }
-  return result
-})
+		if (toastRef.value) {
+			setToastInstance(toastRef.value)
+		}
+	})
 
-const filteredCars = computed(() => {
-  if (!contactForm.value.carSearch) return []
-  const search = contactForm.value.carSearch.toLowerCase()
-  return vehicleList.value
-    .filter(
-      (v) =>
-        v.name.toLowerCase().includes(search) || v.brand.toLowerCase().includes(search)
-    )
-    .slice(0, 5)
-})
-
-const toggleTheme = () => {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark'
-  localStorage.setItem('theme', theme.value)
-}
-
-const scrollTo = (id) => {
-  const element = document.getElementById(id)
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' })
-  }
-}
-
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-const handleScroll = () => {
-  showBackToTop.value = window.scrollY > 300
-}
-
-const prevCars = () => {
-  currentCarIndex.value = (currentCarIndex.value - carsPerView + cars.value.length) % cars.value.length
-}
-
-const nextCars = () => {
-  currentCarIndex.value = (currentCarIndex.value + carsPerView) % cars.value.length
-}
-
-const viewCarDetail = (car) => {
-  // Navigate to car detail
-  console.log('View car:', car)
-}
-
-const viewAllCars = () => {
-  // Navigate to all cars page
-  console.log('View all cars')
-}
-
-const switchToRegister = () => {
-  showLoginModal.value = false
-  setTimeout(() => {
-    showRegisterModal.value = true
-  }, 300)
-}
-
-const switchToLogin = () => {
-  showRegisterModal.value = false
-  setTimeout(() => {
-    showLoginModal.value = true
-  }, 300)
-}
-
-const handleLogin = async () => {
-  if (!loginForm.value.email.trim()) {
-    toast.error('Vui lòng nhập email')
-    return
-  }
-
-  try {
-    loginLoading.value = true
-    // Redirect to OTP verification
-    router.push({
-      path: '/verify-otp',
-      query: { mode: 'login', email: loginForm.value.email }
-    })
-  } catch (error) {
-    toast.error('Lỗi đăng nhập', error.message)
-  } finally {
-    loginLoading.value = false
-  }
-}
-
-const handleRegister = async () => {
-  if (!registerForm.value.fullName.trim() || !registerForm.value.email.trim()) {
-    toast.error('Vui lòng nhập đầy đủ thông tin')
-    return
-  }
-
-  try {
-    registerLoading.value = true
-    // Redirect to OTP verification
-    router.push({
-      path: '/verify-otp',
-      query: {
-        mode: 'register',
-        email: registerForm.value.email,
-        name: registerForm.value.fullName
-      }
-    })
-  } catch (error) {
-    toast.error('Lỗi đăng ký', error.message)
-  } finally {
-    registerLoading.value = false
-  }
-}
-
-const handleCarSearch = () => {
-  carDropdownVisible.value = contactForm.value.carSearch.length > 0
-}
-
-const selectCar = (car) => {
-  contactForm.value.carSearch = car.name
-  carDropdownVisible.value = false
-}
-
-const handleContact = async () => {
-  const lastSubmit = localStorage.getItem('lastSubmitTime')
-  const now = Date.now()
-
-  if (lastSubmit && now - lastSubmit < 30000) {
-    toast.warning('Bạn vừa gửi yêu cầu, vui lòng thử lại sau ít phút.')
-    return
-  }
-
-  try {
-    contactLoading.value = true
-    await api.post('/contact', contactForm.value)
-    
-    contactSuccess.value = true
-    localStorage.setItem('lastSubmitTime', now)
-    
-    setTimeout(() => {
-      showContactModal.value = false
-      contactSuccess.value = false
-      contactForm.value = {
-        fullName: '',
-        email: '',
-        phone: '',
-        carSearch: '',
-        message: ''
-      }
-    }, 2000)
-    
-    toast.success('Gửi yêu cầu thành công!')
-  } catch (error) {
-    toast.error('Lỗi khi gửi yêu cầu', error.message)
-  } finally {
-    contactLoading.value = false
-  }
-}
-
-const handleNewsletter = async () => {
-  if (!newsletterEmail.value.trim()) {
-    toast.error('Vui lòng nhập email')
-    return
-  }
-
-  try {
-    await api.post('/newsletter', { email: newsletterEmail.value })
-    toast.success('Đăng ký nhận tin thành công!')
-    newsletterEmail.value = ''
-  } catch (error) {
-    toast.error('Lỗi khi đăng ký', error.message)
-  }
-}
-
-const handleLogout = async () => {
-  await authService.logout()
-  currentUser.value = null
-  router.push('/')
-}
-
-const goToProfile = () => {
-  router.push('/customer/profile')
-}
-
-const goToHistory = () => {
-  router.push('/customer/service-tickets')
-}
-
-const goToSettings = () => {
-  router.push('/customer/settings')
-}
-const goToPublicBooking = () => {
-  router.push('/customer/bookings/create')
-}
-
-onMounted(async () => {
-  // Set toast instance
-  if (toastRef.value) {
-    const { setToastInstance } = await import('@/composables/useToast')
-    setToastInstance(toastRef.value)
-  }
-
-  // Auto rotate cars
-  setInterval(() => {
-    currentCarIndex.value = (currentCarIndex.value + 1) % cars.value.length
-  }, 3500)
-
-  // Scroll handler
-  window.addEventListener('scroll', handleScroll)
-
-  // Close car dropdown on outside click
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.position-relative')) {
-      carDropdownVisible.value = false
-    }
-  })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
+	onBeforeUnmount(() => {
+		if (typeof teardownFn === 'function') {
+			teardownFn()
+		}
+	})
 </script>
-
-<style scoped>
-@import '../assets/style/home.css';
-</style>
-

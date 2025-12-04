@@ -6,7 +6,7 @@
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
-    
+
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
         title="Quản lý dịch vụ garage"
@@ -14,7 +14,7 @@
         :notifications="notifications"
         @logout="handleLogout"
       />
-      
+
       <main class="main-content" style="margin-top: 70px; padding: 2rem;">
         <!-- Toolbar -->
         <div class="toolbar">
@@ -28,7 +28,7 @@
               @input="handleSearch"
             />
           </div>
-          
+
           <div class="toolbar-right">
             <GmsButton
               variant="primary"
@@ -39,7 +39,7 @@
             </GmsButton>
           </div>
         </div>
-        
+
         <!-- Filters -->
         <div class="filters">
           <div class="filter-group">
@@ -53,7 +53,7 @@
               @change="applyFilters"
             />
           </div>
-          
+
           <div class="filter-group">
             <label>Giá đến:</label>
             <input
@@ -65,7 +65,7 @@
               @change="applyFilters"
             />
           </div>
-          
+
           <GmsButton
             variant="outline"
             icon="fa-times"
@@ -74,7 +74,7 @@
             Xóa bộ lọc
           </GmsButton>
         </div>
-        
+
         <!-- Table -->
         <div class="table-container">
           <GmsTable
@@ -92,7 +92,7 @@
             </span>
             <span v-else class="text-muted">Chưa có giá</span>
           </template>
-          
+
           <template #cell-actions="{ row }">
             <div class="action-buttons">
               <GmsButton
@@ -103,7 +103,7 @@
               >
                 Sửa
               </GmsButton>
-              
+
               <GmsButton
                 variant="danger"
                 size="small"
@@ -116,7 +116,7 @@
           </template>
           </GmsTable>
         </div>
-        
+
         <!-- Pagination -->
         <div v-if="totalItems > 0" class="pagination mt-4">
           <div class="pagination-left">
@@ -142,7 +142,7 @@
             >
               <i class="fas fa-chevron-left"></i>
             </GmsButton>
-            
+
             <div class="pagination-pages">
               <button
                 v-for="page in visiblePages"
@@ -154,7 +154,7 @@
                 {{ page }}
               </button>
             </div>
-            
+
             <GmsButton
               variant="outline"
               size="small"
@@ -167,7 +167,7 @@
         </div>
       </main>
     </div>
-    
+
     <!-- Create/Edit Dialog -->
     <GmsDialog
       v-model="showFormDialog"
@@ -184,7 +184,7 @@
             :maxlength="255"
           />
         </div>
-        
+
         <div class="mb-3">
           <label class="form-label">Giá dịch vụ (VNĐ)</label>
           <GmsInput
@@ -196,7 +196,7 @@
           />
           <small class="text-muted">Để trống nếu chưa có giá</small>
         </div>
-        
+
         <div class="dialog-actions">
           <GmsButton type="button" variant="outline" @click="closeFormDialog">Hủy</GmsButton>
           <GmsButton type="submit" variant="primary" :loading="submitting">
@@ -205,7 +205,7 @@
         </div>
       </form>
     </GmsDialog>
-    
+
     <!-- Delete Confirmation Dialog -->
     <GmsDialog
       v-model="showDeleteDialog"
@@ -215,7 +215,7 @@
       <template v-if="selectedService">
         <p>Bạn có chắc chắn muốn xóa dịch vụ <strong>{{ selectedService.garageServiceName }}</strong>?</p>
         <p class="text-muted small">Dịch vụ sẽ bị xóa mềm (soft delete) và có thể khôi phục sau.</p>
-        
+
         <div class="dialog-actions">
           <GmsButton type="button" variant="outline" @click="showDeleteDialog = false">Hủy</GmsButton>
           <GmsButton variant="danger" :loading="deleting" @click="confirmDelete">
@@ -224,7 +224,7 @@
         </div>
       </template>
     </GmsDialog>
-    
+
     <!-- Toast -->
     <GmsToast ref="toastRef" />
   </div>
@@ -298,15 +298,15 @@ const visiblePages = computed(() => {
   const maxVisible = 5
   let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
   let end = Math.min(totalPages.value, start + maxVisible - 1)
-  
+
   if (end - start < maxVisible - 1) {
     start = Math.max(1, end - maxVisible + 1)
   }
-  
+
   for (let i = start; i <= end; i++) {
     pages.push(i)
   }
-  
+
   return pages
 })
 
@@ -391,15 +391,15 @@ const handleSubmit = async () => {
     toast.error('Vui lòng nhập tên dịch vụ')
     return
   }
-  
+
   try {
     submitting.value = true
-    
+
     const data = {
       garageServiceName: formData.value.garageServiceName.trim(),
       garageServicePrice: formData.value.garageServicePrice || null
     }
-    
+
     if (isEditing.value && selectedService.value) {
       await garageServiceService.update(selectedService.value.garageServiceId, data)
       toast.success('Cập nhật thành công!', `Đã cập nhật dịch vụ "${data.garageServiceName}"`)
@@ -407,7 +407,7 @@ const handleSubmit = async () => {
       await garageServiceService.create(data)
       toast.success('Tạo mới thành công!', `Đã tạo dịch vụ "${data.garageServiceName}"`)
     }
-    
+
     closeFormDialog()
     await loadServices()
   } catch (error) {
@@ -424,7 +424,7 @@ const openDeleteDialog = (service) => {
 
 const confirmDelete = async () => {
   if (!selectedService.value) return
-  
+
   try {
     deleting.value = true
     await garageServiceService.delete(selectedService.value.garageServiceId)
@@ -442,10 +442,10 @@ const confirmDelete = async () => {
 const loadServices = async () => {
   try {
     loading.value = true
-    
+
     // Build column filters
     const columnFilters = []
-    
+
     // Search filter
     if (searchQuery.value && searchQuery.value.trim()) {
       columnFilters.push({
@@ -454,7 +454,7 @@ const loadServices = async () => {
         value: searchQuery.value.trim()
       })
     }
-    
+
     // Price filters
     if (filters.value.priceFrom) {
       columnFilters.push({
@@ -463,7 +463,7 @@ const loadServices = async () => {
         value: filters.value.priceFrom.toString()
       })
     }
-    
+
     if (filters.value.priceTo) {
       columnFilters.push({
         columnName: 'GarageServicePrice',
@@ -471,7 +471,7 @@ const loadServices = async () => {
         value: filters.value.priceTo.toString()
       })
     }
-    
+
     // Build sort
     const columnSorts = []
     if (sortConfig.value.key) {
@@ -486,14 +486,14 @@ const loadServices = async () => {
         sortDirection: 'DESC'
       })
     }
-    
+
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
       columnFilters,
       columnSorts
     }
-    
+
     const response = await garageServiceService.getPaging(params)
     services.value = response.data.items || []
     totalItems.value = response.data.total || 0
@@ -515,13 +515,13 @@ onMounted(async () => {
     const { setToastInstance } = await import('@/composables/useToast')
     setToastInstance(toastRef.value)
   }
-  
+
   // Get menu
   const user = authService.getCurrentUser()
   if (user) {
     menuItems.value = getMenuByRole(user.role)
   }
-  
+
   // Load data
   await loadServices()
 })

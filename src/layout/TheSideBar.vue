@@ -15,11 +15,11 @@
 
     <div class="the-sidebar-user">
       <img
-        :src="user?.avatar || getAvatarUrl(user?.name)"
-        :alt="user?.name"
+        :src="user?.avatar || getAvatarUrl(user?.fullName || user?.name)"
+        :alt="user?.fullName || user?.name"
       />
       <div v-if="!collapsed" class="the-sidebar-user-info">
-        <h6>{{ user?.name || 'User' }}</h6>
+        <h6>{{ user?.fullName || user?.name || 'User' }}</h6>
         <small>{{ getUserRoleLabel(user?.role) }}</small>
       </div>
     </div>
@@ -27,7 +27,7 @@
     <nav class="the-sidebar-nav">
       <ul class="the-sidebar-menu">
         <li
-          v-for="item in menuItems"
+          v-for="item in filteredMenuItems"
           :key="item.key"
           :class="['the-sidebar-menu-item', { active: isActive(item), 'has-submenu': item.children }]"
         >
@@ -41,7 +41,7 @@
             <span v-if="!collapsed">{{ item.label }}</span>
             <span v-if="item.badge && !collapsed" class="the-sidebar-menu-badge">{{ item.badge }}</span>
           </a>
-          
+
           <div v-else class="the-sidebar-menu-group">
             <a
               href="#"
@@ -55,7 +55,7 @@
                 class="fas the-sidebar-menu-arrow"
               ></i>
             </a>
-            
+
             <ul
               v-if="!collapsed"
               v-show="openSubmenus.includes(item.key)"
@@ -89,9 +89,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth.js'
 import authService from '../services/auth.js'
+import { getMenuByRole } from '../utils/menu.js'
 import { ROLES } from '../constant/roles.js'
 import { hasPermission } from '../constant/roles.js'
 
@@ -114,8 +116,13 @@ const emit = defineEmits(['update:collapsed', 'menu-click', 'logout'])
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const openSubmenus = ref([])
-const user = ref(authService.getCurrentUser())
+
+// Get user from auth store, fallback to authService
+const user = computed(() => {
+  return authStore.user || authService.getCurrentUser()
+})
 
 const getAvatarUrl = (name) => {
   if (!name) return 'https://ui-avatars.com/api/?name=User&background=FF7A00&color=fff'
@@ -169,24 +176,88 @@ const handleLogout = () => {
   emit('logout')
 }
 
+// Get menu items - use props if provided, otherwise get from role
+const menuItemsByRole = computed(() => {
+  if (props.menuItems && props.menuItems.length > 0) {
+    return props.menuItems
+  }
+  
+  if (!user.value || !user.value.role) {
+    console.warn('TheSideBar: No user or role found', { user: user.value })
+    return []
+  }
+  
+  const role = user.value.role
+  const menu = getMenuByRole(role)
+  console.log('TheSideBar: Getting menu for role', role, 'menu items:', menu.length)
+  return menu
+})
+
 // Filter menu items based on permissions
 const filteredMenuItems = computed(() => {
-  if (!user.value) return []
-  
-  return props.menuItems.filter(item => {
-    if (item.permission) {
-      return hasPermission(user.value.role, item.permission)
-    }
-    return true
-  })
+  if (!user.value || !user.value.role) {
+    console.warn('TheSideBar: No user or role for filtering', { user: user.value })
+    return []
+  }
+
+  const role = user.value.role
+  console.log('TheSideBar: Filtering menu for role', role, 'menuItemsByRole:', menuItemsByRole.value.length)
+
+  return menuItemsByRole.value
+    .map(item => {
+      // Filter parent item
+      if (item.permission) {
+        const hasPerm = hasPermission(role, item.permission)
+        console.log('TheSideBar: Checking permission', item.permission, 'for role', role, 'result:', hasPerm)
+        if (!hasPerm) {
+          return null
+        }
+      }
+      
+      // Filter children if exists
+      if (item.children) {
+        const filteredChildren = item.children.filter(child => {
+          if (child.permission) {
+            return hasPermission(role, child.permission)
+          }
+          return true
+        })
+        
+        // Only show parent if it has at least one visible child
+        if (filteredChildren.length === 0) {
+          return null
+        }
+        
+        // Return item with filtered children
+        return {
+          ...item,
+          children: filteredChildren
+        }
+      }
+      
+      return item
+    })
+    .filter(item => item !== null)
 })
 
 onMounted(() => {
   // Auto-open submenu if current route is in submenu
-  props.menuItems.forEach(item => {
+  filteredMenuItems.value.forEach(item => {
     if (item.children) {
       const hasActiveChild = item.children.some(child => isActive(child))
       if (hasActiveChild) {
+        openSubmenus.value.push(item.key)
+      }
+    }
+  })
+})
+
+// Watch for route changes to auto-open submenu
+watch(() => route.path, () => {
+  filteredMenuItems.value.forEach(item => {
+    if (item.children) {
+      const hasActiveChild = item.children.some(child => isActive(child))
+      if (hasActiveChild && !openSubmenus.value.includes(item.key)) {
         openSubmenus.value.push(item.key)
       }
     }

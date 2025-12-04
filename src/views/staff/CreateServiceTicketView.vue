@@ -6,14 +6,14 @@
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
-    
+
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
         title="Tạo phiếu dịch vụ mới"
         :show-search="false"
         @logout="handleLogout"
       />
-      
+
       <main class="main-content" style="margin-top: 70px; padding: 2rem;">
         <div class="page-header">
           <GmsButton variant="outline" icon="fa-arrow-left" @click="$router.back()">
@@ -26,9 +26,9 @@
             <!-- Thông tin khách hàng -->
             <div class="form-section">
               <h5 class="section-title">
-                <i class="fas fa-user me-2"></i>Thông tin khách hàng *
+                <i class="fas fa-user me-2"></i>Thông tin khách hàng
               </h5>
-              
+
               <div class="search-container">
                 <label class="form-label">Tìm kiếm khách hàng</label>
                 <div class="search-input-wrapper">
@@ -100,7 +100,7 @@
               <h5 class="section-title">
                 <i class="fas fa-car me-2"></i>Thông tin xe *
               </h5>
-              
+
               <div class="search-container">
                 <label class="form-label">Tìm kiếm xe</label>
                 <div class="search-input-wrapper">
@@ -202,7 +202,7 @@
               <h5 class="section-title">
                 <i class="fas fa-cog me-2"></i>Phụ tùng (tùy chọn)
               </h5>
-              
+
               <div class="search-container">
                 <label class="form-label">Tìm kiếm phụ tùng</label>
                 <div class="search-input-wrapper">
@@ -263,7 +263,7 @@
               <h5 class="section-title">
                 <i class="fas fa-tools me-2"></i>Dịch vụ garage (tùy chọn)
               </h5>
-              
+
               <div class="search-container">
                 <label class="form-label">Tìm kiếm dịch vụ</label>
                 <div class="search-input-wrapper">
@@ -404,7 +404,7 @@
             v-for="staff in filteredTechnicalStaff"
             :key="staff.userId"
             class="technical-card"
-            :class="{ 
+            :class="{
               'available': staff.isAvailable,
               'busy': !staff.isAvailable,
               'selected': selectedTechnical?.userId === staff.userId
@@ -445,8 +445,8 @@
 
         <div class="dialog-actions">
           <GmsButton variant="outline" @click="showAssignModal = false">Hủy</GmsButton>
-          <GmsButton 
-            variant="primary" 
+          <GmsButton
+            variant="primary"
             :disabled="!selectedTechnical"
             @click="confirmTechnical"
           >
@@ -558,7 +558,7 @@ const searchCustomers = async () => {
     customerSearchResults.value = []
     return
   }
-  
+
   try {
     const response = await customerService.search(customerSearch.value)
     customerSearchResults.value = response.data || []
@@ -592,13 +592,13 @@ const searchVehicles = async () => {
     vehicleSearchResults.value = []
     return
   }
-  
+
   const customerId = selectedCustomer.value?.customerId || null
   if (!customerId && !newCustomer.value.customerName) {
     vehicleSearchResults.value = []
     return
   }
-  
+
   try {
     const response = await vehicleService.search(vehicleSearch.value, customerId)
     vehicleSearchResults.value = response.data || []
@@ -632,10 +632,10 @@ const searchParts = async () => {
     partSearchResults.value = []
     return
   }
-  
+
   try {
     const response = await partService.search(partSearch.value)
-    partSearchResults.value = (response.data || []).filter(part => 
+    partSearchResults.value = (response.data || []).filter(part =>
       !selectedParts.value.find(sp => sp.partId === part.partId)
     )
   } catch (error) {
@@ -649,12 +649,12 @@ const addPart = (part) => {
     toast.warning('Phụ tùng đã được thêm')
     return
   }
-  
+
   selectedParts.value.push({
     ...part,
     quantity: 1
   })
-  
+
   partSearch.value = ''
   showPartDropdown.value = false
   partSearchResults.value = []
@@ -669,10 +669,10 @@ const searchServices = async () => {
     serviceSearchResults.value = []
     return
   }
-  
+
   try {
     const response = await garageServiceService.search(serviceSearch.value)
-    serviceSearchResults.value = (response.data || []).filter(service => 
+    serviceSearchResults.value = (response.data || []).filter(service =>
       !selectedServices.value.find(ss => ss.garageServiceId === service.garageServiceId)
     )
   } catch (error) {
@@ -686,7 +686,7 @@ const addService = (service) => {
     toast.warning('Dịch vụ đã được thêm')
     return
   }
-  
+
   selectedServices.value.push(service)
   serviceSearch.value = ''
   showServiceDropdown.value = false
@@ -725,10 +725,13 @@ const clearTechnical = () => {
 }
 
 const handleSubmit = async () => {
-  // Validation
-  if (!selectedCustomer.value && (!newCustomer.value.customerName || !newCustomer.value.customerPhone)) {
-    toast.error('Vui lòng chọn hoặc nhập thông tin khách hàng')
-    return
+  // Validation - Không bắt buộc chọn customer, có thể tạo mới khi nhập thông tin
+  // Nếu không chọn customer, phải nhập thông tin mới
+  if (!selectedCustomer.value) {
+    if (!newCustomer.value.customerName?.trim() || !newCustomer.value.customerPhone?.trim()) {
+      toast.error('Vui lòng chọn khách hàng hoặc nhập đầy đủ thông tin khách hàng mới (Tên và Số điện thoại)')
+      return
+    }
   }
 
   if (!selectedVehicle.value && (!newVehicle.value.vehicleName || !newVehicle.value.vehicleLicensePlate)) {
@@ -756,7 +759,7 @@ const handleSubmit = async () => {
   try {
     submitting.value = true
     const currentUser = authService.getCurrentUser()
-    
+
     const payload = {
       createdBy: currentUser?.userId,
       initialIssue: formData.value.initialIssue.trim(),
@@ -787,7 +790,7 @@ const handleSubmit = async () => {
         toast.error('Vui lòng chọn khách hàng trước khi tạo xe mới')
         return
       }
-      
+
       payload.vehicleInfo = {
         vehicleName: newVehicle.value.vehicleName.trim(),
         vehicleLicensePlate: newVehicle.value.vehicleLicensePlate.trim(),
@@ -804,7 +807,7 @@ const handleSubmit = async () => {
     }
 
     const response = await serviceTicketService.create(payload)
-    
+
     toast.success('Tạo phiếu dịch vụ thành công!')
     router.push(`/staff/service-tickets/${response.data.serviceTicketId}`)
   } catch (error) {

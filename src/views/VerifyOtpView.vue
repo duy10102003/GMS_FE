@@ -1,169 +1,118 @@
 <template>
-  <div class="verify-otp-view">
-    <div class="container">
-      <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-5">
-          <div class="otp-card">
-            <div class="otp-header">
-              <h2>Xác thực OTP</h2>
-              <p>Nhập mã OTP đã được gửi đến email: <strong>{{ email }}</strong></p>
-            </div>
-            <form @submit.prevent="handleVerify">
-              <div class="otp-inputs">
-                <input
-                  v-for="(digit, index) in otpDigits"
-                  :key="index"
-                  v-model="otpDigits[index]"
-                  type="text"
-                  maxlength="1"
-                  class="otp-input"
-                  :ref="(el) => setInputRef(el, index)"
-                  @input="handleOtpInput(index, $event)"
-                  @keydown="handleKeydown(index, $event)"
-                  @paste="handlePaste"
-                />
-              </div>
-              <GmsButton
-                type="submit"
-                variant="primary"
-                block
-                :loading="loading"
-                class="mt-4"
-              >
-                Xác thực
-              </GmsButton>
-              <div class="text-center mt-3">
-                <a href="#" @click.prevent="resendOtp" :class="{ disabled: resendCooldown > 0 }">
-                  {{ resendCooldown > 0 ? `Gửi lại sau ${resendCooldown}s` : 'Gửi lại mã OTP' }}
-                </a>
-              </div>
-            </form>
-          </div>
+  <div class="verify-otp-view" ref="pageRef">
+    <div class="galaxy-bg" aria-hidden="true"></div>
+    <div class="particles" id="particles" aria-hidden="true"></div>
+    <div class="shooting-stars" id="shootingStars" aria-hidden="true"></div>
+
+    <div class="otp-container">
+      <div class="logo-icon">
+        <i class="fas fa-shield-check"></i>
+      </div>
+
+      <h1 class="title">Xác minh danh tính</h1>
+      <p class="subtitle">
+        Nhập mã xác minh 6 số đã được gửi đến<br />
+        <span class="email-badge" id="emailDisplay">email@example.com</span>
+      </p>
+
+      <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>Mã OTP không chính xác. Vui lòng thử lại.</span>
+      </div>
+
+      <form id="otpForm" novalidate>
+        <div class="otp-inputs" id="otpInputs">
+          <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code" />
+          <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+          <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+          <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+          <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+          <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" />
         </div>
+
+        <button type="submit" class="btn-verify" id="verifyBtn">Xác nhận</button>
+      </form>
+
+      <div class="resend-section">
+        <span class="resend-text">
+          Không nhận được mã?
+          <a href="#" class="resend-link" id="resendLink">Gửi lại</a>
+        </span>
       </div>
     </div>
-    <GmsToast ref="toastRef" />
+
+    <div class="success-overlay" id="successOverlay">
+      <div class="success-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2 class="success-title">Xác minh thành công!</h2>
+        <p class="success-message">Đang chuyển hướng...</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { GmsButton, GmsToast } from '@/components'
-import { useToast } from '@/composables/useToast'
-import authService from '@/services/auth'
-import api from '@/services/api'
-import { API_ENDPOINTS } from '@/constant/api'
+import { useAuthStore } from '../stores/auth'
+import { initVerifyOtpPage } from '../assets/js/VerifyOtp'
+import '../assets/style/VerifyOtp.css'
 
-const route = useRoute()
 const router = useRouter()
-const toastRef = ref(null)
-const toast = useToast()
+const route = useRoute()
+const auth = useAuthStore()
 
-const email = ref(route.query.email || '')
-const mode = ref(route.query.mode || 'login')
-const otpDigits = ref(['', '', '', '', '', ''])
-const inputRefs = ref([])
-const loading = ref(false)
-const resendCooldown = ref(0)
+const pageRef = ref(null)
+const email = ref('')
+let teardownHandler
 
-const setInputRef = (el, index) => {
-  if (el) {
-    inputRefs.value[index] = el
-  }
+const roleRedirectMap = {
+  MANAGER: '/manager/dashboard',
+  STAFF: '/staff/dashboard',
+  CUSTOMER: '/customer/home',
+  STOCKER: '/stocker/dashboard',
+  MECHANIC: '/mechanic/dashboard'
 }
 
-const handleOtpInput = (index, event) => {
-  const value = event.target.value.replace(/[^0-9]/g, '')
-  otpDigits.value[index] = value
-
-  if (value && index < 5) {
-    inputRefs.value[index + 1]?.focus()
-  }
+const redirectToRolePage = () => {
+  const target = roleRedirectMap[auth.role] || '/login'
+  router.replace(target)
 }
 
-const handleKeydown = (index, event) => {
-  if (event.key === 'Backspace' && !otpDigits.value[index] && index > 0) {
-    inputRefs.value[index - 1]?.focus()
-  }
-}
-
-const handlePaste = (event) => {
-  event.preventDefault()
-  const pastedData = event.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6)
-  pastedData.split('').forEach((digit, index) => {
-    if (index < 6) {
-      otpDigits.value[index] = digit
-    }
-  })
-  inputRefs.value[Math.min(pastedData.length, 5)]?.focus()
-}
-
-const handleVerify = async () => {
-  const otp = otpDigits.value.join('')
-  if (otp.length !== 6) {
-    toast.error('Vui lòng nhập đầy đủ 6 số OTP')
+onMounted(() => {
+  const queryEmail = route.query.email?.toString() || ''
+  if (!queryEmail) {
+    router.replace({ name: 'login' })
     return
   }
 
-  try {
-    loading.value = true
-    const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, {
-      email: email.value,
-      otp: otp,
-      mode: mode.value
-    })
+  email.value = queryEmail
 
-    if (response.token) {
-      authService.saveUser(response.user)
-      toast.success('Đăng nhập thành công!')
-      
-      // Redirect based on role
-      const role = response.user.role
-      const dashboardPaths = {
-        customer: '/customer/dashboard',
-        staff: '/staff/service-tickets',
-        manager: '/manager/dashboard',
-        stocker: '/stocker/dashboard',
-        mechanic: '/mechanic/dashboard'
+  teardownHandler = initVerifyOtpPage(pageRef.value, {
+    email: email.value,
+    mode: route.query.mode?.toString() || 'login',
+    onVerify: async ({ otp }) => {
+      const ok = await auth.verifyOtp(email.value, otp)
+      if (!ok) {
+        throw new Error(auth.error || 'OTP không hợp lệ')
       }
-      router.push(dashboardPaths[role] || '/')
-    }
-  } catch (error) {
-    toast.error('Mã OTP không đúng', error.message)
-    // Clear OTP on error
-    otpDigits.value = ['', '', '', '', '', '']
-    inputRefs.value[0]?.focus()
-  } finally {
-    loading.value = false
-  }
-}
-
-const resendOtp = async () => {
-  if (resendCooldown.value > 0) return
-
-  try {
-    await api.post('/auth/resend-otp', { email: email.value, mode: mode.value })
-    toast.success('Đã gửi lại mã OTP')
-    resendCooldown.value = 60
-    const interval = setInterval(() => {
-      resendCooldown.value--
-      if (resendCooldown.value <= 0) {
-        clearInterval(interval)
+    },
+    onResend: async () => {
+      const ok = await auth.requestOtp(email.value)
+      if (!ok) {
+        throw new Error(auth.error || 'Không gửi được OTP')
       }
-    }, 1000)
-  } catch (error) {
-    toast.error('Lỗi khi gửi lại OTP', error.message)
-  }
-}
+    },
+    onSuccessRedirect: redirectToRolePage
+  })
+})
 
-onMounted(async () => {
-  if (toastRef.value) {
-    const { setToastInstance } = await import('@/composables/useToast')
-    setToastInstance(toastRef.value)
+onBeforeUnmount(() => {
+  if (typeof teardownHandler === 'function') {
+    teardownHandler()
   }
-  
-  inputRefs.value[0]?.focus()
 })
 </script>
 
@@ -234,5 +183,6 @@ onMounted(async () => {
   pointer-events: none;
 }
 </style>
+
 
 
