@@ -38,7 +38,12 @@ const router = createRouter({
 					path: 'dashboard',
 					name: 'staffDashboard',
 					component: () => import('../views/staff/DashBoardStaff.vue')
-				}
+				},
+				{
+      			path: '/staff/service-tickets',
+      			name: 'staff-service-tickets',
+      			component: () => import('../views/staff/ServiceTicketsView.vue'),
+    			}
 			]
 		},
 
@@ -64,8 +69,8 @@ const router = createRouter({
 				{
 					path: 'dashboard',
 					name: 'stockerDashboard',
-					component: () => import('../views/stocker/DashboardStocker.vue')
-				}
+					component: () => import('../views/staff/ServiceTicketsView.vue')
+				},
 			]
 		},
 		{
