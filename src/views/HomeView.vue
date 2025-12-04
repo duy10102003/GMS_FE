@@ -65,6 +65,11 @@
 					</div>
 				</div>
 			</nav>
+      
+      
+      
+      
+  
 		</header>
 
 		<!-- Hero -->
@@ -529,7 +534,9 @@
 	const toastRef = ref(null)
 
 	const hideModal = (modalId) => {
-		if (typeof window === 'undefined' || !window.bootstrap) {
+		if (typeof window 
+        
+        'undefined' || !window.bootstrap) {
 			return
 		}
 
