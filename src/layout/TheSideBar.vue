@@ -1,93 +1,196 @@
 <template>
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
+  <aside class="the-sidebar" :class="{ collapsed: collapsed }">
+    <div class="the-sidebar-header">
+      <a href="/" class="the-sidebar-logo">
         <span class="orange">Garage</span><span class="dark">Pro</span>
-      </div>
+      </a>
+      <button
+        v-if="collapsible"
+        class="the-sidebar-toggle"
+        @click="toggleCollapse"
+      >
+        <i :class="collapsed ? 'fa-chevron-right' : 'fa-chevron-left'" class="fas"></i>
+      </button>
     </div>
 
-    <div class="user-profile">
+    <div class="the-sidebar-user">
       <img
-        src="https://ui-avatars.com/api/?name=Nguyen+Van+Khoa&background=FF7A00&color=fff"
-        alt="Avatar"
+        :src="user?.avatar || getAvatarUrl(user?.name)"
+        :alt="user?.name"
       />
-      <div class="user-info">
-        <h6>{{ displayName }}</h6>
-        <div class="user-meta">
-          <small>ID: {{ displayId }}</small>
-          <span class="role-pill">{{ displayRole }}</span>
-        </div>
+      <div v-if="!collapsed" class="the-sidebar-user-info">
+        <h6>{{ user?.name || 'User' }}</h6>
+        <small>{{ getUserRoleLabel(user?.role) }}</small>
       </div>
     </div>
 
-    <ul class="nav-menu">
-      <li class="nav-item">
-        <a href="#" class="nav-link active"><i class="fas fa-gauge"></i> Dashboard</a>
-      </li>
+    <nav class="the-sidebar-nav">
+      <ul class="the-sidebar-menu">
+        <li
+          v-for="item in menuItems"
+          :key="item.key"
+          :class="['the-sidebar-menu-item', { active: isActive(item), 'has-submenu': item.children }]"
+        >
+          <a
+            v-if="!item.children"
+            :href="item.path"
+            class="the-sidebar-menu-link"
+            @click.prevent="handleMenuClick(item)"
+          >
+            <i :class="item.icon" class="fas"></i>
+            <span v-if="!collapsed">{{ item.label }}</span>
+            <span v-if="item.badge && !collapsed" class="the-sidebar-menu-badge">{{ item.badge }}</span>
+          </a>
 
-      <li class="nav-item">
-        <a href="#" class="nav-link"><i class="fas fa-chart-pie"></i> Bao cao tong hop</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="#" class="nav-link"><i class="fas fa-users"></i> Nhan su</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="#" class="nav-link"><i class="fas fa-warehouse"></i> Kho phu tung</a>
-        <ul class="sub-menu">
-          <li>
-            <a href="/FE_ver_0.0.3_SWP/FE_ver_0.0.3_SWP/template/manager/inventory/manage-parts.html" class="nav-link"
-              ><i class="fas fa-cogs"></i> Quan ly phu tung</a
+          <div v-else class="the-sidebar-menu-group">
+            <a
+              href="#"
+              class="the-sidebar-menu-link"
+              @click.prevent="toggleSubmenu(item.key)"
             >
-          </li>
-          <li>
-            <a href="/FE_ver_0.0.3_SWP/FE_ver_0.0.3_SWP/template/manager/inventory/low-stock.html" class="nav-link"
-              ><i class="fas fa-exclamation-triangle"></i> Canh bao ton</a
+              <i :class="item.icon" class="fas"></i>
+              <span v-if="!collapsed">{{ item.label }}</span>
+              <i
+                :class="openSubmenus.includes(item.key) ? 'fa-chevron-up' : 'fa-chevron-down'"
+                class="fas the-sidebar-menu-arrow"
+              ></i>
+            </a>
+
+            <ul
+              v-if="!collapsed"
+              v-show="openSubmenus.includes(item.key)"
+              class="the-sidebar-submenu"
             >
-          </li>
-          <li>
-            <a href="/FE_ver_0.0.3_SWP/FE_ver_0.0.3_SWP/template/manager/inventory/restock.html" class="nav-link"
-              ><i class="fas fa-shopping-cart"></i> Nhap kho</a
-            >
-          </li>
-        </ul>
-      </li>
+              <li
+                v-for="child in item.children"
+                :key="child.key"
+                :class="{ active: isActive(child) }"
+              >
+                <a
+                  :href="child.path"
+                  class="the-sidebar-submenu-link"
+                  @click.prevent="handleMenuClick(child)"
+                >
+                  <i :class="child.icon" class="fas"></i>
+                  <span>{{ child.label }}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </nav>
 
-      <li class="nav-item">
-        <a href="#" class="nav-link"><i class="fas fa-dollar-sign"></i> Doanh thu</a>
-      </li>
-
-      <li class="nav-item">
-        <a href="#" class="nav-link"><i class="fas fa-cog"></i> Cai dat he thong</a>
-      </li>
-    </ul>
-
-    <button class="logout-btn" @click="emitLogout">
-      <i class="fas fa-sign-out-alt"></i> Dang xuat
+    <button class="the-sidebar-logout" @click="handleLogout">
+      <i class="fas fa-sign-out-alt"></i>
+      <span v-if="!collapsed">Đăng xuất</span>
     </button>
   </aside>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import authService from '../services/auth.js'
+import { ROLES } from '../constant/roles.js'
+import { hasPermission } from '../constant/roles.js'
 
-const auth = useAuthStore()
+const props = defineProps({
+  collapsed: {
+    type: Boolean,
+    default: false
+  },
+  collapsible: {
+    type: Boolean,
+    default: true
+  },
+  menuItems: {
+    type: Array,
+    default: () => []
+  }
+})
 
-const ROLE_LABELS = {
-  MANAGER: 'Quản lý',
-  STAFF: 'Nhân viên',
-  MECHANIC: 'Thợ sửa',
-  CUSTOMER: 'Khách hàng',
-  STOCKER: 'Nhân viên kho'
+const emit = defineEmits(['update:collapsed', 'menu-click', 'logout'])
+
+const route = useRoute()
+const router = useRouter()
+const openSubmenus = ref([])
+const user = ref(authService.getCurrentUser())
+
+const getAvatarUrl = (name) => {
+  if (!name) return 'https://ui-avatars.com/api/?name=User&background=FF7A00&color=fff'
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=FF7A00&color=fff`
 }
 
-const displayName = computed(() => auth.user?.fullName || 'Người dùng')
-const displayId = computed(() => auth.user?.userId || '---')
-const displayRole = computed(() => {
-  const role = auth.user?.role
-  return ROLE_LABELS[role] || 'Chưa phân quyền'
+const getUserRoleLabel = (role) => {
+  const labels = {
+    [ROLES.CUSTOMER]: 'Khách hàng',
+    [ROLES.STAFF]: 'Nhân viên',
+    [ROLES.MANAGER]: 'Quản lý',
+    [ROLES.STOCKER]: 'Thủ kho',
+    [ROLES.MECHANIC]: 'Thợ sửa chữa',
+    [ROLES.ADMIN]: 'Quản trị viên'
+  }
+  return labels[role] || role
+}
+
+const isActive = (item) => {
+  if (item.exact) {
+    return route.path === item.path
+  }
+  return route.path.startsWith(item.path)
+}
+
+const toggleCollapse = () => {
+  emit('update:collapsed', !props.collapsed)
+}
+
+const toggleSubmenu = (key) => {
+  const index = openSubmenus.value.indexOf(key)
+  if (index > -1) {
+    openSubmenus.value.splice(index, 1)
+  } else {
+    openSubmenus.value.push(key)
+  }
+}
+
+const handleMenuClick = (item) => {
+  if (item.path) {
+    if (item.path.startsWith('http')) {
+      window.open(item.path, '_blank')
+    } else {
+      router.push(item.path)
+    }
+  }
+  emit('menu-click', item)
+}
+
+const handleLogout = () => {
+  emit('logout')
+}
+
+// Filter menu items based on permissions
+const filteredMenuItems = computed(() => {
+  if (!user.value) return []
+
+  return props.menuItems.filter(item => {
+    if (item.permission) {
+      return hasPermission(user.value.role, item.permission)
+    }
+    return true
+  })
+})
+
+onMounted(() => {
+  // Auto-open submenu if current route is in submenu
+  props.menuItems.forEach(item => {
+    if (item.children) {
+      const hasActiveChild = item.children.some(child => isActive(child))
+      if (hasActiveChild) {
+        openSubmenus.value.push(item.key)
+      }
+    }
+  })
 })
 </script>
 
@@ -343,7 +446,6 @@ const displayRole = computed(() => {
   display: none;
 }
 </style>
-
 
 
 

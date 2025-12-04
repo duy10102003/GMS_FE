@@ -194,11 +194,25 @@ export const STOCKER_MENU = [
 
 export const MECHANIC_MENU = [
   {
-    key: 'tasks',
-    label: 'Công việc được giao',
-    icon: 'fa-tasks',
-    path: '/mechanic/tasks',
+    key: 'dashboard',
+    label: 'Dashboard',
+    icon: 'fa-gauge',
+    path: '/mechanic/dashboard',
     permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
+  },
+  {
+    key: 'tickets',
+    label: 'Phiếu dịch vụ',
+    icon: 'fa-wrench',
+    path: '/mechanic/tickets',
+    permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
+  },
+  {
+    key: 'history',
+    label: 'Lịch sử',
+    icon: 'fa-history',
+    path: '/mechanic/history',
+    permission: PERMISSIONS.VIEW_HISTORY
   }
 ]
 
@@ -213,7 +227,7 @@ export function getMenuByRole(role) {
     [ROLES.STOCKER]: STOCKER_MENU,
     [ROLES.MECHANIC]: MECHANIC_MENU
   }
-  
+
   return menuMap[role] || []
 }
 

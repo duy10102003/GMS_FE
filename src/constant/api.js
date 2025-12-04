@@ -1,7 +1,7 @@
 /**
  * API Configuration
  */
-const DEFAULT_NODE_API = 'http://localhost:8080/api'
+const DEFAULT_NODE_API = 'https://localhost:5000/api'
 const DEFAULT_SPRINGBOOT_API = 'http://localhost:8888/api'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_NODE_API
@@ -56,5 +56,3 @@ export const API_ENDPOINTS = {
 		SHIFT: '/mechanic/shift'
 	}
 }
-
-
