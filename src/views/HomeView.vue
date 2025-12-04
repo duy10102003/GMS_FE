@@ -534,20 +534,19 @@
 	const toastRef = ref(null)
 
 	const hideModal = (modalId) => {
-		if (typeof window 
-        
-        'undefined' || !window.bootstrap) {
-			return
-		}
-
-		const modalEl = document.getElementById(modalId)
-		if (!modalEl) {
-			return
-		}
-
-		const modalInstance = window.bootstrap.Modal.getInstance(modalEl) ?? window.bootstrap.Modal.getOrCreateInstance(modalEl)
-		modalInstance.hide()
+	if (typeof window === 'undefined' || !window.bootstrap) {
+		return
 	}
+
+	const modalEl = document.getElementById(modalId)
+	if (!modalEl) return
+
+	const modalInstance =
+		window.bootstrap.Modal.getInstance(modalEl) ??
+		window.bootstrap.Modal.getOrCreateInstance(modalEl)
+	modalInstance.hide()
+	}
+
 
 	const cleanupModalState = () => {
 		const body = document.body
