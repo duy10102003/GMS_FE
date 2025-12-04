@@ -139,6 +139,13 @@ export const MANAGER_MENU = [
     permission: PERMISSIONS.VIEW_REVENUE
   },
   {
+    key: 'garage-services',
+    label: 'Dịch vụ garage',
+    icon: 'fa-tools',
+    path: '/manager/garage-services',
+    permission: PERMISSIONS.VIEW_REPORTS
+  },
+  {
     key: 'settings',
     label: 'Cài đặt hệ thống',
     icon: 'fa-cog',
@@ -161,6 +168,13 @@ export const STOCKER_MENU = [
     icon: 'fa-warehouse',
     path: '/stocker/inventory',
     permission: PERMISSIONS.VIEW_INVENTORY
+  },
+  {
+    key: 'part-categories',
+    label: 'Danh mục phụ tùng',
+    icon: 'fa-list',
+    path: '/stocker/part-categories',
+    permission: PERMISSIONS.MANAGE_PARTS
   },
   {
     key: 'parts',
@@ -216,4 +230,5 @@ export function getMenuByRole(role) {
   
   return menuMap[role] || []
 }
+
 

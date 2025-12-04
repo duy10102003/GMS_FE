@@ -1,5 +1,5 @@
 <template>
-  <div class="service-tickets-view">
+  <div class="parts-view">
     <TheSideBar
       :collapsed="sidebarCollapsed"
       :menu-items="menuItems"
@@ -9,7 +9,7 @@
     
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
-        title="Quản lý phiếu dịch vụ"
+        title="Quản lý phụ tùng"
         :show-search="false"
         :notifications="notifications"
         @logout="handleLogout"
@@ -21,7 +21,7 @@
           <div class="toolbar-left">
             <GmsInput
               v-model="searchQuery"
-              placeholder="Tìm theo mã phiếu, khách hàng, biển số..."
+              placeholder="Tìm theo tên, mã phụ tùng..."
               prefix-icon="fa-search"
               :clearable="true"
               class="search-input"
@@ -33,9 +33,9 @@
             <GmsButton
               variant="primary"
               icon="fa-plus"
-              @click="router.push('/staff/service-tickets/create')"
+              @click="openCreateDialog"
             >
-              Tạo phiếu mới
+              Tạo phụ tùng mới
             </GmsButton>
           </div>
         </div>
@@ -66,44 +66,40 @@
         <!-- Table -->
         <div class="table-container">
           <GmsTable
-            :data="tickets"
+            :data="parts"
             :columns="tableColumns"
-            title="Danh sách phiếu dịch vụ"
+            title="Danh sách phụ tùng"
             :loading="loading"
             :pagination="false"
             :scrollable="true"
             @sort="handleSort"
             @filter-click="openFilterModal"
           >
-            <template #cell-customer="{ row }">
-              <div>
-                <div class="customer-name">{{ row.customer?.customerName || 'N/A' }}</div>
-                <div class="customer-phone">{{ row.customer?.customerPhone || '' }}</div>
-              </div>
-            </template>
-            
-            <template #cell-vehicle="{ row }">
-              <div>
-                <div class="vehicle-name">{{ row.vehicle?.vehicleName || 'N/A' }}</div>
-                <div class="vehicle-plate">{{ row.vehicle?.vehicleLicensePlate || '' }}</div>
-              </div>
-            </template>
-            
-            <template #cell-mechanic="{ row }">
-              <div v-if="row.technicalTasks && row.technicalTasks.length > 0" class="mechanic-info">
-                <span>{{ row.technicalTasks[0].assignedToTechnicalName || 'N/A' }}</span>
-              </div>
-              <span v-else class="text-muted">Chưa phân công</span>
-            </template>
-            
-            <template #cell-serviceTicketStatus="{ row }">
-              <span :class="`badge badge-${getStatusColor(row.serviceTicketStatus)}`">
-                {{ getStatusLabel(row.serviceTicketStatus) }}
+            <template #cell-partQuantity="{ row }">
+              <span :class="row.partQuantity < 10 ? 'text-danger' : ''">
+                {{ row.partQuantity }} {{ row.partUnit }}
               </span>
             </template>
             
-            <template #cell-createdDate="{ row }">
-              {{ formatDate(row.createdDate) }}
+            <template #cell-partCategoryName="{ row }">
+              <div>
+                <div class="category-name">{{ row.partCategoryName || 'N/A' }}</div>
+                <div class="category-code">{{ row.partCategoryCode || '' }}</div>
+              </div>
+            </template>
+            
+            <template #cell-partPrice="{ row }">
+              <span v-if="row.partPrice !== null && row.partPrice !== undefined">
+                {{ formatPrice(row.partPrice) }}
+              </span>
+              <span v-else class="text-muted">Chưa có giá</span>
+            </template>
+            
+            <template #cell-warrantyMonth="{ row }">
+              <span v-if="row.warrantyMonth !== null && row.warrantyMonth !== undefined">
+                {{ row.warrantyMonth }} tháng
+              </span>
+              <span v-else class="text-muted">-</span>
             </template>
             
             <template #cell-actions="{ row }">
@@ -111,20 +107,19 @@
                 <GmsButton
                   variant="outline"
                   size="small"
-                  icon="fa-eye"
-                  @click.stop="viewDetail(row)"
+                  icon="fa-edit"
+                  @click.stop="openEditDialog(row)"
                 >
-                  Chi tiết
+                  Sửa
                 </GmsButton>
                 
                 <GmsButton
-                  v-if="canAssign(row)"
-                  variant="primary"
+                  variant="danger"
                   size="small"
-                  icon="fa-user-plus"
-                  @click.stop="openAssignDialog(row)"
+                  icon="fa-trash"
+                  @click.stop="openDeleteDialog(row)"
                 >
-                  Phân công
+                  Xóa
                 </GmsButton>
               </div>
             </template>
@@ -135,7 +130,7 @@
         <div v-if="totalItems > 0" class="pagination mt-4">
           <div class="pagination-left">
             <div class="pagination-info">
-              Hiển thị {{ startIndex + 1 }}-{{ endIndex }} trong tổng {{ totalItems }} phiếu
+              Hiển thị {{ startIndex + 1 }}-{{ endIndex }} trong tổng {{ totalItems }} phụ tùng
             </div>
             <div class="pagination-size">
               <label>Số lượng/trang:</label>
@@ -219,12 +214,6 @@
             :min="0"
           />
           <GmsInput
-            v-else-if="isDateColumn(currentFilterColumn)"
-            v-model="filterForm.value"
-            type="date"
-            :placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`"
-          />
-          <GmsInput
             v-else
             v-model="filterForm.value"
             :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`"
@@ -239,56 +228,126 @@
       </div>
     </GmsDialog>
     
-    <!-- Assign Technical Staff Dialog -->
+    <!-- Create/Edit Dialog -->
     <GmsDialog
-      v-model="showAssignDialog"
-      title="Phân công thợ kỹ thuật"
+      v-model="showFormDialog"
+      :title="isEditing ? 'Cập nhật phụ tùng' : 'Tạo phụ tùng mới'"
       size="medium"
     >
-      <template v-if="selectedTicket">
-        <form @submit.prevent="confirmAssign">
-          <p class="mb-3">
-            Chọn thợ phụ trách phiếu <strong>#{{ selectedTicket.serviceTicketCode }}</strong>
-          </p>
-          
-          <div class="mb-3">
-            <label class="form-label">Chọn thợ:</label>
-            <select
-              v-model.number="assignForm.assignedToTechnical"
-              class="form-select"
-              required
+      <form @submit.prevent="handleSubmit">
+        <div class="mb-3">
+          <label class="form-label">Tên phụ tùng *</label>
+          <GmsInput
+            v-model="formData.partName"
+            placeholder="Nhập tên phụ tùng..."
+            required
+            :maxlength="100"
+          />
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Mã phụ tùng *</label>
+          <GmsInput
+            v-model="formData.partCode"
+            placeholder="Nhập mã phụ tùng..."
+            required
+            :maxlength="20"
+            @blur="checkCode"
+          />
+          <small v-if="codeExists" class="text-danger">Mã phụ tùng đã tồn tại</small>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Danh mục phụ tùng *</label>
+          <select v-model.number="formData.partCategoryId" class="form-select" required>
+            <option value="">-- Chọn danh mục --</option>
+            <option
+              v-for="category in partCategories"
+              :key="category.partCategoryId"
+              :value="category.partCategoryId"
             >
-              <option value="">-- Chọn thợ --</option>
-              <option
-                v-for="staff in technicalStaff"
-                :key="staff.userId"
-                :value="staff.userId"
-              >
-                {{ staff.fullName }} 
-                <span v-if="staff.isAvailable">(Rảnh)</span>
-                <span v-else>(Đang có {{ staff.currentTaskCount }} task)</span>
-              </option>
-            </select>
+              {{ category.partCategoryCode }} - {{ category.partCategoryName || 'N/A' }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Số lượng *</label>
+              <GmsInput
+                v-model.number="formData.partQuantity"
+                type="number"
+                placeholder="0"
+                required
+                :min="0"
+              />
+            </div>
           </div>
-          
-          <div class="mb-3">
-            <label class="form-label">Mô tả công việc *</label>
-            <textarea
-              v-model="assignForm.description"
-              class="form-control"
-              rows="3"
-              placeholder="Nhập mô tả công việc cho thợ..."
-              required
-            ></textarea>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Đơn vị *</label>
+              <GmsInput
+                v-model="formData.partUnit"
+                placeholder="Cái, Bộ, Lít..."
+                required
+                :maxlength="20"
+              />
+            </div>
           </div>
-          
-          <div class="dialog-actions">
-            <GmsButton type="button" variant="outline" @click="showAssignDialog = false">Hủy</GmsButton>
-            <GmsButton type="submit" variant="primary" :loading="assignLoading">
-              Xác nhận phân công
-            </GmsButton>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Giá (VNĐ)</label>
+              <GmsInput
+                v-model.number="formData.partPrice"
+                type="number"
+                placeholder="0"
+                :min="0"
+                step="1000"
+              />
+            </div>
           </div>
-        </form>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Bảo hành (tháng)</label>
+              <GmsInput
+                v-model.number="formData.warrantyMonth"
+                type="number"
+                placeholder="0"
+                :min="0"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="closeFormDialog">Hủy</GmsButton>
+          <GmsButton type="submit" variant="primary" :loading="submitting" :disabled="codeExists">
+            {{ isEditing ? 'Cập nhật' : 'Tạo mới' }}
+          </GmsButton>
+        </div>
+      </form>
+    </GmsDialog>
+    
+    <!-- Delete Confirmation Dialog -->
+    <GmsDialog
+      v-model="showDeleteDialog"
+      title="Xác nhận xóa"
+      size="small"
+    >
+      <template v-if="selectedPart">
+        <p>Bạn có chắc chắn muốn xóa phụ tùng <strong>{{ selectedPart.partName || selectedPart.partCode }}</strong>?</p>
+        <p class="text-muted small">Phụ tùng sẽ bị xóa mềm (soft delete) và có thể khôi phục sau.</p>
+        
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="showDeleteDialog = false">Hủy</GmsButton>
+          <GmsButton variant="danger" :loading="deleting" @click="confirmDelete">
+            Xóa
+          </GmsButton>
+        </div>
       </template>
     </GmsDialog>
     
@@ -305,13 +364,8 @@ import { GmsInput, GmsButton, GmsTable, GmsDialog, GmsToast } from '@/components
 import { useToast } from '@/composables/useToast'
 import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
-import serviceTicketService from '@/services/serviceTicket'
-import userService from '@/services/user'
-import {
-  SERVICE_TICKET_STATUS,
-  SERVICE_TICKET_STATUS_LABELS,
-  SERVICE_TICKET_STATUS_COLORS
-} from '@/constant/serviceTicketStatus'
+import partService from '@/services/part'
+import partCategoryService from '@/services/partCategory'
 
 const router = useRouter()
 const toastRef = ref(null)
@@ -319,45 +373,53 @@ const toast = useToast()
 
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
-const assignLoading = ref(false)
-const showAssignDialog = ref(false)
+const submitting = ref(false)
+const deleting = ref(false)
+const showFormDialog = ref(false)
+const showDeleteDialog = ref(false)
 const showFilterModal = ref(false)
-const selectedTicket = ref(null)
+const isEditing = ref(false)
+const selectedPart = ref(null)
 const currentFilterColumn = ref(null)
-const technicalStaff = ref([])
-const notifications = ref([])
-const menuItems = ref([])
+const codeExists = ref(false)
 
 const searchQuery = ref('')
 const pageSize = ref(10)
 const currentPage = ref(1)
 const sortConfig = ref({ key: '', order: 'asc' })
 
-const tickets = ref([])
+const parts = ref([])
+const partCategories = ref([])
+const notifications = ref([])
+const menuItems = ref([])
 const totalItems = ref(0)
 
 const columnFilters = ref([])
 const activeFilters = ref([])
-
-const assignForm = ref({
-  assignedToTechnical: null,
-  description: ''
-})
 
 const filterForm = ref({
   operator: 'contains',
   value: ''
 })
 
+const formData = ref({
+  partName: '',
+  partCode: '',
+  partQuantity: 0,
+  partUnit: '',
+  partCategoryId: null,
+  partPrice: null,
+  warrantyMonth: null
+})
+
 const tableColumns = ref([
-  { key: 'serviceTicketId', label: 'ID', sortable: true, filterable: false },
-  { key: 'serviceTicketCode', label: 'Mã phiếu', sortable: true, filterable: true },
-  { key: 'customer', label: 'Khách hàng', sortable: false, filterable: false },
-  { key: 'vehicle', label: 'Xe', sortable: false, filterable: false },
-  { key: 'initialIssue', label: 'Vấn đề', sortable: true, filterable: true },
-  { key: 'mechanic', label: 'Thợ phụ trách', sortable: false, filterable: false },
-  { key: 'serviceTicketStatus', label: 'Trạng thái', sortable: true, filterable: true, isNumeric: true },
-  { key: 'createdDate', label: 'Ngày tạo', sortable: true, filterable: true, isDate: true },
+  { key: 'partId', label: 'ID', sortable: true, filterable: false },
+  { key: 'partCode', label: 'Mã phụ tùng', sortable: true, filterable: true },
+  { key: 'partName', label: 'Tên phụ tùng', sortable: true, filterable: true },
+  { key: 'partQuantity', label: 'Số lượng', sortable: true, filterable: true, isNumeric: true },
+  { key: 'partCategoryName', label: 'Danh mục', sortable: true, filterable: true },
+  { key: 'partPrice', label: 'Giá', sortable: true, filterable: true, isNumeric: true },
+  { key: 'warrantyMonth', label: 'Bảo hành', sortable: true, filterable: true, isNumeric: true },
   { key: 'actions', label: 'Hành động', filterable: false }
 ])
 
@@ -393,22 +455,15 @@ const visiblePages = computed(() => {
 
 // Methods
 const isNumericColumn = (column) => {
-  return column?.isNumeric || ['serviceTicketStatus', 'serviceTicketId'].includes(column?.key)
+  return column?.isNumeric || ['partQuantity', 'partPrice', 'warrantyMonth', 'partCategoryId'].includes(column?.key)
 }
 
-const isDateColumn = (column) => {
-  return column?.isDate || ['createdDate'].includes(column?.key)
-}
-
-const formatDate = (date) => {
-  if (!date) return 'N/A'
-  return new Date(date).toLocaleString('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+const formatPrice = (price) => {
+  if (!price && price !== 0) return 'Chưa có giá'
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(price)
 }
 
 const getFilterLabel = (filter) => {
@@ -453,7 +508,7 @@ const openFilterModal = (column) => {
     }
   } else {
     filterForm.value = {
-      operator: isNumericColumn(column) ? 'equals' : (isDateColumn(column) ? 'equals' : 'contains'),
+      operator: isNumericColumn(column) ? 'greater_or_equal' : 'contains',
       value: ''
     }
   }
@@ -505,7 +560,7 @@ const applyColumnFilter = () => {
   
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadParts()
   closeFilterModal()
 }
 
@@ -521,7 +576,7 @@ const clearCurrentFilter = () => {
   
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadParts()
   closeFilterModal()
 }
 
@@ -533,7 +588,7 @@ const removeFilter = (index) => {
   
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadParts()
 }
 
 const clearAllFilters = () => {
@@ -541,7 +596,7 @@ const clearAllFilters = () => {
   searchQuery.value = ''
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadParts()
 }
 
 const updateActiveFilters = () => {
@@ -550,79 +605,187 @@ const updateActiveFilters = () => {
 
 const handleSearch = () => {
   currentPage.value = 1
-  loadTickets()
+  loadParts()
 }
 
 const handleSort = ({ key, order }) => {
   sortConfig.value = { key, order }
-  loadTickets()
+  loadParts()
 }
 
 const goToPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
-    loadTickets()
+    loadParts()
   }
 }
 
 const handlePageSizeChange = () => {
   currentPage.value = 1
-  loadTickets()
+  loadParts()
 }
 
-const canAssign = (row) => {
-  return row.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || 
-         row.serviceTicketStatus === 0
-}
-
-const viewDetail = (ticket) => {
-  router.push(`/staff/service-tickets/${ticket.serviceTicketId}`)
-}
-
-const openAssignDialog = async (ticket) => {
-  selectedTicket.value = ticket
-  assignForm.value = {
-    assignedToTechnical: null,
-    description: ''
+const openCreateDialog = async () => {
+  isEditing.value = false
+  selectedPart.value = null
+  codeExists.value = false
+  formData.value = {
+    partName: '',
+    partCode: '',
+    partQuantity: 0,
+    partUnit: '',
+    partCategoryId: null,
+    partPrice: null,
+    warrantyMonth: null
   }
-  await loadTechnicalStaff()
-  showAssignDialog.value = true
+  await loadPartCategories()
+  showFormDialog.value = true
 }
 
-const confirmAssign = async () => {
-  if (!assignForm.value.assignedToTechnical || !selectedTicket.value) {
-    toast.error('Vui lòng chọn thợ và nhập mô tả')
+const openEditDialog = async (part) => {
+  isEditing.value = true
+  selectedPart.value = part
+  codeExists.value = false
+  formData.value = {
+    partName: part.partName || '',
+    partCode: part.partCode || '',
+    partQuantity: part.partQuantity || 0,
+    partUnit: part.partUnit || '',
+    partCategoryId: part.partCategoryId || null,
+    partPrice: part.partPrice || null,
+    warrantyMonth: part.warrantyMonth || null
+  }
+  await loadPartCategories()
+  showFormDialog.value = true
+}
+
+const closeFormDialog = () => {
+  showFormDialog.value = false
+  isEditing.value = false
+  selectedPart.value = null
+  codeExists.value = false
+  formData.value = {
+    partName: '',
+    partCode: '',
+    partQuantity: 0,
+    partUnit: '',
+    partCategoryId: null,
+    partPrice: null,
+    warrantyMonth: null
+  }
+}
+
+const checkCode = async () => {
+  if (!formData.value.partCode) {
+    codeExists.value = false
     return
   }
   
   try {
-    assignLoading.value = true
-    await serviceTicketService.assign(selectedTicket.value.serviceTicketId, {
-      assignedToTechnical: assignForm.value.assignedToTechnical,
-      description: assignForm.value.description
-    })
-    
-    showAssignDialog.value = false
-    toast.success('Phân công thành công!', `Đã giao phiếu #${selectedTicket.value.serviceTicketCode} cho thợ`)
-    await loadTickets()
+    const excludeId = isEditing.value && selectedPart.value 
+      ? selectedPart.value.partId 
+      : null
+    const response = await partService.checkCode(formData.value.partCode, excludeId)
+    codeExists.value = response.data.exists
   } catch (error) {
-    toast.error('Lỗi khi phân công', error.message || error.userMsg || 'Có lỗi xảy ra')
-  } finally {
-    assignLoading.value = false
+    console.error('Error checking code:', error)
   }
 }
 
-const loadTechnicalStaff = async () => {
+const handleSubmit = async () => {
+  if (!formData.value.partName || formData.value.partName.trim() === '') {
+    toast.error('Vui lòng nhập tên phụ tùng')
+    return
+  }
+  
+  if (!formData.value.partCode || formData.value.partCode.trim() === '') {
+    toast.error('Vui lòng nhập mã phụ tùng')
+    return
+  }
+  
+  if (codeExists.value) {
+    toast.error('Mã phụ tùng đã tồn tại')
+    return
+  }
+  
+  if (!formData.value.partCategoryId) {
+    toast.error('Vui lòng chọn danh mục phụ tùng')
+    return
+  }
+  
+  if (formData.value.partQuantity < 0) {
+    toast.error('Số lượng phải >= 0')
+    return
+  }
+  
+  if (!formData.value.partUnit || formData.value.partUnit.trim() === '') {
+    toast.error('Vui lòng nhập đơn vị')
+    return
+  }
+  
   try {
-    const response = await userService.getTechnicalStaff()
-    technicalStaff.value = response.data || []
+    submitting.value = true
+    
+    const data = {
+      partName: formData.value.partName.trim(),
+      partCode: formData.value.partCode.trim(),
+      partQuantity: formData.value.partQuantity || 0,
+      partUnit: formData.value.partUnit.trim(),
+      partCategoryId: formData.value.partCategoryId,
+      partPrice: formData.value.partPrice || null,
+      warrantyMonth: formData.value.warrantyMonth || null
+    }
+    
+    if (isEditing.value && selectedPart.value) {
+      await partService.update(selectedPart.value.partId, data)
+      toast.success('Cập nhật thành công!', `Đã cập nhật phụ tùng "${data.partName}"`)
+    } else {
+      await partService.create(data)
+      toast.success('Tạo mới thành công!', `Đã tạo phụ tùng "${data.partName}"`)
+    }
+    
+    closeFormDialog()
+    await loadParts()
   } catch (error) {
-    console.error('Error loading technical staff:', error)
-    technicalStaff.value = []
+    toast.error('Lỗi', error.message || 'Có lỗi xảy ra')
+  } finally {
+    submitting.value = false
   }
 }
 
-const loadTickets = async () => {
+const openDeleteDialog = (part) => {
+  selectedPart.value = part
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = async () => {
+  if (!selectedPart.value) return
+  
+  try {
+    deleting.value = true
+    await partService.delete(selectedPart.value.partId)
+    toast.success('Xóa thành công!', `Đã xóa phụ tùng "${selectedPart.value.partName || selectedPart.value.partCode}"`)
+    showDeleteDialog.value = false
+    selectedPart.value = null
+    await loadParts()
+  } catch (error) {
+    toast.error('Lỗi khi xóa', error.message || 'Có lỗi xảy ra')
+  } finally {
+    deleting.value = false
+  }
+}
+
+const loadPartCategories = async () => {
+  try {
+    const response = await partCategoryService.getAll()
+    partCategories.value = response.data || []
+  } catch (error) {
+    console.error('Error loading part categories:', error)
+    partCategories.value = []
+  }
+}
+
+const loadParts = async () => {
   try {
     loading.value = true
     
@@ -632,7 +795,7 @@ const loadTickets = async () => {
     // Search filter
     if (searchQuery.value && searchQuery.value.trim()) {
       filters.push({
-        columnName: 'ServiceTicketCode',
+        columnName: 'PartName',
         operator: 'contains',
         value: searchQuery.value.trim()
       })
@@ -648,9 +811,9 @@ const loadTickets = async () => {
         sortDirection: sortConfig.value.order === 'asc' ? 'ASC' : 'DESC'
       })
     } else {
-      // Default sort by created date DESC
+      // Default sort by ID DESC
       columnSorts.push({
-        columnName: 'CreatedDate',
+        columnName: 'PartId',
         sortDirection: 'DESC'
       })
     }
@@ -662,27 +825,19 @@ const loadTickets = async () => {
       columnSorts
     }
     
-    const response = await serviceTicketService.getPaging(params)
-    tickets.value = response.data.items || []
+    const response = await partService.getPaging(params)
+    parts.value = response.data.items || []
     totalItems.value = response.data.total || 0
   } catch (error) {
-    toast.error('Lỗi khi tải danh sách phiếu', error.message || error.userMsg || 'Có lỗi xảy ra')
+    toast.error('Lỗi khi tải danh sách phụ tùng', error.message || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
 }
 
-const getStatusLabel = (status) => {
-  return SERVICE_TICKET_STATUS_LABELS[status] || 'N/A'
-}
-
-const getStatusColor = (status) => {
-  return SERVICE_TICKET_STATUS_COLORS[status] || 'secondary'
-}
-
 const handleLogout = async () => {
   await authService.logout()
-  router.push('/')
+  router.push('/home')
 }
 
 onMounted(async () => {
@@ -699,13 +854,13 @@ onMounted(async () => {
   }
   
   // Load data
-  await loadTickets()
-  await loadTechnicalStaff()
+  await loadPartCategories()
+  await loadParts()
 })
 </script>
 
 <style scoped>
-.service-tickets-view {
+.parts-view {
   min-height: 100vh;
   background: var(--light, #f8f9fa);
 }
@@ -835,30 +990,14 @@ onMounted(async () => {
   background: #e9ecef;
 }
 
-.customer-name {
+.category-name {
   font-weight: 600;
   color: var(--dark, #2c3a47);
 }
 
-.customer-phone {
+.category-code {
   font-size: 0.85rem;
   color: #666;
-}
-
-.vehicle-name {
-  font-weight: 600;
-  color: var(--dark, #2c3a47);
-}
-
-.vehicle-plate {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.mechanic-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .action-buttons {
@@ -869,6 +1008,11 @@ onMounted(async () => {
 
 .text-muted {
   color: #999;
+}
+
+.text-danger {
+  color: #dc3545;
+  font-size: 0.875rem;
 }
 
 .pagination {
@@ -968,8 +1112,13 @@ onMounted(async () => {
   border-color: var(--primary, #ff7a00);
 }
 
-.filter-modal-content {
-  padding: 0.5rem 0;
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
 }
 
 .form-label {
@@ -1000,31 +1149,22 @@ onMounted(async () => {
   box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
 }
 
-.form-control {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+.small {
+  font-size: 0.875rem;
 }
 
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary, #ff7a00);
-  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+.filter-modal-content {
+  padding: 0.5rem 0;
 }
 
-.dialog-actions {
+.row {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
+  gap: 1rem;
 }
 
-.mt-4 {
-  margin-top: 1.5rem;
+.col-md-6 {
+  flex: 1;
 }
 </style>
+
+

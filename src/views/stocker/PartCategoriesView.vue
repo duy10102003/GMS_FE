@@ -1,5 +1,5 @@
 <template>
-  <div class="service-tickets-view">
+  <div class="part-categories-view">
     <TheSideBar
       :collapsed="sidebarCollapsed"
       :menu-items="menuItems"
@@ -9,7 +9,7 @@
     
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
-        title="Quản lý phiếu dịch vụ"
+        title="Quản lý danh mục phụ tùng"
         :show-search="false"
         :notifications="notifications"
         @logout="handleLogout"
@@ -21,7 +21,7 @@
           <div class="toolbar-left">
             <GmsInput
               v-model="searchQuery"
-              placeholder="Tìm theo mã phiếu, khách hàng, biển số..."
+              placeholder="Tìm theo tên, mã danh mục..."
               prefix-icon="fa-search"
               :clearable="true"
               class="search-input"
@@ -33,9 +33,9 @@
             <GmsButton
               variant="primary"
               icon="fa-plus"
-              @click="router.push('/staff/service-tickets/create')"
+              @click="openCreateDialog"
             >
-              Tạo phiếu mới
+              Tạo danh mục mới
             </GmsButton>
           </div>
         </div>
@@ -66,44 +66,19 @@
         <!-- Table -->
         <div class="table-container">
           <GmsTable
-            :data="tickets"
+            :data="categories"
             :columns="tableColumns"
-            title="Danh sách phiếu dịch vụ"
+            title="Danh sách danh mục phụ tùng"
             :loading="loading"
             :pagination="false"
             :scrollable="true"
             @sort="handleSort"
             @filter-click="openFilterModal"
           >
-            <template #cell-customer="{ row }">
-              <div>
-                <div class="customer-name">{{ row.customer?.customerName || 'N/A' }}</div>
-                <div class="customer-phone">{{ row.customer?.customerPhone || '' }}</div>
-              </div>
-            </template>
-            
-            <template #cell-vehicle="{ row }">
-              <div>
-                <div class="vehicle-name">{{ row.vehicle?.vehicleName || 'N/A' }}</div>
-                <div class="vehicle-plate">{{ row.vehicle?.vehicleLicensePlate || '' }}</div>
-              </div>
-            </template>
-            
-            <template #cell-mechanic="{ row }">
-              <div v-if="row.technicalTasks && row.technicalTasks.length > 0" class="mechanic-info">
-                <span>{{ row.technicalTasks[0].assignedToTechnicalName || 'N/A' }}</span>
-              </div>
-              <span v-else class="text-muted">Chưa phân công</span>
-            </template>
-            
-            <template #cell-serviceTicketStatus="{ row }">
-              <span :class="`badge badge-${getStatusColor(row.serviceTicketStatus)}`">
-                {{ getStatusLabel(row.serviceTicketStatus) }}
+            <template #cell-status="{ row }">
+              <span :class="`badge badge-${row.status === 'Active' ? 'success' : 'secondary'}`">
+                {{ row.status || 'N/A' }}
               </span>
-            </template>
-            
-            <template #cell-createdDate="{ row }">
-              {{ formatDate(row.createdDate) }}
             </template>
             
             <template #cell-actions="{ row }">
@@ -111,20 +86,19 @@
                 <GmsButton
                   variant="outline"
                   size="small"
-                  icon="fa-eye"
-                  @click.stop="viewDetail(row)"
+                  icon="fa-edit"
+                  @click.stop="openEditDialog(row)"
                 >
-                  Chi tiết
+                  Sửa
                 </GmsButton>
                 
                 <GmsButton
-                  v-if="canAssign(row)"
-                  variant="primary"
+                  variant="danger"
                   size="small"
-                  icon="fa-user-plus"
-                  @click.stop="openAssignDialog(row)"
+                  icon="fa-trash"
+                  @click.stop="openDeleteDialog(row)"
                 >
-                  Phân công
+                  Xóa
                 </GmsButton>
               </div>
             </template>
@@ -135,7 +109,7 @@
         <div v-if="totalItems > 0" class="pagination mt-4">
           <div class="pagination-left">
             <div class="pagination-info">
-              Hiển thị {{ startIndex + 1 }}-{{ endIndex }} trong tổng {{ totalItems }} phiếu
+              Hiển thị {{ startIndex + 1 }}-{{ endIndex }} trong tổng {{ totalItems }} danh mục
             </div>
             <div class="pagination-size">
               <label>Số lượng/trang:</label>
@@ -192,18 +166,12 @@
         <div class="mb-3">
           <label class="form-label">Toán tử:</label>
           <select v-model="filterForm.operator" class="form-select">
-            <option v-if="isNumericColumn(currentFilterColumn)" value="equals">Bằng</option>
-            <option v-if="isNumericColumn(currentFilterColumn)" value="not_equals">Không bằng</option>
-            <option v-if="!isNumericColumn(currentFilterColumn)" value="equals">Bằng</option>
-            <option v-if="!isNumericColumn(currentFilterColumn)" value="not_equals">Không bằng</option>
-            <option v-if="!isNumericColumn(currentFilterColumn)" value="contains">Chứa</option>
-            <option v-if="!isNumericColumn(currentFilterColumn)" value="not_contains">Không chứa</option>
-            <option v-if="!isNumericColumn(currentFilterColumn)" value="starts_with">Bắt đầu bằng</option>
-            <option v-if="!isNumericColumn(currentFilterColumn)" value="ends_with">Kết thúc bằng</option>
-            <option v-if="isNumericColumn(currentFilterColumn)" value="greater_than">Lớn hơn</option>
-            <option v-if="isNumericColumn(currentFilterColumn)" value="less_than">Nhỏ hơn</option>
-            <option v-if="isNumericColumn(currentFilterColumn)" value="greater_or_equal">Lớn hơn hoặc bằng</option>
-            <option v-if="isNumericColumn(currentFilterColumn)" value="less_or_equal">Nhỏ hơn hoặc bằng</option>
+            <option value="equals">Bằng</option>
+            <option value="not_equals">Không bằng</option>
+            <option value="contains">Chứa</option>
+            <option value="not_contains">Không chứa</option>
+            <option value="starts_with">Bắt đầu bằng</option>
+            <option value="ends_with">Kết thúc bằng</option>
             <option value="empty">Rỗng</option>
             <option value="not_empty">Không rỗng</option>
           </select>
@@ -212,20 +180,6 @@
         <div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
           <label class="form-label">Giá trị:</label>
           <GmsInput
-            v-if="isNumericColumn(currentFilterColumn)"
-            v-model.number="filterForm.value"
-            type="number"
-            :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`"
-            :min="0"
-          />
-          <GmsInput
-            v-else-if="isDateColumn(currentFilterColumn)"
-            v-model="filterForm.value"
-            type="date"
-            :placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`"
-          />
-          <GmsInput
-            v-else
             v-model="filterForm.value"
             :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`"
           />
@@ -239,56 +193,88 @@
       </div>
     </GmsDialog>
     
-    <!-- Assign Technical Staff Dialog -->
+    <!-- Create/Edit Dialog -->
     <GmsDialog
-      v-model="showAssignDialog"
-      title="Phân công thợ kỹ thuật"
+      v-model="showFormDialog"
+      :title="isEditing ? 'Cập nhật danh mục' : 'Tạo danh mục mới'"
       size="medium"
     >
-      <template v-if="selectedTicket">
-        <form @submit.prevent="confirmAssign">
-          <p class="mb-3">
-            Chọn thợ phụ trách phiếu <strong>#{{ selectedTicket.serviceTicketCode }}</strong>
-          </p>
-          
-          <div class="mb-3">
-            <label class="form-label">Chọn thợ:</label>
-            <select
-              v-model.number="assignForm.assignedToTechnical"
-              class="form-select"
-              required
-            >
-              <option value="">-- Chọn thợ --</option>
-              <option
-                v-for="staff in technicalStaff"
-                :key="staff.userId"
-                :value="staff.userId"
-              >
-                {{ staff.fullName }} 
-                <span v-if="staff.isAvailable">(Rảnh)</span>
-                <span v-else>(Đang có {{ staff.currentTaskCount }} task)</span>
-              </option>
-            </select>
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label">Mô tả công việc *</label>
-            <textarea
-              v-model="assignForm.description"
-              class="form-control"
-              rows="3"
-              placeholder="Nhập mô tả công việc cho thợ..."
-              required
-            ></textarea>
-          </div>
-          
-          <div class="dialog-actions">
-            <GmsButton type="button" variant="outline" @click="showAssignDialog = false">Hủy</GmsButton>
-            <GmsButton type="submit" variant="primary" :loading="assignLoading">
-              Xác nhận phân công
-            </GmsButton>
-          </div>
-        </form>
+      <form @submit.prevent="handleSubmit">
+        <div class="mb-3">
+          <label class="form-label">Mã danh mục *</label>
+          <GmsInput
+            v-model="formData.partCategoryCode"
+            placeholder="Nhập mã danh mục..."
+            required
+            :maxlength="20"
+            @blur="checkCode"
+          />
+          <small v-if="codeExists" class="text-danger">Mã danh mục đã tồn tại</small>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Tên danh mục</label>
+          <GmsInput
+            v-model="formData.partCategoryName"
+            placeholder="Nhập tên danh mục..."
+            :maxlength="100"
+          />
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Mô tả</label>
+          <textarea
+            v-model="formData.partCategoryDiscription"
+            class="form-control"
+            rows="3"
+            placeholder="Nhập mô tả..."
+            :maxlength="255"
+          ></textarea>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Số điện thoại</label>
+          <GmsInput
+            v-model="formData.partCategoryPhone"
+            placeholder="Nhập số điện thoại..."
+            :maxlength="50"
+          />
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Trạng thái</label>
+          <select v-model="formData.status" class="form-select">
+            <option value="">-- Chọn trạng thái --</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+        
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="closeFormDialog">Hủy</GmsButton>
+          <GmsButton type="submit" variant="primary" :loading="submitting" :disabled="codeExists">
+            {{ isEditing ? 'Cập nhật' : 'Tạo mới' }}
+          </GmsButton>
+        </div>
+      </form>
+    </GmsDialog>
+    
+    <!-- Delete Confirmation Dialog -->
+    <GmsDialog
+      v-model="showDeleteDialog"
+      title="Xác nhận xóa"
+      size="small"
+    >
+      <template v-if="selectedCategory">
+        <p>Bạn có chắc chắn muốn xóa danh mục <strong>{{ selectedCategory.partCategoryName || selectedCategory.partCategoryCode }}</strong>?</p>
+        <p class="text-muted small">Danh mục sẽ bị xóa mềm (soft delete) và có thể khôi phục sau.</p>
+        
+        <div class="dialog-actions">
+          <GmsButton type="button" variant="outline" @click="showDeleteDialog = false">Hủy</GmsButton>
+          <GmsButton variant="danger" :loading="deleting" @click="confirmDelete">
+            Xóa
+          </GmsButton>
+        </div>
       </template>
     </GmsDialog>
     
@@ -305,13 +291,7 @@ import { GmsInput, GmsButton, GmsTable, GmsDialog, GmsToast } from '@/components
 import { useToast } from '@/composables/useToast'
 import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
-import serviceTicketService from '@/services/serviceTicket'
-import userService from '@/services/user'
-import {
-  SERVICE_TICKET_STATUS,
-  SERVICE_TICKET_STATUS_LABELS,
-  SERVICE_TICKET_STATUS_COLORS
-} from '@/constant/serviceTicketStatus'
+import partCategoryService from '@/services/partCategory'
 
 const router = useRouter()
 const toastRef = ref(null)
@@ -319,45 +299,49 @@ const toast = useToast()
 
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
-const assignLoading = ref(false)
-const showAssignDialog = ref(false)
+const submitting = ref(false)
+const deleting = ref(false)
+const showFormDialog = ref(false)
+const showDeleteDialog = ref(false)
 const showFilterModal = ref(false)
-const selectedTicket = ref(null)
+const isEditing = ref(false)
+const selectedCategory = ref(null)
 const currentFilterColumn = ref(null)
-const technicalStaff = ref([])
-const notifications = ref([])
-const menuItems = ref([])
+const codeExists = ref(false)
 
 const searchQuery = ref('')
 const pageSize = ref(10)
 const currentPage = ref(1)
 const sortConfig = ref({ key: '', order: 'asc' })
 
-const tickets = ref([])
+const categories = ref([])
+const notifications = ref([])
+const menuItems = ref([])
 const totalItems = ref(0)
 
 const columnFilters = ref([])
 const activeFilters = ref([])
-
-const assignForm = ref({
-  assignedToTechnical: null,
-  description: ''
-})
 
 const filterForm = ref({
   operator: 'contains',
   value: ''
 })
 
+const formData = ref({
+  partCategoryName: '',
+  partCategoryCode: '',
+  partCategoryDiscription: '',
+  partCategoryPhone: '',
+  status: ''
+})
+
 const tableColumns = ref([
-  { key: 'serviceTicketId', label: 'ID', sortable: true, filterable: false },
-  { key: 'serviceTicketCode', label: 'Mã phiếu', sortable: true, filterable: true },
-  { key: 'customer', label: 'Khách hàng', sortable: false, filterable: false },
-  { key: 'vehicle', label: 'Xe', sortable: false, filterable: false },
-  { key: 'initialIssue', label: 'Vấn đề', sortable: true, filterable: true },
-  { key: 'mechanic', label: 'Thợ phụ trách', sortable: false, filterable: false },
-  { key: 'serviceTicketStatus', label: 'Trạng thái', sortable: true, filterable: true, isNumeric: true },
-  { key: 'createdDate', label: 'Ngày tạo', sortable: true, filterable: true, isDate: true },
+  { key: 'partCategoryId', label: 'ID', sortable: true, filterable: false },
+  { key: 'partCategoryCode', label: 'Mã danh mục', sortable: true, filterable: true },
+  { key: 'partCategoryName', label: 'Tên danh mục', sortable: true, filterable: true },
+  { key: 'partCategoryDiscription', label: 'Mô tả', sortable: true, filterable: true },
+  { key: 'partCategoryPhone', label: 'Số điện thoại', sortable: true, filterable: true },
+  { key: 'status', label: 'Trạng thái', sortable: true, filterable: true },
   { key: 'actions', label: 'Hành động', filterable: false }
 ])
 
@@ -392,30 +376,9 @@ const visiblePages = computed(() => {
 })
 
 // Methods
-const isNumericColumn = (column) => {
-  return column?.isNumeric || ['serviceTicketStatus', 'serviceTicketId'].includes(column?.key)
-}
-
-const isDateColumn = (column) => {
-  return column?.isDate || ['createdDate'].includes(column?.key)
-}
-
-const formatDate = (date) => {
-  if (!date) return 'N/A'
-  return new Date(date).toLocaleString('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
 const getFilterLabel = (filter) => {
-  const column = tableColumns.value.find(col => {
-    const colKey = col.key.charAt(0).toUpperCase() + col.key.slice(1).replace(/([A-Z])/g, '_$1').toUpperCase()
-    return colKey === filter.columnName || col.key === filter.columnName
-  })
+  const column = tableColumns.value.find(col => col.key === filter.columnName || 
+    col.key.toLowerCase() === filter.columnName.toLowerCase())
   const columnLabel = column ? column.label : filter.columnName
   const operatorLabels = {
     equals: '=',
@@ -453,7 +416,7 @@ const openFilterModal = (column) => {
     }
   } else {
     filterForm.value = {
-      operator: isNumericColumn(column) ? 'equals' : (isDateColumn(column) ? 'equals' : 'contains'),
+      operator: 'contains',
       value: ''
     }
   }
@@ -475,7 +438,7 @@ const applyColumnFilter = () => {
   
   if (['empty', 'not_empty'].includes(filterForm.value.operator) && !filterForm.value.value) {
     // Empty/not_empty doesn't need value
-  } else if (!filterForm.value.value && filterForm.value.value !== 0 && filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty') {
+  } else if (!filterForm.value.value && filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty') {
     toast.error('Vui lòng nhập giá trị')
     return
   }
@@ -489,11 +452,11 @@ const applyColumnFilter = () => {
   )
   
   // Add new filter
-  if (filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty' && (filterForm.value.value || filterForm.value.value === 0)) {
+  if (filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty' && filterForm.value.value) {
     columnFilters.value.push({
       columnName: columnKey,
       operator: filterForm.value.operator,
-      value: filterForm.value.value.toString()
+      value: filterForm.value.value
     })
   } else if (['empty', 'not_empty'].includes(filterForm.value.operator)) {
     columnFilters.value.push({
@@ -505,7 +468,7 @@ const applyColumnFilter = () => {
   
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadCategories()
   closeFilterModal()
 }
 
@@ -521,7 +484,7 @@ const clearCurrentFilter = () => {
   
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadCategories()
   closeFilterModal()
 }
 
@@ -533,7 +496,7 @@ const removeFilter = (index) => {
   
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadCategories()
 }
 
 const clearAllFilters = () => {
@@ -541,7 +504,7 @@ const clearAllFilters = () => {
   searchQuery.value = ''
   updateActiveFilters()
   currentPage.value = 1
-  loadTickets()
+  loadCategories()
 }
 
 const updateActiveFilters = () => {
@@ -550,79 +513,147 @@ const updateActiveFilters = () => {
 
 const handleSearch = () => {
   currentPage.value = 1
-  loadTickets()
+  loadCategories()
 }
 
 const handleSort = ({ key, order }) => {
   sortConfig.value = { key, order }
-  loadTickets()
+  loadCategories()
 }
 
 const goToPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
-    loadTickets()
+    loadCategories()
   }
 }
 
 const handlePageSizeChange = () => {
   currentPage.value = 1
-  loadTickets()
+  loadCategories()
 }
 
-const canAssign = (row) => {
-  return row.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || 
-         row.serviceTicketStatus === 0
-}
-
-const viewDetail = (ticket) => {
-  router.push(`/staff/service-tickets/${ticket.serviceTicketId}`)
-}
-
-const openAssignDialog = async (ticket) => {
-  selectedTicket.value = ticket
-  assignForm.value = {
-    assignedToTechnical: null,
-    description: ''
+const openCreateDialog = () => {
+  isEditing.value = false
+  selectedCategory.value = null
+  codeExists.value = false
+  formData.value = {
+    partCategoryName: '',
+    partCategoryCode: '',
+    partCategoryDiscription: '',
+    partCategoryPhone: '',
+    status: ''
   }
-  await loadTechnicalStaff()
-  showAssignDialog.value = true
+  showFormDialog.value = true
 }
 
-const confirmAssign = async () => {
-  if (!assignForm.value.assignedToTechnical || !selectedTicket.value) {
-    toast.error('Vui lòng chọn thợ và nhập mô tả')
+const openEditDialog = (category) => {
+  isEditing.value = true
+  selectedCategory.value = category
+  codeExists.value = false
+  formData.value = {
+    partCategoryName: category.partCategoryName || '',
+    partCategoryCode: category.partCategoryCode || '',
+    partCategoryDiscription: category.partCategoryDiscription || '',
+    partCategoryPhone: category.partCategoryPhone || '',
+    status: category.status || ''
+  }
+  showFormDialog.value = true
+}
+
+const closeFormDialog = () => {
+  showFormDialog.value = false
+  isEditing.value = false
+  selectedCategory.value = null
+  codeExists.value = false
+  formData.value = {
+    partCategoryName: '',
+    partCategoryCode: '',
+    partCategoryDiscription: '',
+    partCategoryPhone: '',
+    status: ''
+  }
+}
+
+const checkCode = async () => {
+  if (!formData.value.partCategoryCode) {
+    codeExists.value = false
     return
   }
   
   try {
-    assignLoading.value = true
-    await serviceTicketService.assign(selectedTicket.value.serviceTicketId, {
-      assignedToTechnical: assignForm.value.assignedToTechnical,
-      description: assignForm.value.description
-    })
-    
-    showAssignDialog.value = false
-    toast.success('Phân công thành công!', `Đã giao phiếu #${selectedTicket.value.serviceTicketCode} cho thợ`)
-    await loadTickets()
+    const excludeId = isEditing.value && selectedCategory.value 
+      ? selectedCategory.value.partCategoryId 
+      : null
+    const response = await partCategoryService.checkCode(formData.value.partCategoryCode, excludeId)
+    codeExists.value = response.data.exists
   } catch (error) {
-    toast.error('Lỗi khi phân công', error.message || error.userMsg || 'Có lỗi xảy ra')
-  } finally {
-    assignLoading.value = false
+    console.error('Error checking code:', error)
   }
 }
 
-const loadTechnicalStaff = async () => {
+const handleSubmit = async () => {
+  if (!formData.value.partCategoryCode || formData.value.partCategoryCode.trim() === '') {
+    toast.error('Vui lòng nhập mã danh mục')
+    return
+  }
+  
+  if (codeExists.value) {
+    toast.error('Mã danh mục đã tồn tại')
+    return
+  }
+  
   try {
-    const response = await userService.getTechnicalStaff()
-    technicalStaff.value = response.data || []
+    submitting.value = true
+    
+    const data = {
+      partCategoryCode: formData.value.partCategoryCode.trim(),
+      partCategoryName: formData.value.partCategoryName?.trim() || null,
+      partCategoryDiscription: formData.value.partCategoryDiscription?.trim() || null,
+      partCategoryPhone: formData.value.partCategoryPhone?.trim() || null,
+      status: formData.value.status || null
+    }
+    
+    if (isEditing.value && selectedCategory.value) {
+      await partCategoryService.update(selectedCategory.value.partCategoryId, data)
+      toast.success('Cập nhật thành công!', `Đã cập nhật danh mục "${data.partCategoryCode}"`)
+    } else {
+      await partCategoryService.create(data)
+      toast.success('Tạo mới thành công!', `Đã tạo danh mục "${data.partCategoryCode}"`)
+    }
+    
+    closeFormDialog()
+    await loadCategories()
   } catch (error) {
-    console.error('Error loading technical staff:', error)
-    technicalStaff.value = []
+    toast.error('Lỗi', error.message || 'Có lỗi xảy ra')
+  } finally {
+    submitting.value = false
   }
 }
 
-const loadTickets = async () => {
+const openDeleteDialog = (category) => {
+  selectedCategory.value = category
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = async () => {
+  if (!selectedCategory.value) return
+  
+  try {
+    deleting.value = true
+    await partCategoryService.delete(selectedCategory.value.partCategoryId)
+    toast.success('Xóa thành công!', `Đã xóa danh mục "${selectedCategory.value.partCategoryName || selectedCategory.value.partCategoryCode}"`)
+    showDeleteDialog.value = false
+    selectedCategory.value = null
+    await loadCategories()
+  } catch (error) {
+    toast.error('Lỗi khi xóa', error.message || 'Có lỗi xảy ra')
+  } finally {
+    deleting.value = false
+  }
+}
+
+const loadCategories = async () => {
   try {
     loading.value = true
     
@@ -632,7 +663,7 @@ const loadTickets = async () => {
     // Search filter
     if (searchQuery.value && searchQuery.value.trim()) {
       filters.push({
-        columnName: 'ServiceTicketCode',
+        columnName: 'PartCategoryName',
         operator: 'contains',
         value: searchQuery.value.trim()
       })
@@ -648,9 +679,9 @@ const loadTickets = async () => {
         sortDirection: sortConfig.value.order === 'asc' ? 'ASC' : 'DESC'
       })
     } else {
-      // Default sort by created date DESC
+      // Default sort by ID DESC
       columnSorts.push({
-        columnName: 'CreatedDate',
+        columnName: 'PartCategoryId',
         sortDirection: 'DESC'
       })
     }
@@ -662,27 +693,19 @@ const loadTickets = async () => {
       columnSorts
     }
     
-    const response = await serviceTicketService.getPaging(params)
-    tickets.value = response.data.items || []
+    const response = await partCategoryService.getPaging(params)
+    categories.value = response.data.items || []
     totalItems.value = response.data.total || 0
   } catch (error) {
-    toast.error('Lỗi khi tải danh sách phiếu', error.message || error.userMsg || 'Có lỗi xảy ra')
+    toast.error('Lỗi khi tải danh sách danh mục', error.message || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
   }
 }
 
-const getStatusLabel = (status) => {
-  return SERVICE_TICKET_STATUS_LABELS[status] || 'N/A'
-}
-
-const getStatusColor = (status) => {
-  return SERVICE_TICKET_STATUS_COLORS[status] || 'secondary'
-}
-
 const handleLogout = async () => {
   await authService.logout()
-  router.push('/')
+  router.push('/home')
 }
 
 onMounted(async () => {
@@ -699,13 +722,12 @@ onMounted(async () => {
   }
   
   // Load data
-  await loadTickets()
-  await loadTechnicalStaff()
+  await loadCategories()
 })
 </script>
 
 <style scoped>
-.service-tickets-view {
+.part-categories-view {
   min-height: 100vh;
   background: var(--light, #f8f9fa);
 }
@@ -835,32 +857,6 @@ onMounted(async () => {
   background: #e9ecef;
 }
 
-.customer-name {
-  font-weight: 600;
-  color: var(--dark, #2c3a47);
-}
-
-.customer-phone {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.vehicle-name {
-  font-weight: 600;
-  color: var(--dark, #2c3a47);
-}
-
-.vehicle-plate {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.mechanic-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .action-buttons {
   display: flex;
   gap: 0.5rem;
@@ -869,6 +865,11 @@ onMounted(async () => {
 
 .text-muted {
   color: #999;
+}
+
+.text-danger {
+  color: #dc3545;
+  font-size: 0.875rem;
 }
 
 .pagination {
@@ -968,8 +969,13 @@ onMounted(async () => {
   border-color: var(--primary, #ff7a00);
 }
 
-.filter-modal-content {
-  padding: 0.5rem 0;
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
 }
 
 .form-label {
@@ -1006,25 +1012,40 @@ onMounted(async () => {
   border: 1px solid #dee2e6;
   border-radius: 8px;
   font-size: 0.9rem;
+  outline: none;
   transition: all 0.2s;
+  font-family: inherit;
 }
 
 .form-control:focus {
-  outline: none;
   border-color: var(--primary, #ff7a00);
   box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
 }
 
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
+.small {
+  font-size: 0.875rem;
 }
 
-.mt-4 {
-  margin-top: 1.5rem;
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background: rgba(16, 172, 132, 0.1);
+  color: var(--success, #10ac84);
+}
+
+.badge-secondary {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+.filter-modal-content {
+  padding: 0.5rem 0;
 }
 </style>
+
