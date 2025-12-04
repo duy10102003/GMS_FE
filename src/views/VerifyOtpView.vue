@@ -72,7 +72,8 @@ const roleRedirectMap = {
   MANAGER: '/manager/dashboard',
   STAFF: '/staff/dashboard',
   CUSTOMER: '/customer/home',
-  STOCKER: '/stocker/dashboard'
+  STOCKER: '/stocker/dashboard',
+  MECHANIC: '/mechanic/dashboard'
 }
 
 const redirectToRolePage = () => {

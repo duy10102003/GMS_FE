@@ -99,10 +99,27 @@ export const ROLE_PERMISSIONS = {
 export function hasPermission(userRole, permission) {
   if (!userRole || !permission) return false
   
-  const rolePermissions = ROLE_PERMISSIONS[userRole] || []
+  // Normalize role to match ROLES constants
+  const normalizedRole = userRole.toLowerCase().trim()
+  
+  // Find matching role key in ROLES
+  let matchedRole = null
+  for (const key in ROLES) {
+    if (ROLES[key].toLowerCase() === normalizedRole) {
+      matchedRole = ROLES[key]
+      break
+    }
+  }
+  
+  // If no match found, try direct lookup
+  if (!matchedRole) {
+    matchedRole = userRole
+  }
+  
+  const rolePermissions = ROLE_PERMISSIONS[matchedRole] || []
   
   // Admin có tất cả quyền
-  if (userRole === ROLES.ADMIN) return true
+  if (matchedRole === ROLES.ADMIN || normalizedRole === 'admin') return true
   
   return rolePermissions.includes(permission)
 }

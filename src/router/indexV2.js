@@ -24,6 +24,11 @@ const router = createRouter({
 					path: 'dashboard',
 					name: 'managerDashboard',
 					component: () => import('../views/manager/DashboardManager.vue')
+				},
+				{
+					path: 'garage-services',
+					name: 'managerGarageService',
+					component: () => import('../views/manager/GarageServicesView.vue')
 				}
 			]
 		},
@@ -38,6 +43,21 @@ const router = createRouter({
 					path: 'dashboard',
 					name: 'staffDashboard',
 					component: () => import('../views/staff/DashBoardStaff.vue')
+				},
+				{
+					path: 'service-tickets',
+					name: 'serviceTickets',
+					component: () => import('../views/staff/ServiceTicketsView.vue')
+				},
+				{
+					path: '/staff/service-tickets/:id',
+					name: 'serviceTicketDetail',
+					component: () => import('../views/staff/ServiceTicketDetailView.vue')
+				},
+				{
+					path: '/staff/service-tickets/create',
+					name: 'serviceTicketCreate',
+					component: () => import('../views/staff/CreateServiceTicketView.vue')
 				}
 			]
 		},
@@ -65,6 +85,29 @@ const router = createRouter({
 					path: 'dashboard',
 					name: 'stockerDashboard',
 					component: () => import('../views/stocker/DashboardStocker.vue')
+				}
+			]
+		},
+		{
+			path: '/mechanic',
+			redirect: '/mechanic/dashboard',
+			beforeEnter: requireAuth,
+			meta: { role: 'MECHANIC' },
+			children: [
+				{
+					path: 'dashboard',
+					name: 'mechanicDashboard',
+					component: () => import('../views/mechanic/DashboardMechanic.vue')
+				},
+				{
+					path: '/mechanic/tasks',
+					name: 'mechanic-tasks',
+					component: () => import('../views/mechanic/MechanicTasksView.vue')
+				},
+				{
+					path: '/mechanic/tasks/:id',
+					name: 'mechanic-task-detail',
+					component: () => import('../views/mechanic/MechanicTaskDetailView.vue')
 				}
 			]
 		},
