@@ -58,6 +58,11 @@ const router = createRouter({
 					path: '/staff/service-tickets/create',
 					name: 'serviceTicketCreate',
 					component: () => import('../views/staff/CreateServiceTicketView.vue')
+				},
+				{
+					path: '/staff/invoices/:id',
+					name: 'serviceInvoice',
+					component: () => import('../views/staff/InvoiceView.vue')
 				}
 			]
 		},
@@ -85,6 +90,16 @@ const router = createRouter({
 					path: 'dashboard',
 					name: 'stockerDashboard',
 					component: () => import('../views/stocker/DashboardStocker.vue')
+				},
+				{
+					path: '/stocker/parts',
+					name: 'stockerParts',
+					component: () => import('../views/stocker/PartsView.vue')
+				},
+				{
+					path: '/stocker/part-categories',
+					name: 'stockerPartCategories',
+					component: () => import('../views/stocker/PartCategoriesView.vue')
 				}
 			]
 		},

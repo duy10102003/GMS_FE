@@ -565,7 +565,7 @@
 					sortDirection: sortConfig.value.order === 'asc' ? 'ASC' : 'DESC'
 				})
 			} else {
-				// Default sort by created date DESC
+				// Set sort defaut
 				columnSorts.push({
 					columnName: 'CreatedDate',
 					sortDirection: 'DESC'
@@ -581,18 +581,18 @@
 
 			const response = await serviceTicketService.getPaging(params)
 			const items = response.data?.items || response.data || []
-			
+
 			// Debug: Log response để kiểm tra cấu trúc
-			console.log('=== SERVICE TICKETS LIST DEBUG ===')
-			console.log('Full response:', response)
-			console.log('Items:', items)
-			if (items.length > 0) {
-				console.log('First item structure:', items[0])
-				console.log('First item customer:', items[0].customer)
-				console.log('First item vehicle:', items[0].vehicle)
-			}
-			console.log('===================================')
-			
+			// console.log('=== SERVICE TICKETS LIST DEBUG ===')
+			// console.log('Full response:', response)
+			// console.log('Items:', items)
+			// if (items.length > 0) {
+			// 	console.log('First item structure:', items[0])
+			// 	console.log('First item customer:', items[0].customer)
+			// 	console.log('First item vehicle:', items[0].vehicle)
+			// }
+			// console.log('===================================')
+
 			tickets.value = items
 			totalItems.value = response.data?.total || 0
 		} catch (error) {
@@ -616,13 +616,13 @@
 	}
 
 	onMounted(async () => {
-		// Set toast instance
+		// Set vị trí cho toast
 		if (toastRef.value) {
 			const { setToastInstance } = await import('@/composables/useToast')
 			setToastInstance(toastRef.value)
 		}
 
-		// Get menu
+		// Lấy menu
 		const user = authService.getCurrentUser()
 		if (user) {
 			menuItems.value = getMenuByRole(user.role)

@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
 	STOCKER: {
 		INVENTORY: '/stocker/inventory',
 		PARTS: '/stocker/parts',
+		PARTCATEGORYS: '/stocker/part-categories',
 		RESTOCK_REQUESTS: '/stocker/restock-requests'
 	},
 
