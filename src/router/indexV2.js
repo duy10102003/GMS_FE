@@ -72,6 +72,11 @@ const router = createRouter({
 					path: 'home',
 					name: 'customerHome',
 					component: () => import('../views/customer/CustomerHome.vue')
+				},
+				{
+					path: 'bookings',
+					name: 'customerBookings',
+					component: () => import('../views/customer/BookingManagementView.vue')
 				}
 			]
 		},
@@ -115,6 +120,11 @@ const router = createRouter({
 			path: '/verify-otp',
 			name: 'verifyOtp',
 			component: () => import('../views/VerifyOtpView.vue')
+		},
+		{
+			path: '/booking/Guest',
+			name: 'bookingGuest',
+			component: () => import('../views/customer/BookingCreateView.vue')
 		}
 	]
 })

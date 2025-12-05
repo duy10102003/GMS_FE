@@ -12,6 +12,13 @@ class BookingService {
   async getPaging(params) {
     return await api.post('/Booking/paging', params)
   }
+  /**
+   * Lấy booking theo email qua endpoint chuyên biệt (BE mới)
+   * GET /api/Booking/by-email?email=...
+   */
+  async getByEmailDirect(email) {
+    return await api.get('/Booking/by-email', { email })
+  }
 
   /**
    * Lấy chi tiết booking theo id
