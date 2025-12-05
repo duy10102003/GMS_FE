@@ -55,6 +55,11 @@ const router = createRouter({
 					component: () => import('../views/staff/ServiceTicketDetailView.vue')
 				},
 				{
+					path: '/staff/invoices/:id',
+					name: 'serviceInvoice',
+					component: () => import('../views/staff/InvoiceDetail.vue')
+				},
+				{
 					path: '/staff/service-tickets/create',
 					name: 'serviceTicketCreate',
 					component: () => import('../views/staff/CreateServiceTicketView.vue')

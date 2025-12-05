@@ -581,18 +581,7 @@
 
 			const response = await serviceTicketService.getPaging(params)
 			const items = response.data?.items || response.data || []
-			
-			// Debug: Log response để kiểm tra cấu trúc
-			console.log('=== SERVICE TICKETS LIST DEBUG ===')
-			console.log('Full response:', response)
-			console.log('Items:', items)
-			if (items.length > 0) {
-				console.log('First item structure:', items[0])
-				console.log('First item customer:', items[0].customer)
-				console.log('First item vehicle:', items[0].vehicle)
-			}
-			console.log('===================================')
-			
+
 			tickets.value = items
 			totalItems.value = response.data?.total || 0
 		} catch (error) {
