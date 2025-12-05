@@ -1,21 +1,48 @@
-<template>
+﻿<template>
   <div class="dashboard-customer">
     <TheSideBar @logout="handleLogout" />
     <div class="dashboard-customer-body">
-      <TheHeader @logout="handleLogout" />
+      <TheHeader
+        title="Danh sách đặt lịch"
+        :show-search="false"
+        :notifications="notifications"
+        @logout="handleLogout"
+      />
 
       <main class="main-content">
         <div class="header-row">
           <div>
-            <h1 class="page-title">Danh sách đặt dịch vụ</h1>
-            <p class="sub-text">Theo dõi các yêu cầu đặt lịch đã gửi</p>
+            <!-- <h1 class="page-title">Lịch đặt của bạn</h1> -->
+            <p class="sub-text">Theo dõi các yêu cầu đặt dịch vụ đã gửi</p>
           </div>
-          <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/booking/Guest')">
-            Đặt lịch mới
-          </GmsButton>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <p class="stat-title">Tổng số lịch đặt</p>
+            <strong>{{ stats.total }}</strong>
+          </div>
+          <div class="stat-card">
+            <p class="stat-title">Chờ xử lý</p>
+            <strong>{{ stats.pending }}</strong>
+          </div>
+          <div class="stat-card">
+            <p class="stat-title">Đã hoàn thành</p>
+            <strong>{{ stats.completed }}</strong>
+          </div>
+          <div class="stat-card">
+            <p class="stat-title">Đang thực hiện</p>
+            <strong>{{ stats.inProgress }}</strong>
+          </div>
         </div>
 
         <div class="content-card">
+          <div class="table-head-row">
+            <h3>Lịch gần nhất</h3>
+            <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/booking/Guest')">
+              Đặt lịch mới
+            </GmsButton>
+          </div>
 
           <div v-if="loading" class="loading-state">
             <i class="fas fa-spinner fa-spin"></i>
@@ -27,22 +54,25 @@
               <thead>
                 <tr>
                   <th>Mã</th>
-                  <th>Khách hàng</th>
-                  <th>Điện thoại</th>
-                  <th>Thời gian</th>
+                  <th>Tên khách</th>
+                  <th>Xe</th>
+                  <th>Số điện thoại</th>
                   <th>Trạng thái</th>
+                  <th>Ngày</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="booking in bookings" :key="booking.bookingId || booking.id">
                   <td>{{ booking.bookingCode || booking.bookingId || booking.id || '—' }}</td>
                   <td>{{ booking.customerName || 'N/A' }}</td>
-                  <td>{{ booking.phone || 'N/A' }}</td>
+                  <td>{{ booking.vehicleName || 'N/A' }}</td>
+                  <td>{{ booking.customerPhone || 'N/A' }}</td>
+                  <td>{{ statusLabel(booking.status || booking.bookingStatus) }}</td>
                   <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
-                  <td>
-                    <span class="badge badge-info">
-                      {{ booking.status || booking.bookingStatus || 'Chờ xử lý' }}
-                    </span>
+                  <td class="action-cell">
+                    <a href="#" @click.prevent="viewDetail(booking)">Xem chi tiết  </a>
+
                   </td>
                 </tr>
               </tbody>
@@ -55,6 +85,10 @@
             <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/booking/Guest')">
               Đặt lịch ngay
             </GmsButton>
+          </div>
+
+          <div class="table-footer" v-if="bookings.length > 0">
+            <a href="#" @click.prevent="$router.push('/booking/Guest')">Xem tất cả →</a>
           </div>
         </div>
       </main>
@@ -76,6 +110,12 @@ const toast = useToast()
 
 const loading = ref(false)
 const bookings = ref([])
+const stats = ref({
+  total: 0,
+  pending: 0,
+  completed: 0,
+  inProgress: 0
+})
 const userEmail = ref(
   (authService.getCurrentUser()?.email || authService.getCurrentUser()?.username || '').toLowerCase()
 )
@@ -91,42 +131,55 @@ const formatDate = (date) => {
   })
 }
 
+const statusLabel = (status) => {
+  if (status === 0 || status === 'PENDING') return 'Chờ xử lý'
+  if (status === 1 || status === 'IN_PROGRESS') return 'Đang thực hiện'
+  if (status === 2 || status === 'COMPLETED') return 'Đã hoàn thành'
+  return status || 'Chưa rõ'
+}
+
+const viewDetail = (booking) => {
+  console.log('View booking detail', booking.bookingId || booking.id)
+}
+
 const loadBookings = async () => {
   try {
-    loading.value = true
     const email = userEmail.value
-
-    // Ưu tiên gọi API chuyên biệt theo email nếu có
-    let items = []
-    try {
-      const resDirect = await bookingService.getByEmailDirect(email)
-      items = resDirect?.data || resDirect?.items || resDirect || []
-    } catch (err) {
-      // Fallback sang paging + filter server-side
-      const params = {
-        page: 1,
-        pageSize: 20,
-        columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
-        filters: email
-          ? [
-              { columnName: 'CustomerEmail', value: email },
-              { columnName: 'Email', value: email }
-            ]
-          : []
-      }
-      const res = await bookingService.getPaging(params)
-      items = res?.data?.items || res?.items || []
-    }
-
     if (!email) {
-      bookings.value = items
+      toast.error('Không xác định được email người dùng. Vui lòng đăng nhập lại.')
       return
     }
+    const params = {
+      page: 1,
+      pageSize: 50,
+      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
+      filters: email
+        ? [
+            { columnName: 'CustomerEmail', value: email },
+            { columnName: 'Email', value: email }
+          ]
+        : []
+    }
+    loading.value = true
 
-    bookings.value = items.filter((booking) => {
-      const bookingEmail = (booking.email || booking.customerEmail || booking.customerMail || '').toLowerCase()
-      return bookingEmail === email
-    })
+
+
+    // Gọi thẳng API /Booking/by-email
+    const resDirect = await bookingService.getPaging(params)
+    const items = resDirect?.data?.items || []
+
+    // API đã lọc theo email
+    const sorted = items
+      .slice()
+      .sort((a, b) => new Date(b.bookingTime || b.createdDate || 0) - new Date(a.bookingTime || a.createdDate || 0))
+
+    // Stats
+    stats.value.total = sorted.length
+    stats.value.pending = sorted.filter((b) => (b.status ?? b.bookingStatus) === 0 || (b.status ?? b.bookingStatus) === 'PENDING').length
+    stats.value.completed = sorted.filter((b) => (b.status ?? b.bookingStatus) === 2 || (b.status ?? b.bookingStatus) === 'COMPLETED').length
+    stats.value.inProgress = sorted.filter((b) => (b.status ?? b.bookingStatus) === 1 || (b.status ?? b.bookingStatus) === 'IN_PROGRESS').length
+
+    bookings.value = sorted.slice(0, 5)
   } catch (error) {
     console.error('Error loading bookings', error)
     toast.error('Không tải được danh sách đặt lịch', error.message || error.userMsg || 'Đã có lỗi xảy ra')
@@ -158,7 +211,7 @@ onMounted(loadBookings)
 }
 
 .main-content {
-  padding: 2rem;
+  padding: 0.5rem;
   padding-top: 4.5rem; /* chừa khoảng cho header cố định */
 }
 
@@ -191,6 +244,41 @@ onMounted(loadBookings)
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  padding: 14px 16px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.stat-title {
+  margin: 0;
+  color: #555;
+  font-weight: 600;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 22px;
+  color: #111;
+}
+
+.table-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .table-wrapper {
   overflow-x: auto;
 }
@@ -212,6 +300,23 @@ onMounted(loadBookings)
   font-weight: 600;
   color: #555;
   background: #fafafa;
+}
+
+.action-cell a {
+  color: var(--primary, #ff7a00);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.table-footer {
+  padding: 12px 0 0;
+  text-align: right;
+}
+
+.table-footer a {
+  color: var(--primary, #ff7a00);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .loading-state,

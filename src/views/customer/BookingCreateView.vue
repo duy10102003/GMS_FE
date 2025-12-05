@@ -1,13 +1,21 @@
 <template>
   <div class="booking-create">
-    <TheSideBar
-      v-if="isAuthenticated"
+      <TheHeader
+        title="Tạo đặt lịch mới"
+        :show-search="false"
+        :notifications="notifications"
+        @logout="handleLogout"
+      />
+   <TheSideBar
       :collapsed="sidebarCollapsed"
-      :menu-items="sidebarMenu"
-      :collapsible="true"
+      :menu-items="menuItems"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
+
+    <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
+    
+
 
     <div
       class="booking-create__content"
@@ -15,12 +23,12 @@
     >
       <header class="page-header">
         <div>
-          <h1>Tạo đặt lịch mới</h1>
-          <p>Điền thông tin khách hàng và xe để đặt lịch</p>
+          <!-- <h1>Tạo đặt lịch mới</h1>
+          <p>Điền thông tin khách hàng và xe để đặt lịch</p> -->
         </div>
       </header>
 
-      <div class="layout">
+      <div class="layout" display="flex">
         <div class="main-column">
           <section class="card" id="step-customer">
             <div class="card-title">
@@ -142,7 +150,7 @@
           </div>
         </aside>
       </div>
-
+    </div>
       <GmsToast ref="toastRef" />
     </div>
   </div>
@@ -156,6 +164,7 @@ import authService from '@/services/auth'
 import bookingService from '@/services/booking'
 import { useToast } from '@/composables/useToast'
 import { GmsToast } from '@/components'
+import TheHeader from '@/layout/TheHeader.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -316,6 +325,8 @@ onMounted(async () => {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
 
 .booking-create {
+  padding-top: 80px;
+  padding-right: 0px;
   display: flex;
   min-height: 100vh;
   background: #f4f7fb;
@@ -324,6 +335,7 @@ onMounted(async () => {
 .booking-create__content {
   flex: 1;
   padding: 28px 32px 40px;
+  padding-right: 0px;
   transition: margin-left 0.2s ease;
 }
 
@@ -518,7 +530,8 @@ textarea {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   height: fit-content;
   position: sticky;
-  top: 16px;
+  top: 70px;
+
 }
 
 .process-card h3 {
