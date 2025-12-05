@@ -80,11 +80,11 @@
           @click="toggleUserMenu"
         >
           <img
-            :src="user.avatar || getAvatarUrl(user.name)"
-            :alt="user.name"
+            :src="user?.avatar || getAvatarUrl(user?.fullName || user?.name)"
+            :alt="userDisplayName"
             class="the-header-user-avatar"
           />
-          <span v-if="showUserName" class="the-header-user-name">{{ user.name }}</span>
+          <span v-if="showUserName" class="the-header-user-name">{{ userDisplayName }}</span>
           <i class="fas fa-chevron-down"></i>
         </button>
 
@@ -95,11 +95,11 @@
         >
           <div class="the-header-user-info">
             <img
-              :src="user.avatar || getAvatarUrl(user.name)"
-              :alt="user.name"
+              :src="user?.avatar || getAvatarUrl(user?.fullName || user?.name)"
+              :alt="userDisplayName"
             />
             <div>
-              <strong>{{ user.name }}</strong>
+              <strong>{{ userDisplayName }}</strong>
               <small>{{ getUserRoleLabel(user.role) }}</small>
             </div>
           </div>
@@ -136,7 +136,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import authService from '../services/auth.js'
+import { useAuthStore } from '../stores/auth.js'
 import { ROLES } from '../constant/roles.js'
 
 const props = defineProps({
@@ -166,9 +169,33 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['search', 'notification-click', 'logout'])
+const emit = defineEmits(['search', 'notification-click', 'logout', 'clear-notifications'])
 
-const user = ref(authService.getCurrentUser())
+const authStore = useAuthStore()
+const { user: storeUser } = storeToRefs(authStore)
+const router = useRouter()
+
+const user = computed(() => {
+  const currentUser = storeUser.value || authService.getCurrentUser()
+
+  if (!currentUser && !storeUser.value) {
+    authStore.fetchUser()
+  }
+  return currentUser
+})
+
+const userDisplayName = computed(() => {
+  const currentUser = user.value
+  if (!currentUser) return ''
+  return (
+    currentUser.fullName ||
+    currentUser.name ||
+    currentUser.username ||
+    currentUser.email ||
+    ''
+  )
+})
+
 const searchQuery = ref('')
 const notificationsOpen = ref(false)
 const userMenuOpen = ref(false)
@@ -178,6 +205,7 @@ const notificationCount = computed(() => {
 })
 
 const getAvatarUrl = (name) => {
+  if (!name) return 'https://ui-avatars.com/api/?name=User&background=FF7A00&color=fff'
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=FF7A00&color=fff`
 }
 
@@ -248,17 +276,18 @@ const clearNotifications = () => {
 
 const viewAllNotifications = () => {
   // Navigate to notifications page
+  router.push('/notifications')
   closeAllDropdowns()
 }
 
 const goToProfile = () => {
+  router.push('/profile')
   closeAllDropdowns()
-  // Navigate to profile
 }
 
 const goToSettings = () => {
+  router.push('/settings')
   closeAllDropdowns()
-  // Navigate to settings
 }
 
 const handleLogout = () => {
@@ -639,6 +668,4 @@ onUnmounted(() => {
   }
 }
 </style>
-
-
 
