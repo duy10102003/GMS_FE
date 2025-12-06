@@ -10,27 +10,22 @@
       />
 
       <main class="main-content">
-        <div class="header-row">
-          <div>
-            <!-- <h1 class="page-title">Lịch đặt của bạn</h1> -->
-            <p class="sub-text">Theo dõi các yêu cầu đặt dịch vụ đã gửi</p>
-          </div>
-        </div>
+
 
         <div class="stats-row">
-          <div class="stat-card">
+          <div class="stat-card stat-total">
             <p class="stat-title">Tổng số lịch đặt</p>
             <strong>{{ stats.total }}</strong>
           </div>
-          <div class="stat-card">
+          <div class="stat-card stat-pending">
             <p class="stat-title">Chờ xử lý</p>
             <strong>{{ stats.pending }}</strong>
           </div>
-          <div class="stat-card">
+          <div class="stat-card stat-completed">
             <p class="stat-title">Đã hoàn thành</p>
             <strong>{{ stats.completed }}</strong>
           </div>
-          <div class="stat-card">
+          <div class="stat-card stat-inprogress">
             <p class="stat-title">Đang thực hiện</p>
             <strong>{{ stats.inProgress }}</strong>
           </div>
@@ -39,7 +34,7 @@
         <div class="content-card">
           <div class="table-head-row">
             <h3>Lịch gần nhất</h3>
-            <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/booking/Guest')">
+            <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
               Đặt lịch mới
             </GmsButton>
           </div>
@@ -68,10 +63,26 @@
                   <td>{{ booking.customerName || 'N/A' }}</td>
                   <td>{{ booking.vehicleName || 'N/A' }}</td>
                   <td>{{ booking.customerPhone || 'N/A' }}</td>
-                  <td>{{ statusLabel(booking.status || booking.bookingStatus) }}</td>
+                  <td>
+                    <span
+                      class="status-pill"
+                      :class="statusClass(booking.status ?? booking.bookingStatus)"
+                    >
+                      {{ statusLabel(booking.status || booking.bookingStatus) }}
+                    </span>
+                  </td>
                   <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
                   <td class="action-cell">
-                    <a href="#" @click.prevent="viewDetail(booking)">Xem chi tiết  </a>
+                    <GmsButton variant="info" size="small" @click="viewDetail(booking)">
+                      Xem chi tiết
+                    </GmsButton>
+                    <GmsButton variant="primary" size="small" @click="viewDetail(booking)">
+                      Sửa
+                    </GmsButton>
+                    <GmsButton variant="danger" size="small" @click="viewDetail(booking)">
+                      Xóa
+                    </GmsButton>                                        
+                    <!-- <a href="#" @click.prevent="viewDetail(booking)">Xem chi tiết  </a> -->
 
                   </td>
                 </tr>
@@ -131,6 +142,13 @@ const formatDate = (date) => {
   })
 }
 
+const statusClass = (status) => {
+  if (status === 0 || status === 'PENDING') return 'pending'
+  if (status === 1 || status === 'IN_PROGRESS') return 'in-progress'
+  if (status === 2 || status === 'COMPLETED') return 'completed'
+  return 'unknown'
+}
+
 const statusLabel = (status) => {
   if (status === 0 || status === 'PENDING') return 'Chờ xử lý'
   if (status === 1 || status === 'IN_PROGRESS') return 'Đang thực hiện'
@@ -164,16 +182,16 @@ const loadBookings = async () => {
 
 
 
-    // Gọi thẳng API /Booking/by-email
+    
     const resDirect = await bookingService.getPaging(params)
     const items = resDirect?.data?.items || []
 
-    // API đã lọc theo email
+    
     const sorted = items
       .slice()
       .sort((a, b) => new Date(b.bookingTime || b.createdDate || 0) - new Date(a.bookingTime || a.createdDate || 0))
 
-    // Stats
+    
     stats.value.total = sorted.length
     stats.value.pending = sorted.filter((b) => (b.status ?? b.bookingStatus) === 0 || (b.status ?? b.bookingStatus) === 'PENDING').length
     stats.value.completed = sorted.filter((b) => (b.status ?? b.bookingStatus) === 2 || (b.status ?? b.bookingStatus) === 'COMPLETED').length
@@ -242,6 +260,10 @@ onMounted(loadBookings)
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-height: calc(100vh - 220px); /* vừa khít chiều cao màn hình dưới header */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .stats-row {
@@ -257,6 +279,31 @@ onMounted(loadBookings)
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.stat-total {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #fcd34d;
+}
+
+.stat-pending {
+  background: linear-gradient(135deg, #e0f2fe, #bfdbfe);
+  border-color: #93c5fd;
+}
+
+.stat-completed {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac;
+}
+
+.stat-inprogress {
+  background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+  border-color: #f9a8d4;
+}
+
+.stat-card .stat-title,
+.stat-card strong {
+  color: #1f2937;
 }
 
 .stat-title {
@@ -277,10 +324,12 @@ onMounted(loadBookings)
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  /* height: calc(100vh - 12px); */
 }
 
 .table-wrapper {
-  overflow-x: auto;
+  flex: 1;
+  overflow: auto;
 }
 
 .table {
@@ -302,10 +351,45 @@ onMounted(loadBookings)
   background: #fafafa;
 }
 
+.action-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .action-cell a {
   color: var(--primary, #ff7a00);
   text-decoration: none;
   font-weight: 600;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.in-progress {
+  background: #e0f2fe;
+  color: #1d4ed8;
+}
+
+.status-pill.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.unknown {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .table-footer {

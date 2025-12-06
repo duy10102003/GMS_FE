@@ -1,11 +1,6 @@
 <template>
-  <div class="booking-create">
-      <TheHeader
-        title="Tạo đặt lịch mới"
-        :show-search="false"
-        :notifications="notifications"
-        @logout="handleLogout"
-      />
+  <div class="booking-create" >
+
    <TheSideBar
       :collapsed="sidebarCollapsed"
       :menu-items="menuItems"
@@ -14,19 +9,18 @@
     />
 
     <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
-    
+          <TheHeader
+        title="Tạo đặt lịch mới"
+        :show-search="false"
+        :notifications="notifications"
+        @logout="handleLogout"
+      />
 
 
     <div
       class="booking-create__content"
       :style="isAuthenticated ? { marginLeft: sidebarCollapsed ? '80px' : '260px' } : { marginLeft: '0' }"
     >
-      <header class="page-header">
-        <div>
-          <!-- <h1>Tạo đặt lịch mới</h1>
-          <p>Điền thông tin khách hàng và xe để đặt lịch</p> -->
-        </div>
-      </header>
 
       <div class="layout" display="flex">
         <div class="main-column">
@@ -334,9 +328,12 @@ onMounted(async () => {
 
 .booking-create__content {
   flex: 1;
-  padding: 28px 32px 40px;
-  padding-right: 0px;
+  width: 100%;
+  max-width: 100%;
+  padding: 32px 24px 48px;
+  margin: 0 auto;
   transition: margin-left 0.2s ease;
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -360,12 +357,13 @@ onMounted(async () => {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 20px;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 16px;
   align-items: start;
 }
 
 .main-column {
+min-width: 100vh;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -374,9 +372,23 @@ onMounted(async () => {
 .card {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 20px 22px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 10% 10%, rgba(255, 122, 0, 0.06), transparent),
+    radial-gradient(120% 120% at 90% 0%, rgba(59, 130, 246, 0.05), transparent);
+  pointer-events: none;
+}
+ .card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .card-title {
@@ -527,10 +539,10 @@ textarea {
   border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 18px 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
   height: fit-content;
   position: sticky;
-  top: 70px;
+  top: 90px;
 
 }
 
@@ -540,10 +552,11 @@ textarea {
 }
 
 .step {
-  padding: 10px 0;
+  padding: 12px 10px;
   border-bottom: 1px solid #f1f2f4;
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
+  border-radius: 10px;
 }
 
 .step:last-child {
@@ -561,8 +574,8 @@ textarea {
 }
 
 .step:hover {
-  background: #f8fafc;
-  box-shadow: inset 0 0 0 1px #e5e7eb;
+  background: linear-gradient(90deg, rgba(255, 122, 0, 0.08), rgba(255, 255, 255, 0));
+  box-shadow: inset 0 0 0 1px #ffe8d6;
 }
 
 @media (max-width: 1024px) {
