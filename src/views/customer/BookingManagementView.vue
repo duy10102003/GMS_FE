@@ -241,7 +241,7 @@ const fetchBookings = async () => {
             { columnName: 'CustomerEmail', value: email },
             { columnName: 'Email', value: email }
           ]
-        : []
+        : []   
     }
     const res = await bookingService.getPaging(params)
     const items = res?.data?.items || res?.items || []

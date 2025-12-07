@@ -54,5 +54,16 @@ export const API_ENDPOINTS = {
 		TICKETS: '/mechanic/tickets',
 		HISTORY: '/mechanic/history',
 		SHIFT: '/mechanic/shift'
+	},
+
+	// Booking
+	BOOKING: {
+		PAGING: '/Booking/paging',
+		BY_EMAIL: '/Booking/by-email',
+		BY_ID: (id) => `/Booking/${id}`,
+		CREATE_GUEST: '/Booking/guest',
+		CREATE_USER: '/Booking/user',
+		UPDATE: (id) => `/Booking/${id}`,
+		DELETE: (id) => `/Booking/${id}`
 	}
 }

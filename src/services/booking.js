@@ -1,4 +1,5 @@
 import api from './api.js'
+import { API_ENDPOINTS } from '@/constant/api'
 
 /**
  * Booking API Service
@@ -10,14 +11,15 @@ class BookingService {
    * POST /api/Booking/paging
    */
   async getPaging(params) {
-    return await api.post('/Booking/paging', params)
+    return await api.post(API_ENDPOINTS.BOOKING.PAGING, params)
   }
+
   /**
    * Lấy booking theo email qua endpoint chuyên biệt (BE mới)
    * GET /api/Booking/by-email?email=...
    */
   async getByEmailDirect(email) {
-    return await api.get('/Booking/by-email', { email })
+    return await api.get(API_ENDPOINTS.BOOKING.BY_EMAIL, { email })
   }
 
   /**
@@ -25,7 +27,7 @@ class BookingService {
    * GET /api/Booking/{id}
    */
   async getById(id) {
-    return await api.get(`/Booking/${id}`)
+    return await api.get(API_ENDPOINTS.BOOKING.BY_ID(id))
   }
 
   /**
@@ -33,7 +35,7 @@ class BookingService {
    * POST /api/Booking/guest
    */
   async createByGuest(data) {
-    return await api.post('/Booking/guest', data)
+    return await api.post(API_ENDPOINTS.BOOKING.CREATE_GUEST, data)
   }
 
   /**
@@ -41,7 +43,7 @@ class BookingService {
    * POST /api/Booking/user
    */
   async createByUser(data) {
-    return await api.post('/Booking/user', data)
+    return await api.post(API_ENDPOINTS.BOOKING.CREATE_USER, data)
   }
 
   /**
@@ -49,7 +51,7 @@ class BookingService {
    * PUT /api/Booking/{id}
    */
   async update(id, data) {
-    return await api.put(`/Booking/${id}`, data)
+    return await api.put(API_ENDPOINTS.BOOKING.UPDATE(id), data)
   }
 
   /**
@@ -57,7 +59,7 @@ class BookingService {
    * DELETE /api/Booking/{id}
    */
   async delete(id) {
-    return await api.delete(`/Booking/${id}`)
+    return await api.delete(API_ENDPOINTS.BOOKING.DELETE(id))
   }
 }
 

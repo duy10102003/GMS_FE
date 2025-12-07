@@ -99,7 +99,7 @@
           </div>
 
           <div class="table-footer" v-if="bookings.length > 0">
-            <a href="#" @click.prevent="$router.push('/booking/Guest')">Xem tất cả →</a>
+            <a href="#" @click.prevent="$router.push('/customer/booking/all')">Xem tất cả →</a>
           </div>
         </div>
       </main>
