@@ -1,79 +1,41 @@
-<template>
+﻿<template>
   <div class="dashboard-customer">
     <TheSideBar @logout="handleLogout" />
     <div class="dashboard-customer-body">
-      <TheHeader @logout="handleLogout" />
-      <main class="main-content" style="padding: 2rem;">
-        <div class="header-row">
-          <h1 class="page-title">Trang Chủ Khách Hàng</h1>
-        </div>
+      <TheHeader
+        title="Danh sách đặt lịch"
+        :show-search="false"
+        :notifications="notifications"
+        @logout="handleLogout"
+      />
 
-        <!-- Welcome Section -->
-        <div class="welcome-card">
-          <div class="welcome-content">
-            <h2>Xin chào, {{ customerName }}!</h2>
-            <p>Chúng tôi sẵn sàng phục vụ bạn</p>
-          </div>
-          <div class="welcome-actions">
-            <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/staff/service-tickets/create')">
-              Tạo phiếu dịch vụ mới
-            </GmsButton>
-          </div>
-        </div>
+      <main class="main-content">
 
-        <!-- Quick Stats -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(84, 160, 255, 0.1); color: var(--info)">
-              <i class="fas fa-car"></i>
-            </div>
-            <h6>Xe của tôi</h6>
-            <div class="value">{{ stats.totalVehicles }}</div>
-            <div class="change">
-              <i class="fas fa-list"></i> Tổng số xe
-            </div>
-          </div>
 
-          <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(247, 183, 49, 0.1); color: var(--warning)">
-              <i class="fas fa-ticket-alt"></i>
-            </div>
-            <h6>Phiếu dịch vụ</h6>
-            <div class="value">{{ stats.totalTickets }}</div>
-            <div class="change">
-              <i class="fas fa-clipboard-list"></i> Tất cả phiếu
-            </div>
+        <div class="stats-row">
+          <div class="stat-card stat-total">
+            <p class="stat-title">Tổng số lịch đặt</p>
+            <strong>{{ stats.total }}</strong>
           </div>
-
-          <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(16, 172, 132, 0.1); color: var(--success)">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <h6>Đã hoàn thành</h6>
-            <div class="value">{{ stats.completedTickets }}</div>
-            <div class="change positive">
-              <i class="fas fa-check-double"></i> Hoàn thành
-            </div>
+          <div class="stat-card stat-pending">
+            <p class="stat-title">Chờ xử lý</p>
+            <strong>{{ stats.pending }}</strong>
           </div>
-
-          <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(255, 122, 0, 0.1); color: var(--primary)">
-              <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-            <h6>Hóa đơn</h6>
-            <div class="value">{{ stats.totalInvoices }}</div>
-            <div class="change">
-              <i class="fas fa-receipt"></i> Tất cả hóa đơn
-            </div>
+          <div class="stat-card stat-completed">
+            <p class="stat-title">Đã hoàn thành</p>
+            <strong>{{ stats.completed }}</strong>
+          </div>
+          <div class="stat-card stat-inprogress">
+            <p class="stat-title">Đang thực hiện</p>
+            <strong>{{ stats.inProgress }}</strong>
           </div>
         </div>
 
-        <!-- My Vehicles -->
         <div class="content-card">
-          <div class="content-card-header">
-            <h5>Xe của tôi</h5>
-            <GmsButton variant="primary" icon="fa-plus">
-              Thêm xe mới
+          <div class="table-head-row">
+            <h3>Lịch gần nhất</h3>
+            <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
+              Đặt lịch mới
             </GmsButton>
           </div>
 
@@ -82,84 +44,62 @@
             <span>Đang tải...</span>
           </div>
 
-          <div v-else-if="vehicles.length > 0" class="vehicles-grid">
-            <div
-              v-for="vehicle in vehicles"
-              :key="vehicle.vehicleId"
-              class="vehicle-card"
-            >
-              <div class="vehicle-header">
-                <div class="vehicle-icon">
-                  <i class="fas fa-car"></i>
-                </div>
-                <div>
-                  <h6>{{ vehicle.vehicleName }}</h6>
-                  <p class="vehicle-plate">{{ vehicle.vehicleLicensePlate }}</p>
-                </div>
-              </div>
-              <div class="vehicle-details">
-                <div class="detail-item">
-                  <span class="detail-label">Hãng:</span>
-                  <span class="detail-value">{{ vehicle.make || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Model:</span>
-                  <span class="detail-value">{{ vehicle.model || 'N/A' }}</span>
-                </div>
-                <div class="detail-item" v-if="vehicle.currentKm">
-                  <span class="detail-label">Số km:</span>
-                  <span class="detail-value">{{ vehicle.currentKm.toLocaleString() }} km</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div v-else-if="bookings.length > 0" class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Mã</th>
+                  <th>Tên khách</th>
+                  <th>Xe</th>
+                  <th>Số điện thoại</th>
+                  <th>Trạng thái</th>
+                  <th>Ngày</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="booking in bookings" :key="booking.bookingId || booking.id">
+                  <td>{{ booking.bookingCode || booking.bookingId || booking.id || '—' }}</td>
+                  <td>{{ booking.customerName || 'N/A' }}</td>
+                  <td>{{ booking.vehicleName || 'N/A' }}</td>
+                  <td>{{ booking.customerPhone || 'N/A' }}</td>
+                  <td>
+                    <span
+                      class="status-pill"
+                      :class="statusClass(booking.status ?? booking.bookingStatus)"
+                    >
+                      {{ statusLabel(booking.status || booking.bookingStatus) }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
+                  <td class="action-cell">
+                    <GmsButton variant="info" size="small" @click="viewDetail(booking)">
+                      Xem chi tiết
+                    </GmsButton>
+                    <GmsButton variant="primary" size="small" @click="viewDetail(booking)">
+                      Sửa
+                    </GmsButton>
+                    <GmsButton variant="danger" size="small" @click="viewDetail(booking)">
+                      Xóa
+                    </GmsButton>                                        
+                    <!-- <a href="#" @click.prevent="viewDetail(booking)">Xem chi tiết  </a> -->
 
-          <div v-else class="empty-state">
-            <i class="fas fa-car"></i>
-            <p>Bạn chưa có xe nào</p>
-            <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/customer/vehicles/add')">
-              Thêm xe mới
-            </GmsButton>
-          </div>
-        </div>
-
-        <!-- Recent Service Tickets -->
-        <div class="content-card">
-          <div class="content-card-header">
-            <h5>Phiếu dịch vụ gần đây</h5>
-            <GmsButton variant="primary" icon="fa-eye">
-              Xem tất cả
-            </GmsButton>
-          </div>
-
-          <div v-if="recentTickets.length > 0" class="tickets-list">
-            <div
-              v-for="ticket in recentTickets"
-              :key="ticket.serviceTicketId"
-              class="ticket-item"
-              @click="$router.push(`/staff/service-tickets/${ticket.serviceTicketId}`)"
-            >
-              <div class="ticket-info">
-                <div>
-                  <strong>{{ ticket.serviceTicketCode || `#${ticket.serviceTicketId}` }}</strong>
-                  <div class="ticket-meta">
-                    <span><i class="fas fa-car"></i> {{ ticket.vehicleName || 'N/A' }}</span>
-                    <span><i class="fas fa-calendar"></i> {{ formatDate(ticket.createdDate) }}</span>
-                  </div>
-                </div>
-                <span :class="`badge badge-${getStatusColor(ticket.serviceTicketStatus)}`">
-                  {{ getStatusLabel(ticket.serviceTicketStatus) }}
-                </span>
-              </div>
-            </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <div v-else class="empty-state">
             <i class="fas fa-ticket-alt"></i>
-            <p>Bạn chưa có phiếu dịch vụ nào</p>
-            <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/staff/service-tickets/create')">
-              Tạo phiếu dịch vụ mới
+            <p>Bạn chưa có đặt dịch vụ nào</p>
+            <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/booking/Guest')">
+              Đặt lịch ngay
             </GmsButton>
+          </div>
+
+          <div class="table-footer" v-if="bookings.length > 0">
+            <a href="#" @click.prevent="$router.push('/customer/booking/all')">Xem tất cả →</a>
           </div>
         </div>
       </main>
@@ -168,42 +108,28 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { TheHeader, TheSideBar } from '@/layout'
 import { GmsButton } from '@/components'
 import { useToast } from '@/composables/useToast'
 import authService from '@/services/auth'
-import serviceTicketService from '@/services/serviceTicket'
-import { SERVICE_TICKET_STATUS, SERVICE_TICKET_STATUS_LABELS, SERVICE_TICKET_STATUS_COLORS } from '@/constant/serviceTicketStatus'
+import bookingService from '@/services/booking'
 
 const router = useRouter()
 const toast = useToast()
 
 const loading = ref(false)
-
-const customerName = computed(() => {
-  const user = authService.getCurrentUser()
-  return user?.fullName || user?.name || 'Khách hàng'
-})
-
+const bookings = ref([])
 const stats = ref({
-  totalVehicles: 0,
-  totalTickets: 0,
-  completedTickets: 0,
-  totalInvoices: 0
+  total: 0,
+  pending: 0,
+  completed: 0,
+  inProgress: 0
 })
-
-const vehicles = ref([])
-const recentTickets = ref([])
-
-const getStatusLabel = (status) => {
-  return SERVICE_TICKET_STATUS_LABELS[status] || 'N/A'
-}
-
-const getStatusColor = (status) => {
-  return SERVICE_TICKET_STATUS_COLORS[status] || 'secondary'
-}
+const userEmail = ref(
+  (authService.getCurrentUser()?.email || authService.getCurrentUser()?.username || '').toLowerCase()
+)
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
@@ -216,33 +142,65 @@ const formatDate = (date) => {
   })
 }
 
-const loadDashboardData = async () => {
+const statusClass = (status) => {
+  if (status === 0 || status === 'PENDING') return 'pending'
+  if (status === 1 || status === 'IN_PROGRESS') return 'in-progress'
+  if (status === 2 || status === 'COMPLETED') return 'completed'
+  return 'unknown'
+}
+
+const statusLabel = (status) => {
+  if (status === 0 || status === 'PENDING') return 'Chờ xử lý'
+  if (status === 1 || status === 'IN_PROGRESS') return 'Đang thực hiện'
+  if (status === 2 || status === 'COMPLETED') return 'Đã hoàn thành'
+  return status || 'Chưa rõ'
+}
+
+const viewDetail = (booking) => {
+  console.log('View booking detail', booking.bookingId || booking.id)
+}
+
+const loadBookings = async () => {
   try {
+    const email = userEmail.value
+    if (!email) {
+      toast.error('Không xác định được email người dùng. Vui lòng đăng nhập lại.')
+      return
+    }
+    const params = {
+      page: 1,
+      pageSize: 50,
+      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
+      filters: email
+        ? [
+            { columnName: 'CustomerEmail', value: email },
+            { columnName: 'Email', value: email }
+          ]
+        : []
+    }
     loading.value = true
 
-    // TODO: Load customer vehicles
-    // const vehiclesResponse = await api.get('/customers/vehicles')
-    // vehicles.value = vehiclesResponse.data
-    // stats.value.totalVehicles = vehicles.value.length
 
-    // Load recent tickets
-    const recentParams = {
-      page: 1,
-      pageSize: 5,
-      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }]
-    }
-    const recentResponse = await serviceTicketService.getPaging(recentParams)
-    recentTickets.value = recentResponse.data?.items || []
 
-    // Calculate stats
-    stats.value.totalTickets = recentTickets.value.length
-    stats.value.completedTickets = recentTickets.value.filter(t => 
-      t.serviceTicketStatus === SERVICE_TICKET_STATUS.COMPLETED || t.serviceTicketStatus === 3
-    ).length
+    
+    const resDirect = await bookingService.getPaging(params)
+    const items = resDirect?.data?.items || []
 
+    
+    const sorted = items
+      .slice()
+      .sort((a, b) => new Date(b.bookingTime || b.createdDate || 0) - new Date(a.bookingTime || a.createdDate || 0))
+
+    
+    stats.value.total = sorted.length
+    stats.value.pending = sorted.filter((b) => (b.status ?? b.bookingStatus) === 0 || (b.status ?? b.bookingStatus) === 'PENDING').length
+    stats.value.completed = sorted.filter((b) => (b.status ?? b.bookingStatus) === 2 || (b.status ?? b.bookingStatus) === 'COMPLETED').length
+    stats.value.inProgress = sorted.filter((b) => (b.status ?? b.bookingStatus) === 1 || (b.status ?? b.bookingStatus) === 'IN_PROGRESS').length
+
+    bookings.value = sorted.slice(0, 5)
   } catch (error) {
-    console.error('Error loading dashboard data:', error)
-    toast.error('Lỗi khi tải dữ liệu dashboard', error.message || error.userMsg || 'Có lỗi xảy ra')
+    console.error('Error loading bookings', error)
+    toast.error('Không tải được danh sách đặt lịch', error.message || error.userMsg || 'Đã có lỗi xảy ra')
   } finally {
     loading.value = false
   }
@@ -253,9 +211,7 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-onMounted(async () => {
-  await loadDashboardData()
-})
+onMounted(loadBookings)
 </script>
 
 <style scoped>
@@ -272,11 +228,18 @@ onMounted(async () => {
   flex-direction: column;
 }
 
+.main-content {
+  padding: 0.5rem;
+  padding-top: 4.5rem; /* chừa khoảng cho header cố định */
+}
+
 .header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .page-title {
@@ -286,81 +249,10 @@ onMounted(async () => {
   margin: 0;
 }
 
-.welcome-card {
-  background: linear-gradient(135deg, var(--primary, #ff7a00) 0%, #ff9500 100%);
-  border-radius: 12px;
-  padding: 2rem;
-  color: white;
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.welcome-content h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-}
-
-.welcome-content p {
-  font-size: 1rem;
-  margin: 0;
-  opacity: 0.9;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.stat-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.stat-card h6 {
-  font-size: 0.875rem;
+.sub-text {
+  margin: 0.25rem 0 0 0;
   color: #666;
-  margin: 0;
-  font-weight: 500;
-}
-
-.stat-card .value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--dark, #2c3a47);
-}
-
-.stat-card .change {
-  font-size: 0.75rem;
-  color: #999;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.stat-card .change.positive {
-  color: var(--success, #10ac84);
+  font-size: 0.95rem;
 }
 
 .content-card {
@@ -368,185 +260,172 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 2rem;
-}
-
-.content-card-header {
+  max-height: calc(100vh - 220px); /* vừa khít chiều cao màn hình dưới header */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.content-card-header h5 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--dark, #2c3a47);
-  margin: 0;
-}
-
-.vehicles-grid {
+.stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.vehicle-card {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.5rem;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.vehicle-card:hover {
-  border-color: var(--primary, #ff7a00);
-  box-shadow: 0 4px 12px rgba(255, 122, 0, 0.1);
-}
-
-.vehicle-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.vehicle-icon {
-  width: 50px;
-  height: 50px;
+.stat-card {
+  padding: 14px 16px;
+  border: 1px solid #eaeaea;
   border-radius: 12px;
-  background: var(--primary, #ff7a00);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
-.vehicle-header h6 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--dark, #2c3a47);
-  margin: 0 0 0.25rem 0;
+.stat-total {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #fcd34d;
 }
 
-.vehicle-plate {
-  font-size: 0.875rem;
-  color: #666;
+.stat-pending {
+  background: linear-gradient(135deg, #e0f2fe, #bfdbfe);
+  border-color: #93c5fd;
+}
+
+.stat-completed {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac;
+}
+
+.stat-inprogress {
+  background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+  border-color: #f9a8d4;
+}
+
+.stat-card .stat-title,
+.stat-card strong {
+  color: #1f2937;
+}
+
+.stat-title {
   margin: 0;
+  color: #555;
+  font-weight: 600;
 }
 
-.vehicle-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 22px;
+  color: #111;
 }
 
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.875rem;
-}
-
-.detail-label {
-  color: #666;
-}
-
-.detail-value {
-  color: var(--dark, #2c3a47);
-  font-weight: 500;
-}
-
-.tickets-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.ticket-item {
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid var(--primary, #ff7a00);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ticket-item:hover {
-  background: #f0f0f0;
-  transform: translateX(4px);
-}
-
-.ticket-info {
+.table-head-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 12px;
+  /* height: calc(100vh - 12px); */
 }
 
-.ticket-meta {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #666;
+.table-wrapper {
+  flex: 1;
+  overflow: auto;
 }
 
-.ticket-meta span {
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.table th {
+  font-weight: 600;
+  color: #555;
+  background: #fafafa;
+}
+
+.action-cell {
   display: flex;
+  gap: 8px;
   align-items: center;
-  gap: 0.25rem;
 }
 
-.ticket-meta i {
+.action-cell a {
   color: var(--primary, #ff7a00);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.in-progress {
+  background: #e0f2fe;
+  color: #1d4ed8;
+}
+
+.status-pill.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.unknown {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.table-footer {
+  padding: 12px 0 0;
+  text-align: right;
+}
+
+.table-footer a {
+  color: var(--primary, #ff7a00);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .loading-state,
 .empty-state {
   text-align: center;
-  padding: 3rem;
-  color: #999;
+  padding: 3rem 1rem;
+  color: #777;
 }
 
 .loading-state i,
 .empty-state i {
   font-size: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: block;
+  color: var(--primary, #ff7a00);
 }
 
 .badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
   font-weight: 600;
-  white-space: nowrap;
-}
-
-.badge-primary {
-  background: rgba(255, 122, 0, 0.1);
-  color: var(--primary, #ff7a00);
-}
-
-.badge-success {
-  background: rgba(16, 172, 132, 0.1);
-  color: var(--success, #10ac84);
-}
-
-.badge-warning {
-  background: rgba(247, 183, 49, 0.1);
-  color: var(--warning, #f7b731);
-}
-
-.badge-info {
-  background: rgba(84, 160, 255, 0.1);
+  background: rgba(84, 160, 255, 0.12);
   color: var(--info, #54a0ff);
-}
-
-.badge-secondary {
-  background: rgba(108, 117, 125, 0.1);
-  color: #6c757d;
 }
 
 @media (max-width: 992px) {

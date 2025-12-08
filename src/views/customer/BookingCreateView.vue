@@ -1,79 +1,150 @@
 <template>
-  <div class="booking-create">
-    <TheSideBar
-      v-if="isAuthenticated"
+  <div class="booking-create" >
+
+   <TheSideBar
       :collapsed="sidebarCollapsed"
-      :menu-items="sidebarMenu"
-      :collapsible="true"
+      :menu-items="menuItems"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
+
+    <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
+          <TheHeader
+        title="Tạo đặt lịch mới"
+        :show-search="false"
+        :notifications="notifications"
+        @logout="handleLogout"
+      />
+
 
     <div
       class="booking-create__content"
       :style="isAuthenticated ? { marginLeft: sidebarCollapsed ? '80px' : '260px' } : { marginLeft: '0' }"
     >
-      <header class="page-header">
-        <!-- <button class="back-btn" @click="goBack">
-          <i class="fa-solid fa-arrow-left"></i>
-          Back
-        </button> -->
-        <div>
-          <h1>Create New Booking</h1>
-          <p>Add a new vehicle booking to the system</p>
-        </div>
-      </header>
 
-<section class="form-card">
-  <h3>Customer Information</h3>
-  <div class="form-grid">
-    <div class="form-control">
-      <label>Customer Name</label>
-      <input v-model="form.customerName" type="text" placeholder="Enter customer name" />
-    </div>
-    <div class="form-control">
-      <label>Phone <span class="required">*</span></label>
-      <input v-model="form.phone" type="tel" placeholder="Enter phone number" />
-    </div>
-    <div class="form-control full">
-      <label>Email</label>
-      <input v-model="form.email" type="email" placeholder="Enter email address" />
-    </div>
-  </div>
-
-        <div class="divider"></div>
-
-        <h3>Booking Details</h3>
-        <div class="form-grid">
-          <div class="form-control">
-            <label>Booking Time <span class="required">*</span></label>
-            <div class="input-icon">
-              <i class="fa-regular fa-calendar"></i>
-              <input v-model="form.bookingTime" type="datetime-local" />
+      <div class="layout" display="flex">
+        <div class="main-column">
+          <section class="card" id="step-customer">
+            <div class="card-title">
+              <i class="fa-regular fa-user"></i>
+              <div>
+                <h2>Thông tin khách hàng</h2>
+                <p>Thông tin liên hệ cơ bản</p>
+              </div>
             </div>
-          </div>
-          <div class="form-control">
-            <label>Vehicle Name</label>
-            <input v-model="form.vehicleName" type="text" placeholder="Enter vehicle name or model" />
-          </div>
-          <div class="form-control full">
-            <label>Notes</label>
-            <textarea
-              v-model="form.notes"
-              rows="5"
-              placeholder="Add any additional notes about the booking"
-            ></textarea>
+            <div class="form-grid three-cols">
+              <div class="form-control">
+                <label>Họ tên <span class="required">*</span></label>
+                <input v-model="form.customerName" type="text" placeholder="Nhập họ tên" />
+              </div>
+              <div class="form-control">
+                <label>Số điện thoại <span class="required">*</span></label>
+                <input v-model="form.phone" type="tel" placeholder="Nhập số điện thoại" />
+              </div>
+              <div class="form-control">
+                <label>Email</label>
+                <input v-model="form.email" type="email" placeholder="Nhập email" />
+              </div>
+            </div>
+          </section>
+
+          <section class="card" id="step-booking">
+            <div class="card-title">
+              <i class="fa-regular fa-calendar"></i>
+              <div>
+                <h2>Thông tin đặt lịch</h2>
+                <p>Chọn thời gian và xe</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-control">
+                <label>Thời gian đặt lịch <span class="required">*</span></label>
+                <div class="input-icon">
+                  <i class="fa-regular fa-calendar"></i>
+                  <input v-model="form.bookingTime" type="datetime-local" />
+                </div>
+              </div>
+              <div class="form-control">
+                <label>Tên xe <span class="required">*</span></label>
+                <input v-model="form.vehicleName" type="text" placeholder="Nhập tên hoặc dòng xe" />
+              </div>
+              <div class="form-control">
+                <label>Lý do</label>
+                <select v-model="form.reason">
+                  <option value="">Chọn lý do</option>
+                  <option value="Bảo dưỡng">Bảo dưỡng</option>
+                  <option value="Sửa chữa">Sửa chữa</option>
+                  <option value="Kiểm tra">Kiểm tra</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="card" id="step-notes">
+            <div class="card-title">
+              <i class="fa-solid fa-location-dot"></i>
+              <div>
+                <h2>Ghi chú bổ sung</h2>
+                <p>Thông tin thêm bạn muốn gửi</p>
+              </div>
+            </div>
+            <div class="form-control full">
+              <label>Ghi chú</label>
+              <textarea v-model="form.notes" rows="4" placeholder="Thêm ghi chú cho lịch đặt"></textarea>
+            </div>
+
+            <div class="summary-card">
+              <h3>Tóm tắt đặt lịch</h3>
+              <div class="summary-row">
+                <span>Khách hàng:</span>
+                <strong>{{ form.customerName || '-' }}</strong>
+              </div>
+              <div class="summary-row">
+                <span>Số điện thoại:</span>
+                <strong>{{ form.phone || '-' }}</strong>
+              </div>
+              <div class="summary-row">
+                <span>Xe:</span>
+                <strong>{{ form.vehicleName || '-' }}</strong>
+              </div>
+              <div class="summary-row">
+                <span>Thời gian:</span>
+                <strong>{{ form.bookingTime ? formatDate(form.bookingTime) : '-' }}</strong>
+              </div>
+              <div class="summary-row">
+                <span>Lý do:</span>
+                <strong>{{ form.reason || '-' }}</strong>
+              </div>
+            </div>
+          </section>
+
+          <div class="form-actions">
+            <button class="btn-outline" @click="goBack">Hủy</button>
+            <button class="btn-primary" :disabled="submitting" @click="handleSubmit">
+              <span v-if="submitting">Đang lưu...</span>
+              <span v-else>Tạo lịch</span>
+            </button>
           </div>
         </div>
 
-        <div class="form-actions">
-          <button class="btn-outline" @click="goBack">Cancel</button>
-          <button class="btn-primary" :disabled="submitting" @click="handleSubmit">
-            <span v-if="submitting">Saving...</span>
-            <span v-else>Create Booking</span>
-          </button>
-        </div>
-      </section>
+        <aside class="process-card">
+          <h3>Tiến trình</h3>
+          <div class="step" @click="scrollTo('step-customer')">
+            <strong>Bước 1: Thông tin khách</strong>
+            <p>Họ tên, Số điện thoại, Email</p>
+          </div>
+          <div class="step" @click="scrollTo('step-booking')">
+            <strong>Bước 2: Thông tin đặt lịch</strong>
+            <p>Ngày giờ, Xe, Lý do</p>
+          </div>
+          <div class="step" @click="scrollTo('step-notes')">
+            <strong>Bước 3: Xem lại</strong>
+            <p>Ghi chú & Tóm tắt</p>
+          </div>
+        </aside>
+      </div>
+    </div>
       <GmsToast ref="toastRef" />
     </div>
   </div>
@@ -87,6 +158,7 @@ import authService from '@/services/auth'
 import bookingService from '@/services/booking'
 import { useToast } from '@/composables/useToast'
 import { GmsToast } from '@/components'
+import TheHeader from '@/layout/TheHeader.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -94,6 +166,7 @@ const toastRef = ref(null)
 const sidebarCollapsed = ref(false)
 const isAuthenticated = computed(() => authService.isAuthenticated())
 const submitting = ref(false)
+const currentUser = ref(authService.getCurrentUser())
 
 const sidebarMenu = [
   { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check', path: '/customer/bookings', exact: true },
@@ -108,11 +181,32 @@ const form = reactive({
   email: '',
   bookingTime: '',
   vehicleName: '',
+  reason: '',
   notes: ''
 })
 
 const goBack = () => {
-  router.push('/home')
+  router.push('/customer/home')
+}
+
+const scrollTo = (id) => {
+  const el = document.getElementById(id)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 const validateForm = () => {
@@ -148,13 +242,23 @@ const handleSubmit = async () => {
   if (!validateForm()) return
   try {
     submitting.value = true
+    const reasonText = form.reason ? `Lý do: ${form.reason}` : ''
+    const noteText = form.notes?.trim() || ''
+    let finalNotes = null
+    if (reasonText && noteText) {
+      finalNotes = `${reasonText} - ${noteText}`
+    } else {
+      finalNotes = reasonText || noteText || null
+    }
+
     const payload = {
       customerName: form.customerName?.trim() || 'Guest',
       customerPhone: form.phone.trim(),
       customerEmail: form.email?.trim() || null,
       vehicleName: form.vehicleName?.trim() || null,
       bookingTime: form.bookingTime ? new Date(form.bookingTime).toISOString() : null,
-      notes: form.notes?.trim() || null
+      notes: finalNotes || '',
+      note: finalNotes || '' // phòng trường hợp BE dùng field note
     }
 
     if (isAuthenticated.value) {
@@ -164,15 +268,15 @@ const handleSubmit = async () => {
     }
 
     toast.success('Đặt lịch thành công. Vui lòng đăng nhập bằng email để xem danh sách booking.')
-    // Reset form fields
     form.customerName = ''
     form.phone = ''
     form.email = ''
     form.bookingTime = ''
     form.vehicleName = ''
+    form.reason = ''
     form.notes = ''
   } catch (error) {
-    toast.error('Failed to create booking', error.message || error.userMsg || '')
+    toast.error('Không tạo được đặt lịch', error.message || error.userMsg || '')
   } finally {
     submitting.value = false
   }
@@ -188,6 +292,26 @@ onMounted(async () => {
     const { setToastInstance } = await import('@/composables/useToast')
     setToastInstance(toastRef.value)
   }
+
+  const prefillFromUser = (user) => {
+    if (!user) return
+    form.customerName = user.fullName || user.name || form.customerName
+    form.email = user.email || form.email
+    form.phone = user.phone || user.phoneNumber || form.phone
+  }
+
+  prefillFromUser(currentUser.value)
+
+  const token = localStorage.getItem('token')
+  if (token) {
+    try {
+      const profile = await authService.getProfile()
+      currentUser.value = profile || currentUser.value
+      prefillFromUser(currentUser.value)
+    } catch (error) {
+      console.warn('Không lấy được profile, dùng cache local.', error)
+    }
+  }
 })
 </script>
 
@@ -195,22 +319,28 @@ onMounted(async () => {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
 
 .booking-create {
+  padding-top: 80px;
+  padding-right: 0px;
   display: flex;
   min-height: 100vh;
-  background: #f8fafc;
+  background: #f4f7fb;
 }
 
 .booking-create__content {
   flex: 1;
-  padding: 28px 32px 40px;
+  width: 100%;
+  max-width: 100%;
+  padding: 32px 24px 48px;
+  margin: 0 auto;
   transition: margin-left 0.2s ease;
+  box-sizing: border-box;
 }
 
 .page-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .page-header h1 {
@@ -225,35 +355,68 @@ onMounted(async () => {
   font-size: 15px;
 }
 
-.back-btn {
-  background: none;
-  border: none;
-  color: #ff7a00;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 
-.form-card {
+.main-column {
+min-width: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  padding: 24px 28px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 22px 24px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 10% 10%, rgba(255, 122, 0, 0.06), transparent),
+    radial-gradient(120% 120% at 90% 0%, rgba(59, 130, 246, 0.05), transparent);
+  pointer-events: none;
+}
+ .card > * {
+  position: relative;
+  z-index: 1;
 }
 
-.form-card h3 {
-  margin: 0 0 16px;
-  font-size: 17px;
-  color: #1f2933;
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card-title h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #0f172a;
+}
+
+.card-title p {
+  margin: 2px 0 0;
+  color: #6b7280;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px 16px;
+}
+
+.form-grid.three-cols {
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
 }
 
 .form-control {
@@ -267,29 +430,30 @@ onMounted(async () => {
 }
 
 label {
-  font-weight: 600;
-  color: #1f2933;
+  font-weight: 700;
+  color: #374151;
+  font-size: 14px;
 }
 
 .required {
-  color: #ee5253;
+  color: #f97316;
 }
 
 input,
-select,
-textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #d1d5db;
+textarea,
+select {
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
+  padding: 12px 14px;
   font-size: 14px;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fff;
 }
 
 input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
+textarea:focus,
+select:focus {
   border-color: #ff7a00;
   box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
 }
@@ -314,16 +478,30 @@ textarea {
   resize: vertical;
 }
 
-.divider {
-  border-top: 1px solid #e5e7eb;
-  margin: 20px 0;
+.summary-card {
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #f9fafb;
+}
+
+.summary-card h3 {
+  margin: 0 0 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  color: #4b5563;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 8px;
 }
 
 .btn-primary,
@@ -356,17 +534,60 @@ textarea {
   color: #ff7a00;
 }
 
-@media (max-width: 900px) {
-  .form-grid {
+.process-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
+  height: fit-content;
+  position: sticky;
+  top: 90px;
+
+}
+
+.process-card h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+}
+
+.step {
+  padding: 12px 10px;
+  border-bottom: 1px solid #f1f2f4;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  border-radius: 10px;
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.step p {
+  margin: 4px 0 0;
+  color: #6b7280;
+}
+
+.step:hover {
+  background: linear-gradient(90deg, rgba(255, 122, 0, 0.08), rgba(255, 255, 255, 0));
+  box-shadow: inset 0 0 0 1px #ffe8d6;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .form-grid.three-cols {
     grid-template-columns: 1fr;
   }
   .booking-create__content {
     margin-left: 0 !important;
     padding: 20px;
-  }
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 </style>
