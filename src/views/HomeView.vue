@@ -85,7 +85,7 @@
 			<div class="hero-content">
 				<h1>Trải nghiệm Dịch vụ Ô tô Cao cấp cùng GaragePro</h1>
 				<p>Mua bán, sửa chữa, bảo dưỡng – tất cả trong một nền tảng chuyên nghiệp và tận tâm.</p>
-				<a href="#booking" class="btn-cta">Đặt lịch ngay</a>
+				<router-link to="/booking/Guest" class="btn-cta">Đặt lịch ngay</router-link>
 			</div>
 		</section>
 
