@@ -427,11 +427,11 @@
 								</div>
 
 								<div class="col-md-6 position-relative" id="carSearchWrapper">
-									<label for="carSearch" class="form-label">HAœng xe</label>
+									<label for="carSearch" class="form-label">Hãng xe</label>
 									<input type="text" class="form-control" id="carSearch" name="carBrand"
 										placeholder="Toyota, Honda, Mazda..." maxlength="50" autocomplete="off" />
 									<ul class="list-group position-absolute w-100 shadow-sm mt-2" id="carDropdown"></ul>
-									<small class="text-muted">TA1y ch ¯?n</small>
+									<small class="text-muted">Tùy chọn</small>
 								</div>
 
 								<div class="col-md-6">
