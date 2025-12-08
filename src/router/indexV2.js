@@ -77,6 +77,26 @@ const router = createRouter({
 					path: 'home',
 					name: 'customerHome',
 					component: () => import('../views/customer/CustomerHome.vue')
+				},
+				{
+					path: 'bookings',
+					name: 'customerBookings',
+					component: () => import('../views/customer/BookingManagementView.vue')
+				},
+				{
+					path: 'booking/all',
+					name: 'customerBookingList',
+					component: () => import('../views/customer/BookingListView.vue')
+				},
+				{
+					path: 'booking/:id',
+					name: 'customerBookingDetail',
+					component: () => import('../views/customer/BookingDetailView.vue')
+				},
+				{
+					path: 'booking/:id/edit',
+					name: 'customerBookingEdit',
+					component: () => import('../views/customer/BookingEditView.vue')
 				}
 			]
 		},
@@ -130,6 +150,11 @@ const router = createRouter({
 			path: '/verify-otp',
 			name: 'verifyOtp',
 			component: () => import('../views/VerifyOtpView.vue')
+		},
+		{
+			path: '/booking/Guest',
+			name: 'bookingGuest',
+			component: () => import('../views/customer/BookingCreateView.vue')
 		}
 	]
 })

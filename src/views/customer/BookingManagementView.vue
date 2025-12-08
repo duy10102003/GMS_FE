@@ -11,12 +11,12 @@
     <div class="booking-content" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <header class="page-header">
         <div>
-          <h1>Booking Management</h1>
-          <p>Manage all vehicle bookings and reservations</p>
+          <h1>Danh sách đặt lịch</h1>
+          <p>Theo dõi tất cả booking theo email đang đăng nhập</p>
         </div>
         <button class="btn-primary" @click="goCreate">
           <i class="fa-solid fa-plus"></i>
-          New Booking
+          Đặt lịch mới
         </button>
       </header>
 
@@ -26,79 +26,84 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Tìm kiếm khách hàng, SĐT, hoặc xe..."
+            placeholder="Tìm theo tên, SĐT, xe..."
           />
         </div>
         <div class="filters-right">
-          <select v-model="statusFilter">
-            <option value="">Tất cả trạng thái</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-          </select>
+          <label class="date-filter">
+            Từ
+            <input v-model="dateFilter.start" type="date" />
+          </label>
+          <label class="date-filter">
+            Đến
+            <input v-model="dateFilter.end" type="date" />
+          </label>
           <button class="btn-ghost" @click="clearFilters">
-            <i class="fa-solid fa-xmark"></i>
-            Xóa
+            <i class="fa-solid fa-rotate"></i>
+            Xóa lọc
           </button>
         </div>
       </section>
 
       <section class="table-card">
         <div class="table-head">
-          <span>Booking Time</span>
-          <span>Vehicle</span>
-          <span>Customer</span>
-          <span>Status</span>
-          <span>Actions</span>
+          <span>Mã</span>
+          <span>Tên người đặt</span>
+          <span>Số điện thoại</span>
+          <span>Thời gian đặt</span>
+          <span>Tên xe</span>
+        </div>
+
+        <div v-if="loading" class="empty-state">Đang tải danh sách...</div>
+        <div v-else-if="paginatedBookings.length === 0" class="empty-state">
+          Không có booking nào
         </div>
 
         <div
+          v-else
           v-for="booking in paginatedBookings"
-          :key="booking.id"
+          :key="booking.bookingId || booking.id"
           class="table-row"
         >
           <div class="cell">
-            <i class="fa-regular fa-calendar"></i>
             <div class="cell-text">
-              <span class="primary-text">{{ booking.time }}</span>
-            </div>
-          </div>
-
-          <div class="cell">
-            <i class="fa-solid fa-car-side"></i>
-            <div class="cell-text">
-              <span class="primary-text">{{ booking.vehicle }}</span>
-              <span class="muted">{{ booking.year }}</span>
+              <span class="primary-text">{{ booking.bookingId || booking.id }}</span>
             </div>
           </div>
 
           <div class="cell">
             <i class="fa-regular fa-user"></i>
             <div class="cell-text">
-              <span class="primary-text">{{ booking.customer }}</span>
-              <span class="muted">{{ booking.phone }}</span>
+              <span class="primary-text">{{ booking.customerName || 'N/A' }}</span>
             </div>
           </div>
 
           <div class="cell">
-            <span :class="['status', booking.status]">
-              <i :class="statusIcon(booking.status)"></i>
-              {{ statusLabel(booking.status) }}
-            </span>
+            <i class="fa-solid fa-phone"></i>
+            <div class="cell-text">
+              <span class="primary-text">{{ booking.customerPhone || booking.phone || 'N/A' }}</span>
+            </div>
           </div>
 
           <div class="cell">
-            <a class="action" href="#">
-              Details
-              <i class="fa-solid fa-angle-down"></i>
-            </a>
+            <i class="fa-regular fa-calendar"></i>
+            <div class="cell-text">
+              <span class="primary-text">{{ formatDate(booking.bookingTime || booking.createdDate) }}</span>
+            </div>
+          </div>
+
+          <div class="cell">
+            <i class="fa-solid fa-car-side"></i>
+            <div class="cell-text">
+              <span class="primary-text">{{ booking.vehicleName || booking.vehicle || 'N/A' }}</span>
+            </div>
           </div>
         </div>
       </section>
 
       <div class="pagination">
         <div class="pagination-info">
-          Page {{ currentPage }} / {{ totalPages }} · {{ filteredBookings.length }} bookings
+          Trang {{ currentPage }} / {{ totalPages }} · {{ filteredBookings.length }} booking
         </div>
         <div class="pagination-actions">
           <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">
@@ -126,9 +131,14 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import TheSideBar from '../../layout/TheSideBar.vue'
+import authService from '@/services/auth'
+import bookingService from '@/services/booking'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const toast = useToast()
 const sidebarCollapsed = ref(false)
+const loading = ref(false)
 
 const sidebarMenu = [
   { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check', path: '/customer/bookings', exact: true },
@@ -137,29 +147,64 @@ const sidebarMenu = [
   { key: 'reports', label: 'Reports', icon: 'fa-chart-column', path: '#' }
 ]
 
-const bookings = ref([
-  { id: 1, time: '2025-01-15 14:30', vehicle: 'Toyota Camry', year: '2023', customer: 'John Doe', phone: '+84 909 123 456', status: 'confirmed' },
-  { id: 2, time: '2025-01-16 10:00', vehicle: 'Honda CR-V', year: '2022', customer: 'Jane Smith', phone: '+84 912 345 789', status: 'pending' },
-  { id: 3, time: '2025-01-17 16:45', vehicle: 'BMW 328i', year: '2024', customer: 'Michael Johnson', phone: '+84 898 765 432', status: 'completed' },
-  { id: 4, time: '2025-01-18 09:15', vehicle: 'Ford Focus', year: '2021', customer: 'Sarah Williams', phone: '+84 908 234 567', status: 'confirmed' }
-])
-
 const searchQuery = ref('')
-const statusFilter = ref('')
+const dateFilter = ref({ start: '', end: '' })
 const currentPage = ref(1)
-const pageSize = ref(5)
+const pageSize = ref(10)
+const bookings = ref([])
+const currentUser = ref(authService.getCurrentUser())
+
+const goCreate = () => {
+  router.push('/booking/Guest')
+}
+
+const formatDate = (date) => {
+  if (!date) return 'N/A'
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return 'N/A'
+  return d.toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const normalizeDate = (value) => {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d
+}
 
 const filteredBookings = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
+  const start = normalizeDate(dateFilter.value.start)
+  const end = normalizeDate(dateFilter.value.end)
+
   return bookings.value.filter((b) => {
-    const matchStatus = statusFilter.value ? b.status === statusFilter.value : true
+    const bookingTime = normalizeDate(b.bookingTime || b.createdDate)
+    const matchDate =
+      (!start || (bookingTime && bookingTime >= start)) &&
+      (!end || (bookingTime && bookingTime <= end))
+
     const matchQuery = q
-      ? [b.time, b.vehicle, b.year, b.customer, b.phone]
+      ? [
+          b.customerName,
+          b.customerPhone,
+          b.phone,
+          b.vehicleName,
+          b.vehicle,
+          b.bookingId,
+          b.id
+        ]
+          .filter(Boolean)
           .join(' ')
           .toLowerCase()
           .includes(q)
       : true
-    return matchStatus && matchQuery
+
+    return matchDate && matchQuery
   })
 })
 
@@ -169,8 +214,8 @@ const totalPages = computed(() => {
 })
 
 const paginatedBookings = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  return filteredBookings.value.slice(start, start + pageSize.value)
+  const startIdx = (currentPage.value - 1) * pageSize.value
+  return filteredBookings.value.slice(startIdx, startIdx + pageSize.value)
 })
 
 const pageNumbers = computed(() => {
@@ -179,55 +224,48 @@ const pageNumbers = computed(() => {
   return pages
 })
 
-const statusLabel = (status) => {
-  const map = {
-    confirmed: 'Confirmed',
-    pending: 'Pending',
-    completed: 'Completed'
-  }
-  return map[status] || status
-}
-
-const statusIcon = (status) => {
-  const map = {
-    confirmed: 'fa-solid fa-circle-check',
-    pending: 'fa-regular fa-clock',
-    completed: 'fa-solid fa-circle-check'
-  }
-  return map[status] || 'fa-solid fa-circle'
-}
-
-const handleLogout = () => {
-  // Hook up to auth flow when available
-  console.log('logout clicked')
-}
-
-const goCreate = () => {
-  router.push('/customer/bookings/create')
-}
-
-const clearFilters = () => {
-  searchQuery.value = ''
-  statusFilter.value = ''
+watch([searchQuery, dateFilter], () => {
   currentPage.value = 1
-}
-
-watch(filteredBookings, () => {
-  // Reset page if current page exceeds total
-  if (currentPage.value > totalPages.value) currentPage.value = 1
 })
 
-const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) currentPage.value = page
+const fetchBookings = async () => {
+  loading.value = true
+  try {
+    const email = currentUser.value?.email || currentUser.value?.username || ''
+    const params = {
+      page: 1,
+      pageSize: 100, // lấy nhiều một lượt, filter client
+      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
+      filters: email
+        ? [
+            { columnName: 'CustomerEmail', value: email },
+            { columnName: 'Email', value: email }
+          ]
+        : []   
+    }
+    const res = await bookingService.getPaging(params)
+    const items = res?.data?.items || res?.items || []
+
+    // Lọc theo email ở FE nếu backend không hỗ trợ filters
+    bookings.value = items.filter((b) => {
+      if (!email) return true
+      const bookingEmail = (b.customerEmail || b.email || '').toLowerCase()
+      return bookingEmail === email.toLowerCase()
+    })
+  } catch (error) {
+    console.error('Fetch bookings error:', error)
+    toast.error('Không tải được danh sách booking', error.message || error.userMsg || '')
+  } finally {
+    loading.value = false
+  }
 }
 
-const prevPage = () => {
-  if (currentPage.value > 1) currentPage.value -= 1
+const handleLogout = async () => {
+  await authService.logout()
+  router.push('/')
 }
 
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) currentPage.value += 1
-}
+fetchBookings()
 </script>
 
 <style scoped>
@@ -241,7 +279,7 @@ const nextPage = () => {
 
 .booking-content {
   flex: 1;
-  padding: 28px 32px 40px;
+  padding: 24px 32px 40px;
   transition: margin-left 0.2s ease;
 }
 
@@ -249,219 +287,149 @@ const nextPage = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
 .page-header h1 {
-  font-size: 28px;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  font-size: 26px;
   color: #1f2933;
 }
 
 .page-header p {
+  margin: 0;
   color: #6b7280;
-  font-size: 15px;
 }
 
 .btn-primary {
   background: var(--primary, #ff7a00);
   color: #fff;
   border: none;
-  padding: 12px 18px;
   border-radius: 10px;
-  font-size: 15px;
+  padding: 12px 16px;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 12px 30px rgba(255, 122, 0, 0.35);
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark, #e66d00);
-  transform: translateY(-1px);
-}
-
-.table-card {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(255, 122, 0, 0.25);
 }
 
 .filter-bar {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
   display: flex;
+  justify-content: space-between;
   gap: 12px;
-  align-items: center;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .search-box {
-  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
   flex: 1;
+  min-width: 260px;
+  gap: 8px;
 }
 
 .search-box input {
+  border: none;
+  outline: none;
   width: 100%;
-  padding: 12px 14px 12px 38px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-.search-box i {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
 }
 
 .filters-right {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
 }
 
-.filters-right select {
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 14px;
-  background: #fff;
+.date-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #555;
+}
+
+.date-filter input {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .btn-ghost {
+  background: #fff;
   border: 1px solid #e5e7eb;
-  background: #f8fafc;
   border-radius: 10px;
-  padding: 12px 14px;
-  font-weight: 600;
-  color: #374151;
+  padding: 10px 12px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  gap: 6px;
 }
 
-.btn-ghost:hover {
-  border-color: #ff7a00;
-  color: #ff7a00;
+.table-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
 }
 
 .table-head,
 .table-row {
   display: grid;
-  grid-template-columns: 1.2fr 1.2fr 1fr 1fr 0.8fr;
-  padding: 16px 20px;
+  grid-template-columns: 0.7fr 1.2fr 1fr 1fr 1fr;
+  padding: 14px 16px;
   align-items: center;
-  column-gap: 12px;
 }
 
 .table-head {
-  background: #f3f4f6;
-  color: #475467;
+  background: #f9fafb;
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.3px;
-  border-bottom: 1px solid var(--border);
-  text-transform: uppercase;
+  color: #374151;
 }
 
 .table-row {
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
-  transition: background 0.15s ease;
-}
-
-.table-row:hover {
-  background: #fdf7f2;
+  border-top: 1px solid #eef0f4;
 }
 
 .cell {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #111827;
+  gap: 10px;
+}
+
+.cell-text .primary-text {
   font-weight: 600;
+  color: #1f2933;
 }
 
-.cell-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.primary-text {
-  font-weight: 700;
-}
-
-.muted {
-  font-size: 13px;
+.empty-state {
+  padding: 20px;
+  text-align: center;
   color: #6b7280;
-  font-weight: 500;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 13px;
-  padding: 8px 14px;
-  border-radius: 999px;
-}
-
-.status.confirmed { background: #e7f7ed; color: #199853; }
-.status.pending { background: #fff3d8; color: #a47306; }
-.status.completed { background: #e7edff; color: #3454c0; }
-
-.action {
-  color: var(--primary, #ff7a00);
-  font-weight: 700;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.action:hover {
-  color: var(--primary-dark, #e66d00);
 }
 
 .pagination {
-  margin-top: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-}
-
-.pagination-info {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.pagination-actions {
-  display: flex;
-  gap: 6px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .page-btn {
-  min-width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
   background: #fff;
-  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
   cursor: pointer;
 }
 
@@ -471,46 +439,20 @@ const nextPage = () => {
   border-color: var(--primary, #ff7a00);
 }
 
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 1024px) {
-  .table-head,
-  .table-row {
-    grid-template-columns: 1.3fr 1.1fr 1fr;
-    row-gap: 12px;
-  }
-  .table-head span:nth-child(4),
-  .table-head span:nth-child(5),
-  .table-row .cell:nth-child(4),
-  .table-row .cell:nth-child(5) {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .booking-management {
-    flex-direction: column;
-  }
+@media (max-width: 900px) {
   .booking-content {
     margin-left: 0 !important;
-    padding: 20px;
+    padding: 18px;
   }
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .table-head {
-    display: none;
-  }
+
+  .table-head,
   .table-row {
     grid-template-columns: 1fr;
-    border-radius: 14px;
-    margin-bottom: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    gap: 6px;
+  }
+
+  .cell {
+    justify-content: space-between;
   }
 }
 </style>

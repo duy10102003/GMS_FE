@@ -44,7 +44,14 @@ class AuthService {
    */
   getCurrentUser() {
     const userStr = localStorage.getItem('user')
-    return userStr ? JSON.parse(userStr) : null
+    if (!userStr) return null
+    try {
+      return JSON.parse(userStr)
+    } catch (error) {
+      console.warn('Invalid user data in localStorage, clearing it.', error)
+      localStorage.removeItem('user')
+      return null
+    }
   }
 
   /**
@@ -107,7 +114,6 @@ class AuthService {
 }
 
 export default new AuthService()
-
 
 
 
