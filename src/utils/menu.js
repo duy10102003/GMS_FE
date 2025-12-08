@@ -1,7 +1,7 @@
-import { ROLES, PERMISSIONS } from '../constant/roles.js'
+﻿import { ROLES, PERMISSIONS } from '../constant/roles.js'
 
 /**
- * Menu items cho từng role
+ * Menu items cho tá»«ng role
  */
 export const CUSTOMER_MENU = [
 	{
@@ -13,35 +13,35 @@ export const CUSTOMER_MENU = [
 	},
 	{
 		key: 'vehicles',
-		label: 'Xe của tôi',
+		label: 'Xe cá»§a tÃ´i',
 		icon: 'fa-car',
 		path: '/customer/vehicles',
 		permission: PERMISSIONS.VIEW_OWN_VEHICLES
 	},
 	{
 		key: 'service-tickets',
-		label: 'Lịch sử sửa chữa',
+		label: 'Lá»‹ch sá»­ sá»­a chá»¯a',
 		icon: 'fa-wrench',
 		path: '/customer/service-tickets',
 		permission: PERMISSIONS.VIEW_OWN_INVOICES
 	},
 	{
 		key: 'invoices',
-		label: 'Hóa đơn',
+		label: 'HÃ³a Ä‘Æ¡n',
 		icon: 'fa-file-invoice',
 		path: '/customer/invoices',
 		permission: PERMISSIONS.VIEW_OWN_INVOICES
 	},
 	{
 		key: 'contact',
-		label: 'Liên hệ mua xe',
+		label: 'LiÃªn há»‡ mua xe',
 		icon: 'fa-phone',
 		path: '/customer/contact',
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
 	},
 	{
 		key: 'profile',
-		label: 'Hồ sơ',
+		label: 'Há»“ sÆ¡',
 		icon: 'fa-user',
 		path: '/customer/profile',
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
@@ -50,31 +50,38 @@ export const CUSTOMER_MENU = [
 
 export const STAFF_MENU = [
 	{
-		key: 'dashboard',
-		label: 'Dashboard',
-		icon: 'fa-gauge',
-		path: '/staff/dashboard',
+		key: "dashboard",
+		label: "Dashboard",
+		icon: "fa-gauge",
+		path: "/staff/dashboard",
 		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
 	},
 	{
-		key: 'service-tickets',
-		label: 'Phiếu dịch vụ',
-		icon: 'fa-clipboard-list',
-		path: '/staff/service-tickets',
+		key: "service-tickets",
+		label: "Phieu dich vu",
+		icon: "fa-clipboard-list",
+		path: "/staff/service-tickets",
 		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
 	},
 	{
-		key: 'payment',
-		label: 'Thanh toán',
-		icon: 'fa-credit-card',
-		path: '/staff/payment',
+		key: "bookings",
+		label: "Lich dat",
+		icon: "fa-calendar-check",
+		path: "/staff/bookings",
+		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
+	},
+	{
+		key: "payment",
+		label: "Thanh toan",
+		icon: "fa-credit-card",
+		path: "/staff/payment",
 		permission: PERMISSIONS.PROCESS_PAYMENT
 	},
 	{
-		key: 'inventory-alerts',
-		label: 'Cảnh báo kho',
-		icon: 'fa-exclamation-triangle',
-		path: '/staff/inventory-alerts',
+		key: "inventory-alerts",
+		label: "Canh bao kho",
+		icon: "fa-exclamation-triangle",
+		path: "/staff/inventory-alerts",
 		permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
 	}
 ]
@@ -89,42 +96,42 @@ export const MANAGER_MENU = [
 	},
 	{
 		key: 'reports',
-		label: 'Báo cáo tổng hợp',
+		label: 'BÃ¡o cÃ¡o tá»•ng há»£p',
 		icon: 'fa-chart-pie',
 		path: '/manager/reports',
 		permission: PERMISSIONS.VIEW_REPORTS
 	},
 	{
 		key: 'staff',
-		label: 'Nhân sự',
+		label: 'NhÃ¢n sá»±',
 		icon: 'fa-users',
 		path: '/manager/staff',
 		permission: PERMISSIONS.MANAGE_STAFF
 	},
 	{
 		key: 'inventory',
-		label: 'Kho phụ tùng',
+		label: 'Kho phá»¥ tÃ¹ng',
 		icon: 'fa-warehouse',
 		path: '/manager/inventory',
 		permission: PERMISSIONS.MANAGE_INVENTORY,
 		children: [
 			{
 				key: 'manage-parts',
-				label: 'Quản lý phụ tùng',
+				label: 'Quáº£n lÃ½ phá»¥ tÃ¹ng',
 				icon: 'fa-cogs',
 				path: '/manager/inventory/parts',
 				permission: PERMISSIONS.MANAGE_INVENTORY
 			},
 			{
 				key: 'low-stock',
-				label: 'Cảnh báo từ Staff',
+				label: 'Cáº£nh bÃ¡o tá»« Staff',
 				icon: 'fa-exclamation-triangle',
 				path: '/manager/inventory/low-stock',
 				permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
 			},
 			{
 				key: 'restock',
-				label: 'Nhập kho',
+				label: 'Nháº­p kho',
 				icon: 'fa-shopping-cart',
 				path: '/manager/inventory/restock',
 				permission: PERMISSIONS.APPROVE_RESTOCK
@@ -140,14 +147,14 @@ export const MANAGER_MENU = [
 	},
 	{
 		key: 'garage-services',
-		label: 'Dịch vụ garage',
+		label: 'Dá»‹ch vá»¥ garage',
 		icon: 'fa-tools',
 		path: '/manager/garage-services',
 		permission: PERMISSIONS.VIEW_REPORTS
 	},
 	{
 		key: 'settings',
-		label: 'Cài đặt hệ thống',
+		label: 'CÃ i Ä‘áº·t há»‡ thá»‘ng',
 		icon: 'fa-cog',
 		path: '/manager/settings',
 		permission: PERMISSIONS.VIEW_REPORTS
@@ -164,28 +171,28 @@ export const STOCKER_MENU = [
 	},
 	{
 		key: 'inventory',
-		label: 'Kho hàng',
+		label: 'Kho hÃ ng',
 		icon: 'fa-warehouse',
 		path: '/stocker/inventory',
 		permission: PERMISSIONS.VIEW_INVENTORY
 	},
 	{
 		key: 'part-categories',
-		label: 'Danh mục phụ tùng',
+		label: 'Danh má»¥c phá»¥ tÃ¹ng',
 		icon: 'fa-list',
 		path: '/stocker/part-categories',
 		permission: PERMISSIONS.MANAGE_PARTS
 	},
 	{
 		key: 'parts',
-		label: 'Quản lý phụ tùng',
+		label: 'Quáº£n lÃ½ phá»¥ tÃ¹ng',
 		icon: 'fa-cogs',
 		path: '/stocker/parts',
 		permission: PERMISSIONS.MANAGE_PARTS
 	},
 	{
 		key: 'restock-requests',
-		label: 'Yêu cầu nhập kho',
+		label: 'YÃªu cáº§u nháº­p kho',
 		icon: 'fa-shopping-cart',
 		path: '/stocker/restock-requests',
 		permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
@@ -202,14 +209,14 @@ export const MECHANIC_MENU = [
 	},
 	{
 		key: 'tickets',
-		label: 'Phiếu dịch vụ',
+		label: 'Phiáº¿u dá»‹ch vá»¥',
 		icon: 'fa-wrench',
 		path: '/mechanic/tasks',
 		permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
 	},
 	{
 		key: 'history',
-		label: 'Lịch sử',
+		label: 'Lá»‹ch sá»­',
 		icon: 'fa-history',
 		path: '/mechanic/history',
 		permission: PERMISSIONS.VIEW_HISTORY
@@ -217,7 +224,7 @@ export const MECHANIC_MENU = [
 ]
 
 /**
- * Lấy menu items dựa trên role
+ * Láº¥y menu items dá»±a trÃªn role
  */
 export function getMenuByRole(role) {
 	if (!role) {
@@ -257,3 +264,5 @@ export function getMenuByRole(role) {
 	console.warn('getMenuByRole: No menu found for role:', role, 'normalized:', normalizedRole)
 	return []
 }
+
+

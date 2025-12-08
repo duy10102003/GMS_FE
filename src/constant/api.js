@@ -62,6 +62,7 @@ export const API_ENDPOINTS = {
 		PAGING: '/Booking/paging',
 		BY_EMAIL: '/Booking/by-email',
 		BY_ID: (id) => `/Booking/${id}`,
+		STATUS: (id) => `/Booking/${id}/status`,
 		CREATE_GUEST: '/Booking/guest',
 		CREATE_USER: '/Booking/user',
 		UPDATE: (id) => `/Booking/${id}`,

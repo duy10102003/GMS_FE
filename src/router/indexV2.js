@@ -50,6 +50,21 @@ const router = createRouter({
 					component: () => import('../views/staff/ServiceTicketsView.vue')
 				},
 				{
+					path: 'bookings',
+					name: 'staffBookings',
+					component: () => import('../views/staff/BookingListStaffView.vue')
+				},
+				{
+					path: '/staff/bookings/:id',
+					name: 'staffBookingDetail',
+					component: () => import('../views/customer/BookingDetailView.vue')
+				},
+				{
+					path: '/staff/bookings/:id/edit',
+					name: 'staffBookingEdit',
+					component: () => import('../views/customer/BookingEditView.vue')
+				},
+				{
 					path: '/staff/service-tickets/:id',
 					name: 'serviceTicketDetail',
 					component: () => import('../views/staff/ServiceTicketDetailView.vue')

@@ -1,13 +1,13 @@
-import api from './api.js'
+﻿import api from './api.js'
 import { API_ENDPOINTS } from '@/constant/api'
 
 /**
  * Booking API Service
- * Dùng cho khách vãng lai và người dùng đã đăng nhập.
+ * DÃ¹ng cho khÃ¡ch vÃ£ng lai vÃ  ngÆ°á»i dÃ¹ng Ä‘Ã£ Ä‘Äƒng nháº­p.
  */
 class BookingService {
   /**
-   * Phân trang/tìm kiếm booking
+   * PhÃ¢n trang/tÃ¬m kiáº¿m booking
    * POST /api/Booking/paging
    */
   async getPaging(params) {
@@ -15,7 +15,7 @@ class BookingService {
   }
 
   /**
-   * Lấy booking theo email qua endpoint chuyên biệt (BE mới)
+   * Láº¥y booking theo email qua endpoint chuyÃªn biá»‡t (BE má»›i)
    * GET /api/Booking/by-email?email=...
    */
   async getByEmailDirect(email) {
@@ -23,7 +23,7 @@ class BookingService {
   }
 
   /**
-   * Lấy chi tiết booking theo id
+   * Láº¥y chi tiáº¿t booking theo id
    * GET /api/Booking/{id}
    */
   async getById(id) {
@@ -31,7 +31,7 @@ class BookingService {
   }
 
   /**
-   * Tạo booking cho khách vãng lai (guest)
+   * Táº¡o booking cho khÃ¡ch vÃ£ng lai (guest)
    * POST /api/Booking/guest
    */
   async createByGuest(data) {
@@ -39,7 +39,7 @@ class BookingService {
   }
 
   /**
-   * Tạo booking cho người dùng đã đăng nhập
+   * Táº¡o booking cho ngÆ°á»i dÃ¹ng Ä‘Ã£ Ä‘Äƒng nháº­p
    * POST /api/Booking/user
    */
   async createByUser(data) {
@@ -47,15 +47,19 @@ class BookingService {
   }
 
   /**
-   * Cập nhật booking
+   * Cáº­p nháº­t booking
    * PUT /api/Booking/{id}
    */
   async update(id, data) {
     return await api.put(API_ENDPOINTS.BOOKING.UPDATE(id), data)
   }
 
+  async updateStatus(id, data) {
+    return await api.put(API_ENDPOINTS.BOOKING.STATUS(id), data)
+  }
+
   /**
-   * Hủy/Xóa booking
+   * Há»§y/XÃ³a booking
    * DELETE /api/Booking/{id}
    */
   async delete(id) {
@@ -64,3 +68,7 @@ class BookingService {
 }
 
 export default new BookingService()
+
+
+
+
