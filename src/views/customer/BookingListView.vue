@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="booking-list">
     <TheSideBar
       :collapsed="sidebarCollapsed"
@@ -74,14 +74,17 @@
               <thead>
                 <tr class="label-title">
                   <th>
-                    Mã
-                    <button class="filter-btn" @click="openFilter('id', 'Mã', filterId, 'text')">
+                    MÃ
+                    <button class="filter-btn" @click="openFilter('id', 'MÃ', filterId, 'text')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
                   </th>
                   <th>
                     Tên khách
-                    <button class="filter-btn" @click="openFilter('customer', 'Tên khách', filterCustomer, 'text')">
+                    <button
+                      class="filter-btn"
+                      @click="openFilter('customer', 'Tên khách', filterCustomer, 'text')"
+                    >
                       <i class="fa-solid fa-filter"></i>
                     </button>
                   </th>
@@ -310,7 +313,7 @@ const applyFilter = () => {
       if (op === 'startsWith') return v.startsWith(t)
       if (op === 'endsWith') return v.endsWith(t)
       if (op === 'notContains') return !v.includes(t)
-      return v.includes(t) // contains
+      return v.includes(t)
     }
 
     const matchId = matchByOperator(b.bookingId || b.id || '', filterId.value, filterOpId.value)
@@ -408,7 +411,7 @@ const activeFilters = computed(() => {
     list.push({ key: 'searchText', label: `Tìm kiếm: ${searchText.value}` })
   }
   if (filterId.value) {
-    list.push({ key: 'id', label: `Mã ${operatorLabel(filterOpId.value)} "${filterId.value}"` })
+    list.push({ key: 'id', label: `MÃ ${operatorLabel(filterOpId.value)} "${filterId.value}"` })
   }
   if (filterCustomer.value) {
     list.push({ key: 'customer', label: `Tên khách ${operatorLabel(filterOpCustomer.value)} "${filterCustomer.value}"` })
