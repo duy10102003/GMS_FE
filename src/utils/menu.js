@@ -1,7 +1,7 @@
-﻿import { ROLES, PERMISSIONS } from '../constant/roles.js'
+import { ROLES, PERMISSIONS } from '../constant/roles.js'
 
 /**
- * Menu items cho tá»«ng role
+ * Menu items cho từng role
  */
 export const CUSTOMER_MENU = [
 	{
@@ -13,35 +13,35 @@ export const CUSTOMER_MENU = [
 	},
 	{
 		key: 'vehicles',
-		label: 'Xe cá»§a tÃ´i',
+		label: 'Xe của tôi',
 		icon: 'fa-car',
 		path: '/customer/vehicles',
 		permission: PERMISSIONS.VIEW_OWN_VEHICLES
 	},
 	{
 		key: 'service-tickets',
-		label: 'Lá»‹ch sá»­ sá»­a chá»¯a',
+		label: 'Lịch sử sửa chữa',
 		icon: 'fa-wrench',
 		path: '/customer/service-tickets',
 		permission: PERMISSIONS.VIEW_OWN_INVOICES
 	},
 	{
 		key: 'invoices',
-		label: 'HÃ³a Ä‘Æ¡n',
+		label: 'Hóa đơn',
 		icon: 'fa-file-invoice',
 		path: '/customer/invoices',
 		permission: PERMISSIONS.VIEW_OWN_INVOICES
 	},
 	{
 		key: 'contact',
-		label: 'LiÃªn há»‡ mua xe',
+		label: 'Liên hệ mua xe',
 		icon: 'fa-phone',
 		path: '/customer/contact',
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
 	},
 	{
 		key: 'profile',
-		label: 'Há»“ sÆ¡',
+		label: 'Hồ sơ',
 		icon: 'fa-user',
 		path: '/customer/profile',
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
@@ -96,42 +96,42 @@ export const MANAGER_MENU = [
 	},
 	{
 		key: 'reports',
-		label: 'BÃ¡o cÃ¡o tá»•ng há»£p',
+		label: 'Báo cáo tổng hợp',
 		icon: 'fa-chart-pie',
 		path: '/manager/reports',
 		permission: PERMISSIONS.VIEW_REPORTS
 	},
 	{
 		key: 'staff',
-		label: 'NhÃ¢n sá»±',
+		label: 'Nhân sự',
 		icon: 'fa-users',
 		path: '/manager/staff',
 		permission: PERMISSIONS.MANAGE_STAFF
 	},
 	{
 		key: 'inventory',
-		label: 'Kho phá»¥ tÃ¹ng',
+		label: 'Kho phụ tùng',
 		icon: 'fa-warehouse',
 		path: '/manager/inventory',
 		permission: PERMISSIONS.MANAGE_INVENTORY,
 		children: [
 			{
 				key: 'manage-parts',
-				label: 'Quáº£n lÃ½ phá»¥ tÃ¹ng',
+				label: 'Quản lý phụ tùng',
 				icon: 'fa-cogs',
 				path: '/manager/inventory/parts',
 				permission: PERMISSIONS.MANAGE_INVENTORY
 			},
 			{
 				key: 'low-stock',
-				label: 'Cáº£nh bÃ¡o tá»« Staff',
+				label: 'Cảnh báo từ Staff',
 				icon: 'fa-exclamation-triangle',
 				path: '/manager/inventory/low-stock',
 				permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
 			},
 			{
 				key: 'restock',
-				label: 'Nháº­p kho',
+				label: 'Nhập kho',
 				icon: 'fa-shopping-cart',
 				path: '/manager/inventory/restock',
 				permission: PERMISSIONS.APPROVE_RESTOCK
@@ -147,14 +147,21 @@ export const MANAGER_MENU = [
 	},
 	{
 		key: 'garage-services',
-		label: 'Dá»‹ch vá»¥ garage',
+		label: 'Dịch vụ garage',
 		icon: 'fa-tools',
 		path: '/manager/garage-services',
 		permission: PERMISSIONS.VIEW_REPORTS
 	},
 	{
+		key: 'mechanic-roles',
+		label: 'Vai tro tho may',
+		icon: 'fa-user-gear',
+		path: '/manager/mechanic-roles',
+		permission: PERMISSIONS.MANAGE_STAFF
+	},
+	{
 		key: 'settings',
-		label: 'CÃ i Ä‘áº·t há»‡ thá»‘ng',
+		label: 'Cài đặt hệ thống',
 		icon: 'fa-cog',
 		path: '/manager/settings',
 		permission: PERMISSIONS.VIEW_REPORTS
@@ -171,28 +178,28 @@ export const STOCKER_MENU = [
 	},
 	{
 		key: 'inventory',
-		label: 'Kho hÃ ng',
+		label: 'Kho hàng',
 		icon: 'fa-warehouse',
 		path: '/stocker/inventory',
 		permission: PERMISSIONS.VIEW_INVENTORY
 	},
 	{
 		key: 'part-categories',
-		label: 'Danh má»¥c phá»¥ tÃ¹ng',
+		label: 'Danh mục phụ tùng',
 		icon: 'fa-list',
 		path: '/stocker/part-categories',
 		permission: PERMISSIONS.MANAGE_PARTS
 	},
 	{
 		key: 'parts',
-		label: 'Quáº£n lÃ½ phá»¥ tÃ¹ng',
+		label: 'Quản lý phụ tùng',
 		icon: 'fa-cogs',
 		path: '/stocker/parts',
 		permission: PERMISSIONS.MANAGE_PARTS
 	},
 	{
 		key: 'restock-requests',
-		label: 'YÃªu cáº§u nháº­p kho',
+		label: 'Yêu cầu nhập kho',
 		icon: 'fa-shopping-cart',
 		path: '/stocker/restock-requests',
 		permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
@@ -209,14 +216,14 @@ export const MECHANIC_MENU = [
 	},
 	{
 		key: 'tickets',
-		label: 'Phiáº¿u dá»‹ch vá»¥',
+		label: 'Phiếu dịch vụ',
 		icon: 'fa-wrench',
 		path: '/mechanic/tasks',
 		permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
 	},
 	{
 		key: 'history',
-		label: 'Lá»‹ch sá»­',
+		label: 'Lịch sử',
 		icon: 'fa-history',
 		path: '/mechanic/history',
 		permission: PERMISSIONS.VIEW_HISTORY
@@ -224,7 +231,7 @@ export const MECHANIC_MENU = [
 ]
 
 /**
- * Láº¥y menu items dá»±a trÃªn role
+ * Lấy menu items dựa trên role
  */
 export function getMenuByRole(role) {
 	if (!role) {
@@ -264,5 +271,6 @@ export function getMenuByRole(role) {
 	console.warn('getMenuByRole: No menu found for role:', role, 'normalized:', normalizedRole)
 	return []
 }
+
 
 

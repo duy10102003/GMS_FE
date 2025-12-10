@@ -29,6 +29,11 @@ const router = createRouter({
 					path: 'garage-services',
 					name: 'managerGarageService',
 					component: () => import('../views/manager/GarageServicesView.vue')
+				},
+				{
+					path: 'mechanic-roles',
+					name: 'managerMechanicRoles',
+					component: () => import('../views/manager/MechanicRolesView.vue')
 				}
 			]
 		},
