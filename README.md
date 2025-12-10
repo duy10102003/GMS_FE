@@ -42,3 +42,22 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## Cloudinary Image Upload
+
+Configure the following environment variables in your `.env` (or `.env.local`) file so uploads can use Cloudinary:
+
+```
+VITE_CLOUDINARY_CLOUD_NAME=<your-cloud-name>
+VITE_CLOUDINARY_UPLOAD_PRESET=<unsigned-upload-preset>
+VITE_CLOUDINARY_API_KEY=<optional-api-key>
+VITE_CLOUDINARY_FOLDER=<optional-default-folder>
+```
+
+Then import and call the service wherever you need to upload an image:
+
+```js
+import cloudinaryService from '@/services/cloudinary'
+
+const { url } = await cloudinaryService.uploadImage(fileInput.files[0])
+```

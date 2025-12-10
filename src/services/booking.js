@@ -1,4 +1,4 @@
-﻿import api from './api.js'
+import api from './api.js'
 import { API_ENDPOINTS } from '@/constant/api'
 
 /**
@@ -15,7 +15,7 @@ class BookingService {
   }
 
   /**
-   * Láº¥y booking theo email qua endpoint chuyÃªn biá»‡t (BE má»›i)
+   * Lấy booking theo email qua endpoint chuyÃªn biá»‡t (BE má»›i)
    * GET /api/Booking/by-email?email=...
    */
   async getByEmailDirect(email) {
