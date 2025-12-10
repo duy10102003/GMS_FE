@@ -13,6 +13,14 @@ class ServiceTicketService {
   }
 
   /**
+   * Phân trang Service Ticket theo Customer
+   * POST /api/ServiceTicket/{customerId}/customer/paging
+   */
+  async getPagingByCustomer(customerId, params) {
+    return await api.post(`/ServiceTicket/${customerId}/customer/paging`, params)
+  }
+
+  /**
    * Lấy chi tiết Service Ticket
    */
   async getById(id) {
@@ -83,7 +91,13 @@ class ServiceTicketService {
     return await api.post(`/ServiceTicket/${id}/assign`, data)
   }
 
-
+  /**
+   * Customer xác nhận Service Ticket
+   * PUT /api/ServiceTicket/{id}/status/customerConfirm
+   */
+  async confirmByCustomer(id) {
+    return await api.put(`/ServiceTicket/${id}/status/customerConfirm`)
+  }
 
   /**
    * Xóa Service Ticket

@@ -55,6 +55,11 @@ const router = createRouter({
 					component: () => import('../views/staff/ServiceTicketDetailView.vue')
 				},
 				{
+					path: '/staff/invoices',
+					name: 'staffInvoices',
+					component: () => import('../views/staff/InvoicesView.vue')
+				},
+				{
 					path: '/staff/invoices/:id',
 					name: 'serviceInvoice',
 					component: () => import('../views/staff/InvoiceDetail.vue')
@@ -97,6 +102,11 @@ const router = createRouter({
 					path: 'booking/:id/edit',
 					name: 'customerBookingEdit',
 					component: () => import('../views/customer/BookingEditView.vue')
+				},
+				{
+					path: 'service-tickets',
+					name: 'customerServiceTickets',
+					component: () => import('../views/customer/CustomerServiceTicketsView.vue')
 				}
 			]
 		},

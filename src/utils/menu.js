@@ -65,9 +65,9 @@ export const STAFF_MENU = [
 	},
 	{
 		key: 'payment',
-		label: 'Thanh toán',
+		label: 'Hóa Đơn',
 		icon: 'fa-credit-card',
-		path: '/staff/payment',
+		path: '/staff/invoices',
 		permission: PERMISSIONS.PROCESS_PAYMENT
 	},
 	{

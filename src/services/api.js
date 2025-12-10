@@ -14,7 +14,8 @@ class ApiService {
    * Lấy token từ localStorage
    */
   getToken() {
-    return localStorage.getItem('token') || null
+    // Ưu tiên lấy từ accessToken (Spring Boot API), nếu không có thì lấy từ token
+    return localStorage.getItem('accessToken') || localStorage.getItem('token') || null
   }
 
   /**
@@ -23,8 +24,11 @@ class ApiService {
   setToken(token) {
     this.token = token
     if (token) {
+      // Lưu vào cả accessToken và token để tương thích
+      localStorage.setItem('accessToken', token)
       localStorage.setItem('token', token)
     } else {
+      localStorage.removeItem('accessToken')
       localStorage.removeItem('token')
     }
   }
@@ -38,8 +42,10 @@ class ApiService {
       ...customHeaders
     }
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`
+    // Luôn lấy token mới nhất từ localStorage
+    const token = this.getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
     }
 
     return headers

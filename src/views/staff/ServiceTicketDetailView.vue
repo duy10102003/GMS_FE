@@ -848,8 +848,28 @@
 	}
 
 	const openInvoiceDialog = () => {
+		// Tính tổng tiền từ parts và services (nếu có)
+		let totalAmount = 0
+		
+		// Tính từ parts
+		if (serviceTicket.value?.parts && serviceTicket.value.parts.length > 0) {
+			totalAmount += serviceTicket.value.parts.reduce((sum, part) => {
+				return sum + (part.part?.partPrice || 0) * (part.quantity || 0)
+			}, 0)
+		}
+		
+		// Tính từ services
+		if (serviceTicket.value?.garageServices && serviceTicket.value.garageServices.length > 0) {
+			totalAmount += serviceTicket.value.garageServices.reduce((sum, service) => {
+				return sum + (service.price || 0)
+			}, 0)
+		}
+		
+		// Set tax mặc định là 10% của tổng tiền
+		const defaultTax = Math.round(totalAmount * 0.1)
+		
 		invoiceForm.value = {
-			taxAmount: 0,
+			taxAmount: defaultTax,
 			discountAmount: 0
 		}
 		showInvoiceDialog.value = true
