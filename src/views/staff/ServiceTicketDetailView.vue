@@ -453,7 +453,7 @@
 	// Computed
 	const canUpdate = computed(() => {
 		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED
+		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED
 	})
 
 	const canAssign = computed(() => {
@@ -485,7 +485,7 @@
 
 	const canCancel = computed(() => {
 		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED && serviceTicket.value.serviceTicketStatus !== 3 && serviceTicket.value.serviceTicketStatus !== 4
+		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED && serviceTicket.value.serviceTicketStatus !== 3 && serviceTicket.value.serviceTicketStatus !== 4 && serviceTicket.value.serviceTicketStatus !== 5
 	})
 
 	// Methods
@@ -848,8 +848,28 @@
 	}
 
 	const openInvoiceDialog = () => {
+		// Tính tổng tiền từ parts và services (nếu có)
+		let totalAmount = 0
+		
+		// Tính từ parts
+		if (serviceTicket.value?.parts && serviceTicket.value.parts.length > 0) {
+			totalAmount += serviceTicket.value.parts.reduce((sum, part) => {
+				return sum + (part.part?.partPrice || 0) * (part.quantity || 0)
+			}, 0)
+		}
+		
+		// Tính từ services
+		if (serviceTicket.value?.garageServices && serviceTicket.value.garageServices.length > 0) {
+			totalAmount += serviceTicket.value.garageServices.reduce((sum, service) => {
+				return sum + (service.price || 0)
+			}, 0)
+		}
+		
+		// Set tax mặc định là 10% của tổng tiền
+		const defaultTax = Math.round(totalAmount * 0.1)
+		
 		invoiceForm.value = {
-			taxAmount: 0,
+			taxAmount: defaultTax,
 			discountAmount: 0
 		}
 		showInvoiceDialog.value = true

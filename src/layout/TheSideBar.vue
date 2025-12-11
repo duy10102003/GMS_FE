@@ -172,8 +172,9 @@ const handleMenuClick = (item) => {
   emit('menu-click', item)
 }
 
-const handleLogout = () => {
-  emit('logout')
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push({ name: 'home' })
 }
 
 // Get menu items - use props if provided, otherwise get from role
@@ -517,6 +518,5 @@ watch(() => route.path, () => {
   display: none;
 }
 </style>
-
 
 

@@ -78,10 +78,10 @@ export const STAFF_MENU = [
 		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
 	},
 	{
-		key: "payment",
-		label: "Thanh toan",
-		icon: "fa-credit-card",
-		path: "/staff/payment",
+		key: 'payment',
+		label: 'Hóa Đơn',
+		icon: 'fa-credit-card',
+		path: '/staff/invoices',
 		permission: PERMISSIONS.PROCESS_PAYMENT
 	},
 	{

@@ -41,6 +41,14 @@ class InvoiceService {
   async delete(id) {
     return await api.delete(`/Invoice/${id}`)
   }
+
+  /**
+   * Xác nhận thanh toán Invoice
+   * PUT /api/Invoice/{id}/status/paid?modifiedBy={userId}
+   */
+  async setStatusPaid(id, modifiedBy) {
+    return await api.put(`/Invoice/${id}/status/paid?modifiedBy=${modifiedBy}`)
+  }
 }
 
 export default new InvoiceService()

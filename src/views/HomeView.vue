@@ -26,9 +26,18 @@
 								<li class="nav-item"><a class="nav-link" href="#reviews">Đánh giá</a></li>
 								<li class="nav-item"><a class="nav-link" href="#booking">Đặt lịch</a></li>
 								<li class="nav-item dropdown">
-									<a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">Tài khoản</a>
+									<a class="nav-link dropdown-toggle" href="#" id="userDropdown"
+										data-bs-toggle="dropdown">Tài khoản</a>
 									<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-										<li class="dropdown-item user-info">Khách hàng: Nguyễn Văn A</li>
+										<li v-if="user" class="dropdown-item user-info">
+											{{ userDisplayName }}
+										</li>
+										<li>
+											<a class="dropdown-item" @click="redirectToRolePage">
+												<i class="fas fa-tachometer-alt me-2"></i>
+												Dashboard
+											</a>
+										</li>
 										<li>
 											<a class="dropdown-item" href="#profile">
 												<i class="fas fa-user me-2"></i>
@@ -47,9 +56,11 @@
 												Cài đặt
 											</a>
 										</li>
-										<li><hr class="dropdown-divider" /></li>
 										<li>
-											<a class="dropdown-item" href="#logout">
+											<hr class="dropdown-divider" />
+										</li>
+										<li>
+											<a class="dropdown-item" href="#logout" @click.prevent="handleLogout">
 												<i class="fas fa-sign-out-alt me-2"></i>
 												Đăng xuất
 											</a>
@@ -58,18 +69,15 @@
 								</li>
 							</ul>
 							<div class="d-flex mt-3 mt-lg-0 gap-2">
-								<a href="#" class="btn-login" data-bs-toggle="modal" data-bs-target="#login-modal">Đăng nhập</a>
-								<a href="#" class="btn-register" data-bs-toggle="modal" data-bs-target="#register-modal">Đăng ký</a>
+								<a href="#" class="btn-login" data-bs-toggle="modal" data-bs-target="#login-modal">Đăng
+									nhập</a>
+								<a href="#" class="btn-register" data-bs-toggle="modal"
+									data-bs-target="#register-modal">Đăng ký</a>
 							</div>
 						</div>
 					</div>
 				</div>
 			</nav>
-      
-      
-      
-      
-  
 		</header>
 
 		<!-- Hero -->
@@ -86,7 +94,8 @@
 			<div class="modal-dialog modal-lg modal-dialog-centered">
 				<div class="modal-content border-0 shadow-lg">
 					<div class="custom-modal-content">
-						<div class="modal-image" style="background: url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat">
+						<div class="modal-image"
+							style="background: url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat">
 							<div class="modal-image-text">
 								<h4>Chào mừng trở lại!</h4>
 								<p>Cùng GaragePro chăm sóc chiếc xe của bạn dễ dàng hơn.</p>
@@ -102,7 +111,8 @@
 							</div>
 							<form id="loginForm" data-vue-handled="true" @submit.prevent="sendOtp">
 								<div class="floating-label-group">
-									<input v-model.trim="email" type="email" id="loginEmail" placeholder=" " :disabled="auth.loading" />
+									<input v-model.trim="email" type="email" id="loginEmail" placeholder=" "
+										:disabled="auth.loading" />
 									<label for="loginEmail">Email</label>
 								</div>
 								<button type="submit" :disabled="auth.loading" class="btn btn-primary w-100">
@@ -113,7 +123,8 @@
 							</form>
 							<div class="text-center mt-3">
 								<span>Chưa có tài khoản?</span>
-								<a href="#" data-bs-toggle="modal" data-bs-target="#register-modal" data-bs-dismiss="modal">Đăng ký</a>
+								<a href="#" data-bs-toggle="modal" data-bs-target="#register-modal"
+									data-bs-dismiss="modal">Đăng ký</a>
 							</div>
 						</div>
 					</div>
@@ -126,7 +137,8 @@
 			<div class="modal-dialog modal-lg modal-dialog-centered">
 				<div class="modal-content border-0 shadow-lg">
 					<div class="custom-modal-content">
-						<div class="modal-image" style="background: url('https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat">
+						<div class="modal-image"
+							style="background: url('https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat">
 							<div class="modal-image-text">
 								<h4>Gia nhập GaragePro</h4>
 								<p>Tận hưởng dịch vụ chăm sóc, sửa chữa và mua bán xe toàn diện.</p>
@@ -143,13 +155,15 @@
 							<form id="registerForm">
 								<!-- Họ và tên -->
 								<div class="floating-label-group mb-3">
-									<input type="text" id="registerFullName" class="form-control" placeholder="" required />
+									<input type="text" id="registerFullName" class="form-control" placeholder=""
+										required />
 									<label for="registerFullName">Họ và tên</label>
 								</div>
 
 								<!-- Email -->
 								<div class="floating-label-group mb-3">
-									<input type="email" id="registerEmail" class="form-control" placeholder="" required />
+									<input type="email" id="registerEmail" class="form-control" placeholder=""
+										required />
 									<label for="registerEmail">Email</label>
 								</div>
 
@@ -161,7 +175,8 @@
 
 								<!-- Địa chỉ -->
 								<div class="floating-label-group mb-3">
-									<input type="text" id="registerAddress" class="form-control" placeholder="" required />
+									<input type="text" id="registerAddress" class="form-control" placeholder=""
+										required />
 									<label for="registerAddress">Địa chỉ</label>
 								</div>
 
@@ -171,7 +186,8 @@
 
 							<div class="text-center mt-3">
 								<span>Đã có tài khoản?</span>
-								<a href="#" data-bs-toggle="modal" data-bs-target="#login-modal" data-bs-dismiss="modal">Đăng nhập</a>
+								<a href="#" data-bs-toggle="modal" data-bs-target="#login-modal"
+									data-bs-dismiss="modal">Đăng nhập</a>
 							</div>
 						</div>
 					</div>
@@ -184,16 +200,20 @@
 			<div class="container">
 				<div class="about-content">
 					<div class="about-image">
-						<img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80" alt="Luxury Car" />
+						<img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80"
+							alt="Luxury Car" />
 					</div>
 					<div class="about-text">
 						<h2>GaragePro</h2>
 						<p>
-							GaragePro là nền tảng hàng đầu cung cấp giải pháp toàn diện cho xe hơi, từ mua bán, sửa chữa đến bảo dưỡng định kỳ. Với đội ngũ kỹ thuật viên chuyên nghiệp và công nghệ tiên tiến, chúng
+							GaragePro là nền tảng hàng đầu cung cấp giải pháp toàn diện cho xe hơi, từ mua bán, sửa chữa
+							đến bảo dưỡng định kỳ. Với đội ngũ kỹ thuật viên chuyên nghiệp và công nghệ tiên tiến, chúng
 							tôi cam kết mang đến trải nghiệm dịch vụ cao cấp, minh bạch và đáng tin cậy.
 						</p>
 						<p>
-							Mục tiêu của chúng tôi là giúp khách hàng quản lý và chăm sóc xe hơi một cách dễ dàng, tiết kiệm thời gian và chi phí, đồng thời đảm bảo chất lượng dịch vụ luôn đạt tiêu chuẩn cao nhất.
+							Mục tiêu của chúng tôi là giúp khách hàng quản lý và chăm sóc xe hơi một cách dễ dàng, tiết
+							kiệm thời gian và chi phí, đồng thời đảm bảo chất lượng dịch vụ luôn đạt tiêu chuẩn cao
+							nhất.
 						</p>
 						<div class="about-stats">
 							<div class="stat-item">
@@ -256,11 +276,13 @@
 			<div class="container text-center">
 				<h2 class="section-title mb-4">Bộ sưu tập xe nổi bật</h2>
 				<div class="position-relative">
-					<button id="prevCar" class="btn btn-outline-secondary rounded-circle position-absolute top-50 start-0 translate-middle-y shadow">
+					<button id="prevCar"
+						class="btn btn-outline-secondary rounded-circle position-absolute top-50 start-0 translate-middle-y shadow">
 						<i class="fa-solid fa-chevron-left"></i>
 					</button>
 					<div class="row g-4 justify-content-center" id="carList"></div>
-					<button id="nextCar" class="btn btn-outline-secondary rounded-circle position-absolute top-50 end-0 translate-middle-y shadow">
+					<button id="nextCar"
+						class="btn btn-outline-secondary rounded-circle position-absolute top-50 end-0 translate-middle-y shadow">
 						<i class="fa-solid fa-chevron-right"></i>
 					</button>
 				</div>
@@ -313,7 +335,8 @@
 				<p class="lead text-muted">
 					<strong>Sẵn sàng hỗ trợ bạn 24/7. Đặt lịch ngay để được tư vấn và nhận ưu đãi tốt nhất.</strong>
 				</p>
-				<a href="#" class="btn btn-cta btn-warning px-4 py-2 fw-semibold text-white" data-bs-toggle="modal" data-bs-target="#bookingModal">
+				<a href="#" class="btn btn-cta btn-warning px-4 py-2 fw-semibold text-white" data-bs-toggle="modal"
+					data-bs-target="#bookingModal">
 					<i class="fas fa-paper-plane me-2"></i>
 					Gửi yêu cầu
 				</a>
@@ -334,7 +357,8 @@
 
 					<div class="modal-body">
 						<!-- Alert Messages -->
-						<div id="alertSuccess" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+						<div id="alertSuccess" class="alert alert-success alert-dismissible fade show d-none"
+							role="alert">
 							<i class="fas fa-check-circle me-2"></i>
 							<strong>Thành công!</strong>
 							Yêu cầu của bạn đã được gửi. Chúng tôi sẽ liên hệ lại trong thời gian sớm nhất.
@@ -356,7 +380,9 @@
 										Họ và tên
 										<span class="text-danger">*</span>
 									</label>
-									<input type="text" class="form-control" id="fullName" name="fullName" placeholder="Nguyễn Văn A" required minlength="2" maxlength="100" autocomplete="name" />
+									<input type="text" class="form-control" id="fullName" name="fullName"
+										placeholder="Nguyễn Văn A" required minlength="2" maxlength="100"
+										autocomplete="name" />
 									<div class="invalid-feedback">Vui lòng nhập họ tên (từ 2 ký tự)</div>
 								</div>
 
@@ -365,7 +391,9 @@
 										Số điện thoại
 										<span class="text-danger">*</span>
 									</label>
-									<input type="tel" class="form-control" id="phone" name="phone" placeholder="0912345678" required pattern="^(0|\+84)[0-9]{9,10}$" autocomplete="tel" />
+									<input type="tel" class="form-control" id="phone" name="phone"
+										placeholder="0912345678" required pattern="^(0|\+84)[0-9]{9,10}$"
+										autocomplete="tel" />
 									<div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
 								</div>
 
@@ -374,7 +402,8 @@
 										Email
 										<span class="text-danger">*</span>
 									</label>
-									<input type="email" class="form-control" id="email" name="email" placeholder="example@email.com" required autocomplete="email" />
+									<input type="email" class="form-control" id="email" name="email"
+										placeholder="example@email.com" required autocomplete="email" />
 									<div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
 								</div>
 
@@ -398,10 +427,11 @@
 								</div>
 
 								<div class="col-md-6 position-relative" id="carSearchWrapper">
-									<label for="carSearch" class="form-label">HAœng xe</label>
-									<input type="text" class="form-control" id="carSearch" name="carBrand" placeholder="Toyota, Honda, Mazda..." maxlength="50" autocomplete="off" />
+									<label for="carSearch" class="form-label">Hãng xe</label>
+									<input type="text" class="form-control" id="carSearch" name="carBrand"
+										placeholder="Toyota, Honda, Mazda..." maxlength="50" autocomplete="off" />
 									<ul class="list-group position-absolute w-100 shadow-sm mt-2" id="carDropdown"></ul>
-									<small class="text-muted">TA1y ch ¯?n</small>
+									<small class="text-muted">Tùy chọn</small>
 								</div>
 
 								<div class="col-md-6">
@@ -415,16 +445,9 @@
 										Nội dung yêu cầu
 										<span class="text-danger">*</span>
 									</label>
-									<textarea
-										class="form-control"
-										id="message"
-										name="message"
-										rows="4"
-										placeholder="Mô tả chi tiết vấn đề của xe hoặc dịch vụ bạn cần..."
-										required
-										minlength="10"
-										maxlength="1000"
-									></textarea>
+									<textarea class="form-control" id="message" name="message" rows="4"
+										placeholder="Mô tả chi tiết vấn đề của xe hoặc dịch vụ bạn cần..." required
+										minlength="10" maxlength="1000"></textarea>
 									<div class="invalid-feedback">Vui lòng nhập nội dung yêu cầu (từ 10 ký tự)</div>
 									<small class="text-muted">
 										<span id="charCount">0</span>
@@ -458,7 +481,8 @@
 										Gửi yêu cầu
 									</span>
 									<span id="loadingSpinner" class="d-none">
-										<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+										<span class="spinner-border spinner-border-sm me-2" role="status"
+											aria-hidden="true"></span>
 										Đang gửi...
 									</span>
 								</button>
@@ -482,7 +506,8 @@
 						<h5>Liên hệ</h5>
 						<p>
 							<i class="fas fa-map-marker-alt me-2"></i>
-							Khu Giáo dục và Đào tạo - Khu Công nghệ cao Hòa Lạc - Km29 Đại lộ Thăng Long, xã Hòa Lạc, TP. Hà Nội
+							Khu Giáo dục và Đào tạo - Khu Công nghệ cao Hòa Lạc - Km29 Đại lộ Thăng Long, xã Hòa Lạc,
+							TP. Hà Nội
 						</p>
 						<p>
 							<i class="fas fa-phone me-2"></i>
@@ -517,23 +542,49 @@
 </template>
 
 <script setup>
-	import { initHomeInteractions } from '@/assets/js/home'
-	import '@/assets/style/home.css'
-	import { GmsToast } from '@/components'
-	import { useToast, setToastInstance } from '@/composables/useToast'
-	import { onBeforeUnmount, onMounted, ref } from 'vue'
-	import { useRouter } from 'vue-router'
-	import { useAuthStore } from '../stores/auth'
+import { initHomeInteractions } from '@/assets/js/home'
+import '@/assets/style/home.css'
+import { GmsToast } from '@/components'
+import { setToastInstance, useToast } from '@/composables/useToast'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-	const router = useRouter()
-	const auth = useAuthStore()
-	const toast = useToast()
+const router = useRouter()
+const auth = useAuthStore()
+const toast = useToast()
 
-	const email = ref('')
-	const localError = ref('')
-	const toastRef = ref(null)
+const email = ref('')
+const localError = ref('')
+const toastRef = ref(null)
 
-	const hideModal = (modalId) => {
+const user = computed(() => auth.user)
+
+const userDisplayName = computed(() => {
+	const currentUser = user.value
+	if (!currentUser) return ''
+	return (
+		currentUser.fullName ||
+		currentUser.name ||
+		currentUser.username ||
+		currentUser.email ||
+		''
+	)
+})
+const roleRedirectMap = {
+	MANAGER: '/manager/dashboard',
+	STAFF: '/staff/dashboard',
+	CUSTOMER: '/customer/home',
+	STOCKER: '/stocker/dashboard',
+	MECHANIC: '/mechanic/dashboard'
+}
+const redirectToRolePage = () => {
+	const role = user.value?.role
+	if (!role) return
+	const target = roleRedirectMap[role] || '/home'
+	router.replace(target)
+}
+const hideModal = (modalId) => {
 	if (typeof window === 'undefined' || !window.bootstrap) {
 		return
 	}
@@ -545,56 +596,68 @@
 		window.bootstrap.Modal.getInstance(modalEl) ??
 		window.bootstrap.Modal.getOrCreateInstance(modalEl)
 	modalInstance.hide()
-	}
+}
 
 
-	const cleanupModalState = () => {
-		const body = document.body
-		if (body) {
-			body.classList.remove('modal-open')
-			body.style.removeProperty('padding-right')
-		}
-		document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+const cleanupModalState = () => {
+	const body = document.body
+	if (body) {
+		body.classList.remove('modal-open')
+		body.style.removeProperty('padding-right')
 	}
+	document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+}
 
 	const sendOtp = async () => {
-		localError.value = ''
+	localError.value = ''
 
-		const trimmedEmail = email.value.trim()
-		if (!trimmedEmail) {
-			const message = 'Vui lòng nhập email để nhận OTP đăng nhập'
-			localError.value = message
-			toast.error(message, 'Lỗi đăng nhập')
-			return
-		}
-
-		email.value = trimmedEmail
-		const ok = await auth.requestOtp(trimmedEmail)
-		if (ok) {
-			hideModal('login-modal')
-			cleanupModalState()
-			router.push({ name: 'verifyOtp', query: { email: trimmedEmail } })
-			return
-		}
-
-		const errorMessage = auth.error || 'Email không hợp lệ, vui lòng thử lại'
-		localError.value = errorMessage
-		toast.error(errorMessage, 'Lỗi đăng nhập', { duration: 4000 })
+	const trimmedEmail = email.value.trim()
+	if (!trimmedEmail) {
+		const message = 'Vui lòng nhập email để nhận OTP đăng nhập'
+		localError.value = message
+		toast.error(message, 'Lỗi đăng nhập')
+		return
 	}
 
-	let teardownFn
+	email.value = trimmedEmail
+	const ok = await auth.requestOtp(trimmedEmail)
+	if (ok) {
+		hideModal('login-modal')
+		cleanupModalState()
+		router.push({ name: 'verifyOtp', query: { email: trimmedEmail } })
+		return
+	}
 
-	onMounted(() => {
-		teardownFn = initHomeInteractions()
+	const errorMessage = auth.error || 'Email không hợp lệ, vui lòng thử lại'
+	localError.value = errorMessage
+	toast.error(errorMessage, 'Lỗi đăng nhập', { duration: 4000 })
+}
 
-		if (toastRef.value) {
-			setToastInstance(toastRef.value)
-		}
+let teardownFn
+
+onMounted(() => {
+	teardownFn = initHomeInteractions()
+
+	if (toastRef.value) {
+		setToastInstance(toastRef.value)
+	}
+})
+
+// Watch user để redirect khi user được set
+watch(user, (newUser) => {
+	if (newUser) {
+		redirectToRolePage()
+	}
+})
+
+onBeforeUnmount(() => {
+	if (typeof teardownFn === 'function') {
+		teardownFn()
+	}
 	})
 
-	onBeforeUnmount(() => {
-		if (typeof teardownFn === 'function') {
-			teardownFn()
-		}
-	})
+	const handleLogout = async () => {
+		await auth.logout()
+		router.push({ name: 'home' })
+	}
 </script>
