@@ -50,7 +50,15 @@ class MechanicRoleService {
    * GET /api/MechanicRole/assignments/{userId}
    */
   async getAssignments(userId) {
-   return await api.get(`/MechanicRole/assignments/${userId}`)
+    return await api.get(`/MechanicRole/assignments/${userId}`)
+  }
+
+  /**
+   * Phân trang vai trò thợ máy
+   * POST /api/MechanicRole/paging
+   */
+  async getPaging(params) {
+    return await api.post('/MechanicRole/paging', params)
   }
 
   /**

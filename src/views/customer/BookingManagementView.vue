@@ -52,6 +52,7 @@
           <span>Số điện thoại</span>
           <span>Thời gian đặt</span>
           <span>Tên xe</span>
+          <span>Thao tác</span>
         </div>
 
         <div v-if="loading" class="empty-state">Đang tải danh sách...</div>
@@ -98,12 +99,18 @@
               <span class="primary-text">{{ booking.vehicleName || booking.vehicle || 'N/A' }}</span>
             </div>
           </div>
+
+          <div class="cell actions-cell" @click.stop>
+            <button class="btn-action info" @click="viewBooking(booking)">Xem</button>
+            <button class="btn-action primary" @click="editBooking(booking)">Sửa</button>
+            <button class="btn-action danger" @click="deleteBooking(booking)">Xóa</button>
+          </div>
         </div>
       </section>
 
       <div class="pagination">
         <div class="pagination-info">
-          Trang {{ currentPage }} / {{ totalPages }} · {{ filteredBookings.length }} booking
+          Trang {{ currentPage }} / {{ totalPages }} • {{ filteredBookings.length }} booking
         </div>
         <div class="pagination-actions">
           <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">
@@ -139,6 +146,7 @@ const router = useRouter()
 const toast = useToast()
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
+const deletingId = ref(null)
 
 const sidebarMenu = [
   { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check', path: '/customer/bookings', exact: true },
@@ -156,6 +164,35 @@ const currentUser = ref(authService.getCurrentUser())
 
 const goCreate = () => {
   router.push('/booking/Guest')
+}
+
+const viewBooking = (booking) => {
+  const id = booking.bookingId || booking.id
+  if (!id) return
+  router.push(`/customer/booking/${id}`)
+}
+
+const editBooking = (booking) => {
+  const id = booking.bookingId || booking.id
+  if (!id) return
+  router.push(`/customer/booking/${id}/edit`)
+}
+
+const deleteBooking = async (booking) => {
+  const id = booking.bookingId || booking.id
+  if (!id) return
+  const confirmed = window.confirm('Bạn có chắc muốn xóa booking này?')
+  if (!confirmed) return
+  try {
+    deletingId.value = id
+    await bookingService.delete(id)
+    toast.success('Xóa booking thành công')
+    await fetchBookings()
+  } catch (error) {
+    toast.error('Không thể xóa booking', error.message || 'Đã xảy ra lỗi')
+  } finally {
+    deletingId.value = null
+  }
 }
 
 const formatDate = (date) => {
@@ -208,10 +245,7 @@ const filteredBookings = computed(() => {
   })
 })
 
-const totalPages = computed(() => {
-  const total = Math.ceil(filteredBookings.value.length / pageSize.value) || 1
-  return total
-})
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredBookings.value.length / pageSize.value)))
 
 const paginatedBookings = computed(() => {
   const startIdx = (currentPage.value - 1) * pageSize.value
@@ -234,225 +268,245 @@ const fetchBookings = async () => {
     const email = currentUser.value?.email || currentUser.value?.username || ''
     const params = {
       page: 1,
-      pageSize: 100, // lấy nhiều một lượt, filter client
+      pageSize: 100,
       columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
       filters: email
         ? [
             { columnName: 'CustomerEmail', value: email },
             { columnName: 'Email', value: email }
           ]
-        : []   
+        : []
     }
     const res = await bookingService.getPaging(params)
     const items = res?.data?.items || res?.items || []
 
-    // Lọc theo email ở FE nếu backend không hỗ trợ filters
     bookings.value = items.filter((b) => {
-      if (!email) return true
-      const bookingEmail = (b.customerEmail || b.email || '').toLowerCase()
-      return bookingEmail === email.toLowerCase()
+      const emails = [b.customerEmail, b.email].filter(Boolean).map((e) => e.toLowerCase())
+      return email ? emails.includes(email.toLowerCase()) : true
     })
   } catch (error) {
-    console.error('Fetch bookings error:', error)
-    toast.error('Không tải được danh sách booking', error.message || error.userMsg || '')
+    toast.error('Không thể tải danh sách booking', error.message || 'Đã xảy ra lỗi')
   } finally {
     loading.value = false
   }
 }
 
+const clearFilters = () => {
+  searchQuery.value = ''
+  dateFilter.value = { start: '', end: '' }
+}
+
+const goToPage = (page) => {
+  currentPage.value = page
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) currentPage.value -= 1
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) currentPage.value += 1
+}
+
 const handleLogout = async () => {
   await authService.logout()
-  router.push('/')
+  router.push('/home')
 }
 
 fetchBookings()
 </script>
 
 <style scoped>
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
-
 .booking-management {
   display: flex;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--light, #f8f9fa);
 }
 
 .booking-content {
   flex: 1;
-  padding: 24px 32px 40px;
-  transition: margin-left 0.2s ease;
+  padding: 2rem;
+  transition: margin-left 0.3s ease;
 }
 
 .page-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
 .page-header h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
-  color: #1f2933;
+  margin: 0;
+  font-size: 1.6rem;
 }
 
 .page-header p {
-  margin: 0;
-  color: #6b7280;
+  margin: 0.25rem 0 0;
+  color: #6c757d;
 }
 
 .btn-primary {
   background: var(--primary, #ff7a00);
-  color: #fff;
   border: none;
+  color: white;
+  padding: 0.65rem 1rem;
   border-radius: 10px;
-  padding: 12px 16px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(255, 122, 0, 0.25);
 }
 
 .filter-bar {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: white;
+  border: 1px solid #e9ecef;
   border-radius: 10px;
-  padding: 10px 12px;
-  flex: 1;
   min-width: 260px;
-  gap: 8px;
 }
 
 .search-box input {
   border: none;
   outline: none;
-  width: 100%;
+  flex: 1;
 }
 
 .filters-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .date-filter {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #555;
-}
-
-.date-filter input {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 8px 10px;
+  align-items: center;
+  gap: 0.35rem;
+  background: white;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
 }
 
 .btn-ghost {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: white;
+  border: 1px solid #e9ecef;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 0.55rem 0.85rem;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .table-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
 }
 
 .table-head,
 .table-row {
   display: grid;
-  grid-template-columns: 0.7fr 1.2fr 1fr 1fr 1fr;
-  padding: 14px 16px;
+  grid-template-columns: 1fr 2fr 2fr 2fr 2fr 2fr;
   align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eef0f4;
 }
 
 .table-head {
-  background: #f9fafb;
+  background: #f7f8fb;
   font-weight: 700;
-  color: #374151;
 }
 
-.table-row {
-  border-top: 1px solid #eef0f4;
+.table-row:hover {
+  background: #f6f7fb;
 }
 
 .cell {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.5rem;
 }
 
 .cell-text .primary-text {
   font-weight: 600;
-  color: #1f2933;
 }
 
 .empty-state {
-  padding: 20px;
+  padding: 1.5rem;
   text-align: center;
-  color: #6b7280;
+  color: #6c757d;
 }
 
 .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
+  gap: 1rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
-  gap: 10px;
+}
+
+.pagination-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .page-btn {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
-  padding: 8px 12px;
+  background: white;
   cursor: pointer;
 }
 
 .page-btn.active {
   background: var(--primary, #ff7a00);
-  color: #fff;
+  color: white;
   border-color: var(--primary, #ff7a00);
 }
 
-@media (max-width: 900px) {
-  .booking-content {
-    margin-left: 0 !important;
-    padding: 18px;
-  }
+.actions-cell {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
 
-  .table-head,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
+.btn-action {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  background: white;
+}
 
-  .cell {
-    justify-content: space-between;
-  }
+.btn-action.info {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-action.primary {
+  color: #ff7a00;
+  border-color: #ff7a00;
+}
+
+.btn-action.danger {
+  color: #e74c3c;
+  border-color: #e74c3c;
 }
 </style>

@@ -12,6 +12,13 @@ export const CUSTOMER_MENU = [
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
 	},
 	{
+		key: 'Booking',
+		label: 'booking',
+		icon: 'fa-gauge',
+		path: '/customer/home',
+		permission: PERMISSIONS.VIEW_OWN_PROFILE
+	},	
+	{
 		key: 'vehicles',
 		label: 'Xe của tôi',
 		icon: 'fa-car',
