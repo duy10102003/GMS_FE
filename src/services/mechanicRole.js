@@ -90,6 +90,14 @@ class MechanicRoleService {
   async getMechanicsByRoleId(roleId) {
     return await api.get(`/MechanicRole/${roleId}/mechanics`)
   }
+
+  /**
+   * Phân trang + lọc thợ theo vai trò
+   * POST /api/MechanicRole/{roleId}/mechanics/paging
+   */
+  async getMechanicsPaging(roleId, payload) {
+    return await api.post(`/MechanicRole/${roleId}/mechanics/paging`, payload)
+  }
 }
 
 export default new MechanicRoleService()

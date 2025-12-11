@@ -16,28 +16,19 @@
       />
 
       <main class="page">
-        <div class="page-head">
-          <div class="page-head__left">
-            <GmsButton variant="outline" icon="fa-sync" :loading="loading" @click="loadRoles">
-              Làm mới
-            </GmsButton>
-          </div>
-          <GmsButton variant="primary" icon="fa-plus" @click="openCreate">
-            Thêm vai trò
-          </GmsButton>
-        </div>
-
-        <div class="filters">
+        <div class="filters filters--with-action">
           <div class="filter-item wide">
             <label>Tìm kiếm (tên, mô tả)</label>
             <input
               v-model="searchText"
               type="text"
-              style="max-width: 300px;"
-              placeholder="Nhập từ khóa..."
+              placeholder="Tìm nhanh..."
               @keyup.enter="applyFilters"
             />
           </div>
+          <GmsButton variant="primary" icon="fa-plus" @click="openCreate">
+            Thêm vai trò
+          </GmsButton>
         </div>
 
         <div class="active-filters" v-if="activeFilters.length">
@@ -62,16 +53,26 @@
             Đang tải...
           </div>
 
-          <div v-else-if="normalizedRoles.length" class="table-wrapper">
+          <div v-else-if="sortedRoles.length" class="table-wrapper">
             <table class="table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>
+                    <div class="th-with-filter">
+                      <span>ID</span>
+                      <button class="sort-btn" @click.stop="changeSort('id')">
+                        <i :class="getSortIcon('id')"></i>
+                      </button>
+                    </div>
+                  </th>
                   <th>
                     <div class="th-with-filter">
                       <span>Tên vai trò</span>
                       <button class="filter-btn" @click.stop="openFilterModal('name')">
                         <i class="fa-solid fa-filter"></i>
+                      </button>
+                      <button class="sort-btn" @click.stop="changeSort('name')">
+                        <i :class="getSortIcon('name')"></i>
                       </button>
                     </div>
                   </th>
@@ -81,18 +82,43 @@
                       <button class="filter-btn" @click.stop="openFilterModal('description')">
                         <i class="fa-solid fa-filter"></i>
                       </button>
+                      <button class="sort-btn" @click.stop="changeSort('description')">
+                        <i :class="getSortIcon('description')"></i>
+                      </button>
                     </div>
                   </th>
-                  <th>Số thợ</th>
+                  <th>
+                    <div class="th-with-filter">
+                      <span>Số thợ</span>
+                      <button class="filter-btn" @click.stop="openFilterModal('total')">
+                        <i class="fa-solid fa-filter"></i>
+                      </button>
+                      <button class="sort-btn" @click.stop="changeSort('total')">
+                        <i :class="getSortIcon('total')"></i>
+                      </button>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-with-filter">
+                      <span>Thợ khả dụng</span>
+                      <button class="filter-btn" @click.stop="openFilterModal('available')">
+                        <i class="fa-solid fa-filter"></i>
+                      </button>
+                      <button class="sort-btn" @click.stop="changeSort('available')">
+                        <i :class="getSortIcon('available')"></i>
+                      </button>
+                    </div>
+                  </th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="role in normalizedRoles" :key="role.displayId" @click="openDetail(role)">
-              <td>{{ role.displayId }}</td>
-              <td>{{ role.displayName }}</td>
-              <td>{{ role.displayDescription || '—' }}</td>
-              <td>{{ role.assignedCount ?? '—' }}</td>
+                <tr v-for="role in sortedRoles" :key="role.displayId" @click="openDetail(role)">
+    <td>{{ role.displayId }}</td>
+    <td>{{ role.displayName }}</td>
+    <td>{{ role.displayDescription || '—' }}</td>
+    <td>{{ role.assignedCount ?? '—' }}</td>
+    <td>{{ role.availableCount ?? '—' }}</td>
               <td class="actions" @click.stop>
                 <GmsButton size="small" variant="info" @click="viewMechanics(role)">Thợ</GmsButton>
                 <GmsButton size="small" variant="info" @click="openDetail(role)">Xem</GmsButton>
@@ -188,12 +214,9 @@
         <div class="mb-3">
           <label class="form-label">Toán tử</label>
           <select v-model="filterModal.operator" class="form-select">
-            <option value="contains">Chứa</option>
-            <option value="not_contains">Không chứa</option>
-            <option value="equals">Bằng</option>
-            <option value="not_equals">Khác</option>
-            <option value="starts_with">Bắt đầu bằng</option>
-            <option value="ends_with">Kết thúc bằng</option>
+            <option v-for="op in currentOperatorOptions" :key="op.value" :value="op.value">
+              {{ op.label }}
+            </option>
           </select>
         </div>
         <div class="mb-3">
@@ -220,6 +243,8 @@ import { useToast } from "@/composables/useToast"
 import { getMenuByRole } from "@/utils/menu"
 import authService from "@/services/auth"
 import mechanicRoleService from "@/services/mechanicRole"
+import technicalTaskService from "@/services/technicalTask"
+import { TASK_STATUS } from "@/constant/serviceTicketStatus"
 
 const router = useRouter()
 const toastRef = ref(null)
@@ -235,6 +260,34 @@ const deleting = ref(false)
 const searchText = ref("")
 const filterName = ref({ operator: "contains", value: "" })
 const filterDescription = ref({ operator: "contains", value: "" })
+const filterTotalCount = ref({ operator: "greater_or_equal", value: "" })
+const filterAvailableCount = ref({ operator: "greater_or_equal", value: "" })
+const sortConfig = ref({ key: "id", direction: "DESC", backend: true })
+
+const textOperatorOptions = [
+  { value: "contains", label: "Chứa" },
+  { value: "not_contains", label: "Không chứa" },
+  { value: "equals", label: "Bằng" },
+  { value: "not_equals", label: "Khác" },
+  { value: "starts_with", label: "Bắt đầu bằng" },
+  { value: "ends_with", label: "Kết thúc bằng" }
+]
+
+const numberOperatorOptions = [
+  { value: "equals", label: "Bằng" },
+  { value: "not_equals", label: "Khác" },
+  { value: "greater_than", label: "Lớn hơn" },
+  { value: "less_than", label: "Nhỏ hơn" },
+  { value: "greater_or_equal", label: "Lớn hơn hoặc bằng" },
+  { value: "less_or_equal", label: "Nhỏ hơn hoặc bằng" }
+]
+
+const filterConfig = {
+  name: { type: "text" },
+  description: { type: "text" },
+  total: { type: "number" },
+  available: { type: "number" }
+}
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalItems = ref(0)
@@ -266,15 +319,70 @@ const normalizedRoles = computed(() =>
     displayId: role?.mechanicRoleId ?? role?.id ?? "-",
     displayName: role?.mechanicRoleName ?? "Không tên",
     displayDescription: role?.mechanicRoleDescription ?? "",
-    assignedCount: role?.assignedCount ?? role?.mechanicsCount ?? role?.usersCount ?? null
+    assignedCount: role?.assignedCount ?? role?.mechanicsCount ?? role?.usersCount ?? null,
+    availableCount: role?.availableCount ?? null
   }))
 )
+
+const matchesNumberFilter = (value, filter) => {
+  if (value === null || value === undefined || value === "—") return false
+  const num = Number(value)
+  const filterVal = Number(filter?.value)
+  if (Number.isNaN(num) || Number.isNaN(filterVal)) return false
+  switch (filter?.operator) {
+    case "equals":
+      return num === filterVal
+    case "not_equals":
+      return num !== filterVal
+    case "greater_than":
+      return num > filterVal
+    case "less_than":
+      return num < filterVal
+    case "greater_or_equal":
+      return num >= filterVal
+    case "less_or_equal":
+      return num <= filterVal
+    default:
+      return true
+  }
+}
+
+const filteredRoles = computed(() => {
+  return normalizedRoles.value.filter((role) => {
+    const totalFilterOn = filterTotalCount.value.value !== "" && filterTotalCount.value.value !== null && filterTotalCount.value.value !== undefined
+    const availableFilterOn =
+      filterAvailableCount.value.value !== "" && filterAvailableCount.value.value !== null && filterAvailableCount.value.value !== undefined
+
+    if (totalFilterOn && !matchesNumberFilter(role.assignedCount ?? 0, filterTotalCount.value)) return false
+    if (availableFilterOn && !matchesNumberFilter(role.availableCount ?? 0, filterAvailableCount.value)) return false
+
+    return true
+  })
+})
 
 const describedCount = computed(() => normalizedRoles.value.filter((r) => r.displayDescription).length)
 
 const assignedTotal = computed(() =>
-  normalizedRoles.value.reduce((sum, r) => (typeof r.assignedCount === "number" ? sum + r.assignedCount : sum), 0)
+  filteredRoles.value.reduce((sum, r) => (typeof r.assignedCount === "number" ? sum + r.assignedCount : sum), 0)
 )
+
+const sortedRoles = computed(() => {
+  const list = [...filteredRoles.value]
+  const dir = sortConfig.value.direction === "DESC" ? -1 : 1
+  switch (sortConfig.value.key) {
+    case "name":
+      return list.sort((a, b) => (a.displayName || "").localeCompare(b.displayName || "") * dir)
+    case "description":
+      return list.sort((a, b) => (a.displayDescription || "").localeCompare(b.displayDescription || "") * dir)
+    case "total":
+      return list.sort((a, b) => ((a.assignedCount ?? 0) - (b.assignedCount ?? 0)) * dir)
+    case "available":
+      return list.sort((a, b) => ((a.availableCount ?? 0) - (b.availableCount ?? 0)) * dir)
+    case "id":
+    default:
+      return list.sort((a, b) => ((a.displayId ?? 0) - (b.displayId ?? 0)) * dir)
+  }
+})
 
 const activeFilters = computed(() => {
   const chips = []
@@ -290,7 +398,29 @@ const activeFilters = computed(() => {
       label: `Mô tả: ${filterDescription.value.value} (${operatorLabel(filterDescription.value.operator)})`
     })
   }
+  if (filterTotalCount.value.value !== "" && filterTotalCount.value.value !== null && filterTotalCount.value.value !== undefined) {
+    chips.push({
+      key: "total",
+      label: `Số thợ: ${operatorLabel(filterTotalCount.value.operator)} ${filterTotalCount.value.value}`
+    })
+  }
+  if (
+    filterAvailableCount.value.value !== "" &&
+    filterAvailableCount.value.value !== null &&
+    filterAvailableCount.value.value !== undefined
+  ) {
+    chips.push({
+      key: "available",
+      label: `Thợ khả dụng: ${operatorLabel(filterAvailableCount.value.operator)} ${filterAvailableCount.value.value}`
+    })
+  }
   return chips
+})
+
+const currentOperatorOptions = computed(() => {
+  const type = filterConfig[filterModal.value.type]?.type
+  if (type === "number") return numberOperatorOptions
+  return textOperatorOptions
 })
 
 const parsePagingResponse = (response) => {
@@ -316,19 +446,61 @@ const parsePagingResponse = (response) => {
 
 const getRoleKey = (role) => role?.mechanicRoleId ?? role?.id ?? null
 
-const fetchMechanicCounts = async (items) => {
+const ACTIVE_TASK_STATUSES = [TASK_STATUS.IN_PROGRESS, TASK_STATUS.PENDING]
+
+const hasActiveTask = async (userId) => {
+  if (!userId) return false
+  for (const status of ACTIVE_TASK_STATUSES) {
+    const res = await technicalTaskService.getPaging({
+      page: 1,
+      pageSize: 1,
+      assignedToTechnical: userId,
+      taskStatus: status,
+      columnSorts: [{ columnName: "TechnicalTaskId", sortDirection: "DESC" }]
+    })
+    const items = res?.data?.items ?? res?.items ?? res?.data ?? []
+    const total =
+      res?.data?.total ??
+      res?.data?.totalItems ??
+      res?.total ??
+      res?.totalItems ??
+      (Array.isArray(items) ? items.length : 0)
+    if (typeof total === "number" && total > 0) {
+      return true
+    }
+  }
+  return false
+}
+
+const fetchMechanicStats = async (items) => {
   const entries = await Promise.all(
     items.map(async (role) => {
       const key = getRoleKey(role)
-      if (!key) return [null, null]
+      if (!key) return [null, { total: null, available: null }]
       try {
         const res = await mechanicRoleService.getMechanicsByRoleId(key)
         const mechanics = parsePagingResponse(res).items || parsePagingResponse(res).data || []
-        const count = Array.isArray(mechanics) ? mechanics.length : 0
-        return [key, count]
+        const list = Array.isArray(mechanics) ? mechanics : []
+        const total = list.length
+
+        const availability = await Promise.allSettled(
+          list.map(async (m) => ({
+            userId: m.userId,
+            busy: await hasActiveTask(m.userId)
+          }))
+        )
+
+        const available = availability.reduce((count, r) => {
+          if (r.status === "fulfilled" && r.value && !r.value.busy) {
+            return count + 1
+          }
+          return count
+        }, 0)
+
+        return [key, { total, available }]
       } catch (error) {
-        console.error("Fetch mechanics count failed for role", key, error)
-        return [key, null]
+        console.error("Fetch mechanics stats failed for role", key, error)
+        return [key, { total: null, available: null }]
       }
     })
   )
@@ -364,20 +536,32 @@ const buildFilters = () => {
 const loadRoles = async () => {
   try {
     loading.value = true
+    const backendSortMap = {
+      id: "MechanicRoleId",
+      name: "MechanicRoleName",
+      description: "MechanicRoleDescription"
+    }
+    const isBackendSort = backendSortMap[sortConfig.value.key]
+
     const params = {
-      page: Math.max(0, currentPage.value - 1),
+      // Backend dùng trang 1-based, gửi thẳng currentPage
+      page: currentPage.value,
       pageSize: pageSize.value,
       columnFilters: buildFilters(),
-      columnSorts: [{ columnName: "MechanicRoleId", sortDirection: "DESC" }]
+      columnSorts: isBackendSort
+        ? [{ columnName: backendSortMap[sortConfig.value.key], sortDirection: sortConfig.value.direction }]
+        : [{ columnName: "MechanicRoleId", sortDirection: "DESC" }]
     }
     const response = await mechanicRoleService.getPaging(params)
     const { items, total } = parsePagingResponse(response)
-    const countMap = await fetchMechanicCounts(items)
+    const statsMap = await fetchMechanicStats(items)
     roles.value = items.map((role) => {
       const key = getRoleKey(role)
+      const stats = statsMap[key] || {}
       return {
         ...role,
-        assignedCount: countMap[key] ?? role.assignedCount ?? null
+        assignedCount: stats.total ?? role.assignedCount ?? null,
+        availableCount: stats.available ?? null
       }
     })
     totalItems.value = total
@@ -388,20 +572,36 @@ const loadRoles = async () => {
   }
 }
 
-const changePage = (page) => {
+const changePage = async (page) => {
   if (page < 1 || page > totalPages.value) return
   currentPage.value = page
+  await loadRoles()
+}
+
+const handlePageSizeChange = async () => {
+  currentPage.value = 1
+  await loadRoles()
+}
+
+const applyFilters = async () => {
+  currentPage.value = 1
+  await loadRoles()
+}
+
+const changeSort = (key) => {
+  if (sortConfig.value.key === key) {
+    sortConfig.value.direction = sortConfig.value.direction === "ASC" ? "DESC" : "ASC"
+  } else {
+    sortConfig.value.key = key
+    sortConfig.value.direction = "ASC"
+    sortConfig.value.backend = ["id", "name", "description"].includes(key)
+  }
   loadRoles()
 }
 
-const handlePageSizeChange = () => {
-  currentPage.value = 1
-  loadRoles()
-}
-
-const applyFilters = () => {
-  currentPage.value = 1
-  loadRoles()
+const getSortIcon = (key) => {
+  if (sortConfig.value.key !== key) return "fa-solid fa-sort"
+  return sortConfig.value.direction === "ASC" ? "fa-solid fa-sort-up" : "fa-solid fa-sort-down"
 }
 
 const removeFilter = (key) => {
@@ -409,6 +609,10 @@ const removeFilter = (key) => {
     filterName.value = { operator: "contains", value: "" }
   } else if (key === "description") {
     filterDescription.value = { operator: "contains", value: "" }
+  } else if (key === "total") {
+    filterTotalCount.value = { operator: "greater_or_equal", value: "" }
+  } else if (key === "available") {
+    filterAvailableCount.value = { operator: "greater_or_equal", value: "" }
   }
   applyFilters()
 }
@@ -416,6 +620,8 @@ const removeFilter = (key) => {
 const clearAllFilters = () => {
   filterName.value = { operator: "contains", value: "" }
   filterDescription.value = { operator: "contains", value: "" }
+  filterTotalCount.value = { operator: "greater_or_equal", value: "" }
+  filterAvailableCount.value = { operator: "greater_or_equal", value: "" }
   searchText.value = ""
   applyFilters()
 }
@@ -427,19 +633,33 @@ const operatorLabel = (op) => {
     equals: "bằng",
     not_equals: "khác",
     starts_with: "bắt đầu",
-    ends_with: "kết thúc"
+    ends_with: "kết thúc",
+    greater_than: ">",
+    less_than: "<",
+    greater_or_equal: "≥",
+    less_or_equal: "≤"
   }
   return map[op] || op
 }
 
 const openFilterModal = (type) => {
   const preset = type === "name" ? filterName.value : filterDescription.value
+  const isNumber = type === "total" || type === "available"
+  const presetNumber = type === "total" ? filterTotalCount.value : type === "available" ? filterAvailableCount.value : null
+
   filterModal.value = {
     show: true,
     type,
-    label: type === "name" ? "Tên vai trò" : "Mô tả",
-    operator: preset.operator || "contains",
-    value: preset.value || ""
+    label:
+      type === "name"
+        ? "Tên vai trò"
+        : type === "description"
+        ? "Mô tả"
+        : type === "total"
+        ? "Số thợ"
+        : "Thợ khả dụng",
+    operator: (isNumber ? presetNumber?.operator : preset?.operator) || (isNumber ? "greater_or_equal" : "contains"),
+    value: (isNumber ? presetNumber?.value : preset?.value) || ""
   }
 }
 
@@ -453,6 +673,16 @@ const applyFilterModal = () => {
     filterDescription.value = {
       operator: filterModal.value.operator,
       value: filterModal.value.value.trim()
+    }
+  } else if (filterModal.value.type === "total") {
+    filterTotalCount.value = {
+      operator: filterModal.value.operator,
+      value: filterModal.value.value
+    }
+  } else if (filterModal.value.type === "available") {
+    filterAvailableCount.value = {
+      operator: filterModal.value.operator,
+      value: filterModal.value.value
     }
   }
   filterModal.value.show = false
@@ -619,6 +849,11 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
+.filters--with-action {
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
 .filter-item {
   display: flex;
   flex-direction: column;
@@ -626,12 +861,14 @@ onMounted(async () => {
 }
 
 .filter-item.wide {
-  flex: 1;
+  flex: 0 0 320px;
+  max-width: 360px;
+  width: 100%;
 }
 
 .filter-item input,
 .filter-item select {
-  padding: 0.55rem 0.75rem;
+  padding: 0.45rem 0.65rem;
   border: 1px solid #dfe4ea;
   border-radius: 8px;
   font-size: 0.95rem;
@@ -684,6 +921,20 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.sort-btn {
+  border: 1px solid #dfe4ea;
+  background: white;
+  border-radius: 6px;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #888;
+}
+
+.sort-btn:hover {
+  border-color: var(--primary, #ff7a00);
+  color: var(--primary, #ff7a00);
 }
 
 .filter-btn {
