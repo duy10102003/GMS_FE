@@ -159,21 +159,17 @@ import bookingService from '@/services/booking'
 import { useToast } from '@/composables/useToast'
 import { GmsToast } from '@/components'
 import TheHeader from '@/layout/TheHeader.vue'
+import { getMenuByRole } from '@/utils/menu'
 
 const router = useRouter()
 const toast = useToast()
 const toastRef = ref(null)
 const sidebarCollapsed = ref(false)
+const menuItems = ref([])
+const notifications = ref([])
 const isAuthenticated = computed(() => authService.isAuthenticated())
 const submitting = ref(false)
 const currentUser = ref(authService.getCurrentUser())
-
-const sidebarMenu = [
-  { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check', path: '/customer/bookings', exact: true },
-  { key: 'vehicles', label: 'Vehicles', icon: 'fa-car', path: '#' },
-  { key: 'customers', label: 'Customers', icon: 'fa-user', path: '#' },
-  { key: 'reports', label: 'Reports', icon: 'fa-chart-column', path: '#' }
-]
 
 const form = reactive({
   customerName: '',
@@ -311,6 +307,11 @@ onMounted(async () => {
     } catch (error) {
       console.warn('Không lấy được profile, dùng cache local.', error)
     }
+  }
+
+  const role = currentUser.value?.role
+  if (role) {
+    menuItems.value = getMenuByRole(role)
   }
 })
 </script>

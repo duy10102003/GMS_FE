@@ -71,7 +71,7 @@
                       {{ statusLabel(booking.status || booking.bookingStatus) }}
                     </span>
                   </td>
-                  <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
+                <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
                                     <td class="action-cell">
                     <GmsButton variant="info" size="small" @click="viewDetail(booking)">
                       Xem chi tiết
@@ -131,12 +131,10 @@ const userEmail = ref(
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
-  return new Date(date).toLocaleString('vi-VN', {
+  return new Date(date).toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: '2-digit'
   })
 }
 

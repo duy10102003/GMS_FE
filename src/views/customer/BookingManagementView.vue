@@ -2,7 +2,7 @@
   <div class="booking-management">
     <TheSideBar
       :collapsed="sidebarCollapsed"
-      :menu-items="sidebarMenu"
+      :menu-items="menuItems"
       :collapsible="true"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
@@ -135,25 +135,22 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TheSideBar from '../../layout/TheSideBar.vue'
 import authService from '@/services/auth'
 import bookingService from '@/services/booking'
 import { useToast } from '@/composables/useToast'
+import { getMenuByRole } from '@/utils/menu'
 
 const router = useRouter()
 const toast = useToast()
 const sidebarCollapsed = ref(false)
 const loading = ref(false)
 const deletingId = ref(null)
+const menuItems = ref([])
 
-const sidebarMenu = [
-  { key: 'bookings', label: 'Bookings', icon: 'fa-calendar-check', path: '/customer/bookings', exact: true },
-  { key: 'vehicles', label: 'Vehicles', icon: 'fa-car', path: '#' },
-  { key: 'customers', label: 'Customers', icon: 'fa-user', path: '#' },
-  { key: 'reports', label: 'Reports', icon: 'fa-chart-column', path: '#' }
-]
+const menuItems = ref([])
 
 const searchQuery = ref('')
 const dateFilter = ref({ start: '', end: '' })
@@ -313,7 +310,13 @@ const handleLogout = async () => {
   router.push('/home')
 }
 
-fetchBookings()
+onMounted(async () => {
+  const user = authService.getCurrentUser()
+  if (user?.role) {
+    menuItems.value = getMenuByRole(user.role)
+  }
+  await fetchBookings()
+})
 </script>
 
 <style scoped>

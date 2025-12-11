@@ -2,7 +2,7 @@
   <div class="booking-detail">
     <TheSideBar
       :collapsed="sidebarCollapsed"
-      :menu-items="sidebarMenu"
+      :menu-items="menuItems"
       :collapsible="true"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
@@ -27,6 +27,13 @@
           </div>
         </div>
 
+        <!-- <div class="progress-nav">
+          <button class="progress-link" @click="scrollTo('overview')">Tóm tắt</button>
+          <button class="progress-link" @click="scrollTo('customer')">Khách hàng</button>
+          <button class="progress-link" @click="scrollTo('booking')">Lịch</button>
+          <button class="progress-link" @click="scrollTo('notes')">Ghi chú</button>
+        </div> -->
+
         <div class="state" v-if="loading">
           <i class="fas fa-spinner fa-spin"></i> Đang tải chi tiết booking...
         </div>
@@ -37,34 +44,12 @@
         <div v-else class="booking-detail__content">
           <div class="layout">
             <div class="main-column">
-              <section class="card highlight">
-                <div class="card-header">
-                  <div>
-                    <p class="muted">Mã lịch</p>
-                    <h2>{{ bookingCode }}</h2>
-                  </div>
-                  <span class="status" :class="statusClass(form.status)">
-                    {{ statusLabel(form.status) }}
-                  </span>
-                </div>
-                <div class="info-grid">
-                  <div>
-                    <p class="muted">Ngày tạo</p>
-                    <strong>{{ formatDate(form.createdDate) }}</strong>
-                  </div>
-                  <div>
-                    <p class="muted">Thời gian đặt</p>
-                    <strong>{{ formatDate(form.bookingTimeRaw) }}</strong>
-                  </div>
-                </div>
-              </section>
-
-              <section class="card">
+              <section ref="sectionRefs.customer" class="card" id="step-customer">
                 <div class="card-title">
                   <i class="fa-regular fa-user"></i>
                   <div>
                     <h2>Thông tin khách hàng</h2>
-                    <p>Họ tên, SĐT, Email</p>
+                    <p>Thông tin liên hệ cơ bản</p>
                   </div>
                 </div>
                 <div class="form-grid three-cols">
@@ -83,7 +68,7 @@
                 </div>
               </section>
 
-              <section class="card">
+              <section ref="sectionRefs.booking" class="card" id="step-booking">
                 <div class="card-title">
                   <i class="fa-regular fa-calendar"></i>
                   <div>
@@ -93,7 +78,7 @@
                 </div>
                 <div class="form-grid">
                   <div class="form-control">
-                    <label>Thời gian đặt</label>
+                    <label>Thời gian đặt lịch</label>
                     <div class="input-icon">
                       <i class="fa-regular fa-calendar"></i>
                       <input v-model="form.bookingTime" type="text" disabled />
@@ -110,12 +95,12 @@
                 </div>
               </section>
 
-              <section class="card">
+              <section ref="sectionRefs.notes" class="card" id="step-notes">
                 <div class="card-title">
-                  <i class="fa-solid fa-note-sticky"></i>
+                  <i class="fa-solid fa-location-dot"></i>
                   <div>
-                    <h2>Ghi chú</h2>
-                    <p>Thông tin bổ sung</p>
+                    <h2>Ghi chú bổ sung</h2>
+                    <p>Thông tin thêm</p>
                   </div>
                 </div>
                 <div class="form-control full">
@@ -124,7 +109,7 @@
                 </div>
 
                 <div class="summary-card">
-                  <h3>Tóm tắt lịch đặt</h3>
+                  <h3>Tóm tắt lịch</h3>
                   <div class="summary-row">
                     <span>Khách hàng:</span>
                     <strong>{{ form.customerName || '-' }}</strong>
@@ -146,26 +131,30 @@
                     <strong>{{ form.reason || '-' }}</strong>
                   </div>
                   <div class="summary-row">
-                    <span>Ghi chú:</span>
-                    <strong>{{ form.notes || '-' }}</strong>
+                    <span>Trạng thái:</span>
+                    <strong>{{ statusLabel(form.status) }}</strong>
+                  </div>
+                  <div class="summary-row">
+                    <span>Mã lịch:</span>
+                    <strong>{{ bookingCode }}</strong>
                   </div>
                 </div>
               </section>
             </div>
 
-            <aside class="process-card">
-              <h3>Thông tin nhanh</h3>
-              <div class="step">
-                <strong>Mã lịch</strong>
-                <p>{{ bookingCode }}</p>
+            <aside class="process-card sticky">
+              <h3>Tiến trình</h3>
+              <div class="step" @click="scrollTo('customer')">
+                <strong>Bước 1: Thông tin khách</strong>
+                <p>Họ tên, SĐT, Email</p>
               </div>
-              <div class="step">
-                <strong>Trạng thái</strong>
-                <p>{{ statusLabel(form.status) }}</p>
+              <div class="step" @click="scrollTo('booking')">
+                <strong>Bước 2: Thông tin lịch</strong>
+                <p>Ngày giờ, Xe, Lý do</p>
               </div>
-              <div class="step">
-                <strong>Ngày tạo</strong>
-                <p>{{ formatDate(form.createdDate) }}</p>
+              <div class="step" @click="scrollTo('notes')">
+                <strong>Bước 3: Tóm tắt</strong>
+                <p>Ghi chú & tổng quan</p>
               </div>
             </aside>
           </div>
@@ -183,17 +172,14 @@ import { GmsButton } from '@/components'
 import bookingService from '@/services/booking'
 import authService from '@/services/auth'
 import { useToast } from '@/composables/useToast'
+import { getMenuByRole } from '@/utils/menu'
 
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
 
 const sidebarCollapsed = ref(false)
-const sidebarMenu = [
-  { key: 'home', label: 'Trang chủ', icon: 'fa-house', path: '/customer/home' },
-  { key: 'bookings', label: 'Lịch đặt', icon: 'fa-calendar-check', path: '/customer/booking/all' },
-  { key: 'create', label: 'Đặt lịch mới', icon: 'fa-plus', path: '/booking/Guest' }
-]
+const menuItems = ref([])
 const notifications = ref([])
 
 const loading = ref(false)
@@ -212,6 +198,12 @@ const form = reactive({
   notes: ''
 })
 const booking = ref(null)
+const sectionRefs = {
+  overview: ref(null),
+  customer: ref(null),
+  booking: ref(null),
+  notes: ref(null)
+}
 
 const bookingCode = computed(() => booking.value?.bookingCode || booking.value?.bookingId || booking.value?.id || '-')
 
@@ -219,12 +211,10 @@ const formatDate = (date) => {
   if (!date) return '-'
   const d = new Date(date)
   if (Number.isNaN(d.getTime())) return '-'
-  return d.toLocaleString('vi-VN', {
+  return d.toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: '2-digit'
   })
 }
 
@@ -278,12 +268,25 @@ const goBack = () => {
   router.back()
 }
 
+const scrollTo = (key) => {
+  const el = sectionRefs[key]?.value
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 const handleLogout = async () => {
   await authService.logout()
   router.push('/')
 }
 
-onMounted(loadBooking)
+onMounted(async () => {
+  const user = authService.getCurrentUser()
+  if (user?.role) {
+    menuItems.value = getMenuByRole(user.role)
+  }
+  await loadBooking()
+})
 </script>
 
 <style scoped>
@@ -302,6 +305,30 @@ onMounted(loadBooking)
 
 .page {
   padding: 90px 24px 32px;
+}
+
+.progress-nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.progress-link {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #374151;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.progress-link:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
 }
 
 .page-head {
@@ -352,6 +379,7 @@ onMounted(loadBooking)
   border-radius: 14px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
   padding: 16px;
+  scroll-margin-top: 90px;
 }
 
 .card.highlight {
@@ -482,10 +510,32 @@ onMounted(loadBooking)
   gap: 10px;
 }
 
+.process-card.sticky {
+  position: sticky;
+  top: 90px;
+}
+
 .process-card .step {
   border: 1px dashed #e5e7eb;
   padding: 10px;
   border-radius: 10px;
+}
+
+.process-card .step.step-link {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.process-card .step.step-link:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .status {

@@ -2,7 +2,7 @@
   <div class="booking-list">
     <TheSideBar
       :collapsed="sidebarCollapsed"
-      :menu-items="sidebarMenu"
+      :menu-items="menuItems"
       :collapsible="true"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
@@ -35,15 +35,6 @@
           <div class="filter-item wide">
             <label>Tìm (Tên khách, Xe, SĐT)</label>
             <input v-model="searchText" type="text" placeholder="Nhập từ khóa..." />
-          </div>
-          <div class="filter-item show-page-size">
-            <label>Hiển thị</label>
-            <select v-model.number="pageSize">
-              <option :value="5">5</option>
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-            </select>
           </div>
         </div>
 
@@ -78,6 +69,9 @@
                     <button class="filter-btn" @click="openFilter('id', 'MÃ', filterId, 'text')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
+                    <button class="sort-btn" @click="changeSort('id')">
+                      <i :class="getSortIcon('id')"></i>
+                    </button>
                   </th>
                   <th>
                     Tên khách
@@ -87,11 +81,17 @@
                     >
                       <i class="fa-solid fa-filter"></i>
                     </button>
+                    <button class="sort-btn" @click="changeSort('customer')">
+                      <i :class="getSortIcon('customer')"></i>
+                    </button>
                   </th>
                   <th>
                     Xe
                     <button class="filter-btn" @click="openFilter('vehicle', 'Xe', filterVehicle, 'text')">
                       <i class="fa-solid fa-filter"></i>
+                    </button>
+                    <button class="sort-btn" @click="changeSort('vehicle')">
+                      <i :class="getSortIcon('vehicle')"></i>
                     </button>
                   </th>
                   <th>
@@ -99,14 +99,25 @@
                     <button class="filter-btn" @click="openFilter('phone', 'Số điện thoại', filterPhone, 'text')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
+                    <button class="sort-btn" @click="changeSort('phone')">
+                      <i :class="getSortIcon('phone')"></i>
+                    </button>
                   </th>
                   <th>
                     Trạng thái
                     <button class="filter-btn" @click="openFilter('status', 'Trạng thái', filterStatus, 'status')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
+                    <button class="sort-btn" @click="changeSort('status')">
+                      <i :class="getSortIcon('status')"></i>
+                    </button>
                   </th>
-                  <th>Thời gian</th>
+                  <th>
+                    Thời gian
+                    <button class="sort-btn" @click="changeSort('time')">
+                      <i :class="getSortIcon('time')"></i>
+                    </button>
+                  </th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -140,6 +151,12 @@
           <div class="pager" v-if="filteredBookings.length > 0">
             <div class="pager-info">
               Hiển thị
+              <select v-model.number="pageSize" class="page-size-select">
+                <option :value="5">5</option>
+                <option :value="10">10</option>
+                <option :value="20">20</option>
+                <option :value="50">50</option>
+              </select>
               <strong>
                 {{ (page - 1) * pageSize + 1 }}
                 -
@@ -204,19 +221,17 @@ import { GmsButton } from '@/components'
 import bookingService from '@/services/booking'
 import authService from '@/services/auth'
 import { useToast } from '@/composables/useToast'
+import { getMenuByRole } from '@/utils/menu'
 
 const router = useRouter()
 const toast = useToast()
 const notifications = ref([])
 const sidebarCollapsed = ref(false)
-const sidebarMenu = [
-  { key: 'home', label: 'Trang chủ', icon: 'fa-house', path: '/customer/home' },
-  { key: 'bookings', label: 'Lịch đặt', icon: 'fa-calendar-check', path: '/customer/booking/all' },
-  { key: 'create', label: 'Đặt lịch mới', icon: 'fa-plus', path: '/booking/Guest' }
-]
+const menuItems = ref([])
 
 const bookings = ref([])
 const filteredBookings = ref([])
+const sortConfig = ref({ key: 'time', direction: 'DESC' })
 const loading = ref(false)
 const page = ref(1)
 const pageSize = ref(10)
@@ -255,12 +270,10 @@ const formatDate = (date) => {
   if (!date) return '-'
   const d = new Date(date)
   if (Number.isNaN(d.getTime())) return '-'
-  return d.toLocaleString('vi-VN', {
+  return d.toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: '2-digit'
   })
 }
 
@@ -329,9 +342,34 @@ const applyFilter = () => {
   page.value = 1
 }
 
+const sortedBookings = computed(() => {
+  const dir = sortConfig.value.direction === 'DESC' ? -1 : 1
+  const list = [...filteredBookings.value]
+  const dateVal = (item) => {
+    const d = item.bookingTime || item.createdDate
+    const dt = d ? new Date(d).getTime() : 0
+    return Number.isNaN(dt) ? 0 : dt
+  }
+  switch (sortConfig.value.key) {
+    case 'id':
+      return list.sort((a, b) => ((a.bookingId ?? a.id ?? 0) - (b.bookingId ?? b.id ?? 0)) * dir)
+    case 'customer':
+      return list.sort((a, b) => (a.customerName || '').localeCompare(b.customerName || '') * dir)
+    case 'vehicle':
+      return list.sort((a, b) => (a.vehicleName || '').localeCompare(b.vehicleName || '') * dir)
+    case 'phone':
+      return list.sort((a, b) => (a.customerPhone || '').localeCompare(b.customerPhone || '') * dir)
+    case 'status':
+      return list.sort((a, b) => ((a.status ?? a.bookingStatus ?? 0) - (b.status ?? b.bookingStatus ?? 0)) * dir)
+    case 'time':
+    default:
+      return list.sort((a, b) => (dateVal(a) - dateVal(b)) * dir)
+  }
+})
+
 const pagedBookings = computed(() => {
   const start = (page.value - 1) * pageSize.value
-  return filteredBookings.value.slice(start, start + pageSize.value)
+  return sortedBookings.value.slice(start, start + pageSize.value)
 })
 
 const viewDetail = (item) => {
@@ -393,6 +431,21 @@ const applyFilterModal = () => {
 
 const closeFilterModal = () => {
   filterModal.value.show = false
+}
+
+const changeSort = (key) => {
+  if (sortConfig.value.key === key) {
+    sortConfig.value.direction = sortConfig.value.direction === 'ASC' ? 'DESC' : 'ASC'
+  } else {
+    sortConfig.value.key = key
+    sortConfig.value.direction = 'ASC'
+  }
+  page.value = 1
+}
+
+const getSortIcon = (key) => {
+  if (sortConfig.value.key !== key) return 'fa-solid fa-sort'
+  return sortConfig.value.direction === 'ASC' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down'
 }
 
 const changePage = (newPage) => {
@@ -503,7 +556,13 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-onMounted(loadBookings)
+onMounted(async () => {
+  const user = authService.getCurrentUser()
+  if (user?.role) {
+    menuItems.value = getMenuByRole(user.role)
+  }
+  await loadBookings()
+})
 </script>
 
 <style scoped>
@@ -669,6 +728,19 @@ onMounted(loadBookings)
   color: #9ca3af;
 }
 
+.sort-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0 4px;
+  color: #9ca3af;
+}
+
+.sort-btn .fa-sort-up,
+.sort-btn .fa-sort-down {
+  color: #2563eb;
+}
+
 .actions {
   display: flex;
   gap: 6px;
@@ -710,6 +782,9 @@ onMounted(loadBookings)
 
 .pager-info {
   color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .pager-actions {
