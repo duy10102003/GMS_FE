@@ -1,9 +1,9 @@
-﻿<template>
+<template>
   <div class="dashboard-manager">
     <TheSideBar @logout="handleLogout" />
     <div class="dashboard-manager-body">
       <TheHeader
-        title="Dashboard nhÃ¢n sá»± ká»¹ thuáº­t"
+        title="Dashboard nhân sự kỹ thuật"
         :show-search="false"
         @logout="handleLogout"
       />
@@ -11,15 +11,15 @@
       <main class="main-content hr-dashboard">
         <div class="page-header">
           <div>
-            <p class="eyebrow">Quáº£n lÃ½ tÃ i nguyÃªn thá»±c thi</p>
-            <h1>Thá»£ báº­n/ráº£nh, kinh nghiá»‡m vÃ  phÃ¢n bá»• task</h1>
+            <p class="eyebrow">Quản lý tài nguyên thực thi</p>
+            <h1>Thợ bận/rảnh, kinh nghiệm và phân bổ task</h1>
             <p class="subtitle">
-              Nhanh chÃ³ng nhÃ¬n ra nguá»“n lá»±c Ä‘ang báº­n, ai Ä‘ang ráº£nh vÃ  cáº£nh bÃ¡o quÃ¡ táº£i Ä‘á»ƒ manager ra quyáº¿t Ä‘á»‹nh.
+              Nhanh chóng nhận ra nguồn lực đang bận, ai đang rảnh và cảnh báo quá tải để manager ra quyết định.
             </p>
           </div>
           <div class="actions">
             <GmsButton variant="outline" icon="fa-rotate-right" :loading="refreshing" @click="refreshDashboard">
-              LÃ m má»›i
+              Làm mới
             </GmsButton>
           </div>
         </div>
@@ -29,19 +29,19 @@
             <div class="stat-icon soft-green">
               <i class="fas fa-user-check"></i>
             </div>
-            <div class="stat-label">Thá»£ ráº£nh</div>
+            <div class="stat-label">Thợ rảnh</div>
             <div class="stat-value">{{ formatNumber(mechanicMetrics.free) }}</div>
-            <div class="stat-meta">Tá»•ng: {{ mechanicMetrics.total }} | Báº­n: {{ mechanicMetrics.busy }}</div>
+            <div class="stat-meta">Tổng: {{ mechanicMetrics.total }} | Bận: {{ mechanicMetrics.busy }}</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-icon soft-amber">
               <i class="fas fa-fire"></i>
             </div>
-            <div class="stat-label">Thá»£ Ä‘ang báº­n</div>
+            <div class="stat-label">Thợ đang bận</div>
             <div class="stat-value">{{ formatNumber(mechanicMetrics.busy) }}</div>
             <div class="stat-meta">
-              QuÃ¡ táº£i: {{ mechanicMetrics.overloaded }} | Ráº£nh: {{ mechanicMetrics.idle }}
+              Quá tải: {{ mechanicMetrics.overloaded }} | Rảnh: {{ mechanicMetrics.idle }}
             </div>
             <div class="progress-bar">
               <span class="progress-fill" :style="{ width: workloadRate + '%' }"></span>
@@ -52,17 +52,17 @@
             <div class="stat-icon soft-blue">
               <i class="fas fa-tasks"></i>
             </div>
-            <div class="stat-label">Task Ä‘ang lÃ m</div>
+            <div class="stat-label">Task đang làm</div>
             <div class="stat-value">{{ formatNumber(taskSummary.inProgress) }}</div>
-            <div class="stat-meta">Chá» xá»­ lÃ½: {{ formatNumber(taskSummary.pending) }}</div>
+            <div class="stat-meta">Chờ xử lý: {{ formatNumber(taskSummary.pending) }}</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-icon soft-purple">
               <i class="fas fa-user-graduate"></i>
             </div>
-            <div class="stat-label">Kinh nghiá»‡m TB</div>
-            <div class="stat-value">{{ mechanicMetrics.avgExp }} nÄƒm</div>
+            <div class="stat-label">Kinh nghiệm TB</div>
+            <div class="stat-value">{{ mechanicMetrics.avgExp }} năm</div>
             <div class="stat-meta">Top: {{ topExperience.map(m => m.fullName).join(', ') || 'N/A' }}</div>
           </div>
         </div>
@@ -71,21 +71,21 @@
           <div class="panel">
             <div class="panel-header">
               <div>
-                <p class="eyebrow">Nguá»“n lá»±c</p>
-                <h3>TÃ¬nh tráº¡ng thá»£</h3>
+                <p class="eyebrow">Nguồn lực</p>
+                <h3>Tình trạng thợ</h3>
               </div>
-              <span class="pill">{{ formatNumber(mechanics.length) }} thá»£</span>
+              <span class="pill">{{ formatNumber(mechanics.length) }} thợ</span>
             </div>
 
             <div v-if="loading" class="state">
-              <i class="fas fa-spinner fa-spin"></i> Äang táº£i dá»¯ liá»‡u...
+              <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
             </div>
             <div v-else-if="!mechanics.length" class="state">
-              <i class="fas fa-users"></i> ChÆ°a cÃ³ dá»¯ liá»‡u thá»£
+              <i class="fas fa-users"></i> Chưa có dữ liệu thợ
             </div>
             <div v-else class="mechanic-list">
               <div
-                v-for="mechanic in mechanics"
+                v-for="mechanic in pagedMechanics"
                 :key="mechanic.userId || mechanic.email"
                 class="mechanic-card"
               >
@@ -93,7 +93,7 @@
                 <div class="mechanic-info">
                   <div class="row-top">
                     <div>
-<div class="name">{{ mechanic.fullName || 'Chưa rõ' }}</div>
+                      <div class="name">{{ mechanic.fullName || 'Chưa rõ' }}</div>
                       <div class="meta">
                         <span class="pill ghost">{{ mechanic.mechanicRoleName || 'Thợ' }}</span>
                         <span class="pill ghost">{{ mechanic.yearExp ? `${mechanic.yearExp} năm exp` : 'Chưa cập nhật exp' }}</span>
@@ -115,18 +115,24 @@
                   </div>
                 </div>
               </div>
+              <div class="pager" v-if="mechanics.length > mechanicPageSize">
+                <button :disabled="mechanicPage === 1" @click="changeMechanicPage(-1)">Trước</button>
+                <span>Trang {{ mechanicPage }} / {{ mechanicTotalPages }}</span>
+                <button :disabled="mechanicPage === mechanicTotalPages" @click="changeMechanicPage(1)">Sau</button>
+              </div>
             </div>
           </div>
+
           <div class="panel alerts">
             <div class="panel-header">
               <div>
-                <p class="eyebrow">Cáº£nh bÃ¡o</p>
-                <h3>QuÃ¡ táº£i / khÃ´ng cÃ³ viá»‡c</h3>
+                <p class="eyebrow">Cảnh báo</p>
+                <h3>Quá tải / không có việc</h3>
               </div>
-              <span class="pill ghost">NgÆ°á»¡ng quÃ¡ táº£i >= {{ overloadThreshold }} task</span>
+              <span class="pill ghost">Ngưỡng quá tải ≥ {{ overloadThreshold }} task</span>
             </div>
             <div v-if="loading" class="state">
-              <i class="fas fa-spinner fa-spin"></i> Äang kiá»ƒm tra...
+              <i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...
             </div>
             <div v-else class="alert-list">
               <div v-for="(alert, index) in alerts" :key="index" :class="['alert-card', alert.type]">
@@ -146,23 +152,23 @@
           <div class="panel">
             <div class="panel-header">
               <div>
-                <p class="eyebrow">PhÃ¢n bá»•</p>
-                <h3>Task theo thá»£</h3>
+                <p class="eyebrow">Phân bổ</p>
+                <h3>Task theo thợ</h3>
               </div>
-              <span class="pill ghost">Top phÃ¹ há»£p Ä‘á»ƒ Ä‘iá»u phá»‘i</span>
+              <span class="pill ghost">Top phù hợp để điều phối</span>
             </div>
 
             <div v-if="!allocationRows.length" class="state">
-              <i class="fas fa-clipboard-list"></i> ChÆ°a cÃ³ dá»¯ liá»‡u phÃ¢n bá»•
+              <i class="fas fa-clipboard-list"></i> Chưa có dữ liệu phân bổ
             </div>
             <div v-else class="table-wrapper">
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Thá»£</th>
-                    <th>Äang lÃ m</th>
-                    <th>Chá»</th>
-                    <th>ÄÃ£ xong</th>
+                    <th>Thợ</th>
+                    <th>Đang làm</th>
+                    <th>Chờ</th>
+                    <th>Đã xong</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,7 +177,7 @@
                       <div class="cell-name">
                         <span class="avatar tiny">{{ getInitials(row.name) }}</span>
                         <div>
-                          <div class="name">{{ row.name || 'ChÆ°a rÃµ' }}</div>
+                          <div class="name">{{ row.name || 'Chưa rõ' }}</div>
                           <small class="muted">#{{ row.key || 'N/A' }}</small>
                         </div>
                       </div>
@@ -188,30 +194,30 @@
           <div class="panel">
             <div class="panel-header">
               <div>
-                <p class="eyebrow">Tráº¡ng thÃ¡i task</p>
+                <p class="eyebrow">Trạng thái task</p>
                 <h3>Pipeline</h3>
               </div>
-              <span class="pill ghost">Tá»•ng {{ formatNumber(taskSummary.total) }} task</span>
+              <span class="pill ghost">Tổng {{ formatNumber(taskSummary.total) }} task</span>
             </div>
 
             <div class="pipeline">
               <div class="pipeline-row">
                 <div>
-                  <div class="pipeline-label">Chá» thá»±c thi</div>
+                  <div class="pipeline-label">Chờ thực thi</div>
                   <small>TaskStatus: Pending</small>
                 </div>
                 <span class="pill ghost">{{ formatNumber(taskSummary.pending) }}</span>
               </div>
               <div class="pipeline-row">
                 <div>
-                  <div class="pipeline-label">Äang lÃ m</div>
+                  <div class="pipeline-label">Đang làm</div>
                   <small>TaskStatus: In progress</small>
                 </div>
                 <span class="pill pill-warning">{{ formatNumber(taskSummary.inProgress) }}</span>
               </div>
               <div class="pipeline-row">
                 <div>
-                  <div class="pipeline-label">ÄÃ£ xong</div>
+                  <div class="pipeline-label">Đã xong</div>
                   <small>TaskStatus: Completed</small>
                 </div>
                 <span class="pill pill-success">{{ formatNumber(taskSummary.completed) }}</span>
@@ -242,12 +248,39 @@ const loading = ref(true)
 const refreshing = ref(false)
 const mechanics = ref([])
 const tasks = ref([])
+// const mechanicPage = ref(1)
+// const mechanicPageSize = ref(5)
 const taskSummary = ref({
   pending: 0,
   inProgress: 0,
   completed: 0,
   total: 0
 })
+// Thợ
+const mechanicPage = ref(1)
+const mechanicPageSize = ref(4)
+const mechanicTotalPages = computed(() => Math.max(1, Math.ceil(mechanics.value.length / mechanicPageSize.value)))
+const pagedMechanics = computed(() => {
+  const start = (mechanicPage.value - 1) * mechanicPageSize.value
+  return mechanics.value.slice(start, start + mechanicPageSize.value)
+})
+const allocationTotalPages = computed(() => Math.max(1, Math.ceil(allocationRows.value.length / allocationPageSize.value)))
+const pagedAllocations = computed(() => {
+  const start = (allocationPage.value - 1) * allocationPageSize.value
+  return allocationRows.value.slice(start, start + allocationPageSize.value)
+})
+
+const pipelineTotalPages = computed(() => Math.max(1, Math.ceil(pipelineItems.length / pipelinePageSize.value)))
+const pagedPipeline = computed(() => {
+  const start = (pipelinePage.value - 1) * pipelinePageSize.value
+  return pipelineItems.slice(start, start + pipelinePageSize.value)
+})
+// Task theo thợ (bảng)
+const allocationPage = ref(1)
+const allocationPageSize = ref(4)
+// Pipeline (nếu cần)
+const pipelinePage = ref(1)
+const pipelinePageSize = ref(4)
 
 const overloadThreshold = 3
 const idleThreshold = 0
@@ -274,6 +307,18 @@ const workloadRate = computed(() => {
   return Math.min(100, Math.round((mechanicMetrics.value.busy / mechanicMetrics.value.total) * 100))
 })
 
+// const mechanicTotalPages = computed(() => {
+//   if (mechanicPageSize.value <= 0) return 1
+//   const total = Math.ceil(mechanics.value.length / mechanicPageSize.value)
+//   return Math.max(1, total)
+// })
+
+// const pagedMechanics = computed(() => {
+//   if (!mechanics.value.length) return []
+//   const start = (mechanicPage.value - 1) * mechanicPageSize.value
+//   return mechanics.value.slice(start, start + mechanicPageSize.value)
+// })
+
 const topExperience = computed(() => {
   return [...mechanics.value]
     .sort((a, b) => getExp(b) - getExp(a))
@@ -287,7 +332,7 @@ const allocationRows = computed(() => {
     const key = task.assignedToTechnical || task.technicalTaskId
     const existing = map.get(key) || {
       key,
-      name: task.assignedToTechnicalName || 'Chua gan',
+      name: task.assignedToTechnicalName || 'Chưa gán',
       pending: 0,
       inProgress: 0,
       completed: 0
@@ -326,8 +371,8 @@ const alerts = computed(() => {
       list.push({
         type: 'danger',
         icon: 'fas fa-bolt',
-        title: m.fullName || 'Thá»£',
-        message: `Äang cÃ³ ${count} task, cáº§n giáº£m táº£i hoáº·c phÃ¢n cÃ´ng láº¡i`
+        title: m.fullName || 'Thợ',
+        message: `Đang có ${count} task, cần giảm tải hoặc phân công lại`
       })
     }
 
@@ -335,8 +380,8 @@ const alerts = computed(() => {
       list.push({
         type: 'warning',
         icon: 'fas fa-coffee',
-        title: m.fullName || 'Thá»£',
-        message: 'Äang ráº£nh, cÃ¢n bá»• sung task hoáº·c há»— trá»£ team khÃ¡c'
+        title: m.fullName || 'Thợ',
+        message: 'Đang rảnh/không có task, cần bổ sung task hoặc hỗ trợ team khác'
       })
     }
   })
@@ -345,8 +390,8 @@ const alerts = computed(() => {
     list.push({
       type: 'success',
       icon: 'fas fa-check-circle',
-      title: 'á»”n Ä‘á»‹nh',
-      message: 'KhÃ´ng cÃ³ cáº£nh bÃ¡o vá» nhÃ¢n sá»±'
+      title: 'Ổn định',
+      message: 'Không có cảnh báo về nhân sự'
     })
   }
 
@@ -389,10 +434,10 @@ const getTaskLoad = (mechanic) => {
 
 const getStatusLabel = (mechanic) => {
   const count = mechanic.currentTaskCount ?? 0
-  if (count >= overloadThreshold) return 'QuÃ¡ táº£i'
-  if (count === 0) return 'KhÃ´ng cÃ³ task'
-  if (mechanic.isAvailable) return 'Ráº£nh'
-  return 'Äang báº­n'
+  if (count >= overloadThreshold) return 'Quá tải'
+  if (count === 0) return 'Không có task'
+  if (mechanic.isAvailable) return 'Rảnh'
+  return 'Đang bận'
 }
 
 const getStatusClass = (mechanic) => {
@@ -411,15 +456,15 @@ const getStatusIcon = (mechanic) => {
 }
 
 const normalizeMechanic = (m) => {
-  const count = m.currentTaskCount ?? m.activeTaskCount ?? 0
+  const count = m.currentTaskCount ?? 0
   return {
-    userId: m.userId ?? m.id,
-    fullName: m.fullName ?? m.name ?? 'Thá»£',
+    // userId: m.userId,
+    fullName: m.fullName ?? m.name ?? 'Thợ',
     email: m.email ?? '',
     phone: m.phone ?? '',
     isAvailable: m.isAvailable ?? m.available ?? m.status === 'AVAILABLE' ?? count === 0,
     currentTaskCount: count,
-    mechanicRoleName: m.mechanicRoleName ?? m.roleName ?? m.role ?? 'Thá»£',
+    mechanicRoleName: m.mechanicRoleName ?? m.roleName ?? m.role ?? 'Thợ',
     yearExp: getExp(m)
   }
 }
@@ -429,9 +474,10 @@ const loadMechanics = async () => {
     const res = await userService.getTechnicalStaff()
     const items = res?.data ?? []
     mechanics.value = Array.isArray(items) ? items.map(normalizeMechanic) : []
+    mechanicPage.value = 1
   } catch (error) {
     mechanics.value = []
-    toast.error('KhÃ´ng thá»ƒ táº£i danh sÃ¡ch thá»£', error?.message || error?.userMsg || 'CÃ³ lá»—i xáº£y ra')
+    toast.error('Không thể tải danh sách thợ', error?.message || error?.userMsg || 'Có lỗi xảy ra')
   }
 }
 
@@ -481,11 +527,16 @@ const refreshDashboard = async () => {
     refreshing.value = true
     await Promise.all([loadMechanics(), loadTasks()])
   } catch (error) {
-    toast.error('Lá»—i táº£i dashboard nhÃ¢n sá»±', error?.message || error?.userMsg || 'CÃ³ lá»—i xáº£y ra')
+    toast.error('Lỗi tải dashboard nhân sự', error?.message || error?.userMsg || 'Có lỗi xảy ra')
   } finally {
     loading.value = false
     refreshing.value = false
   }
+}
+
+const changeMechanicPage = (delta) => {
+  const next = mechanicPage.value + delta
+  mechanicPage.value = Math.min(mechanicTotalPages.value, Math.max(1, next))
 }
 
 const handleLogout = async () => {
@@ -637,6 +688,8 @@ onMounted(async () => {
 }
 
 .panel {
+  /* overflow-y: auto;
+  max-height: 200px; */
   background: #fff;
   border-radius: 16px;
   padding: 1.25rem;
@@ -701,7 +754,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-height: 480px;
+  max-height: 600px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -733,6 +786,7 @@ onMounted(async () => {
   height: 32px;
   border-radius: 10px;
 }
+
 .mechanic-info .row-top {
   display: flex;
   align-items: center;
@@ -784,6 +838,8 @@ onMounted(async () => {
 }
 
 .alerts .alert-list {
+  overflow-x: auto;
+  max-height: 480px;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -916,4 +972,3 @@ onMounted(async () => {
   }
 }
 </style>
-
