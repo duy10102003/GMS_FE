@@ -34,10 +34,13 @@ const router = createRouter({
 					path: 'price-requests',
 					name: 'managerPriceRequests',
 					component: () => import('../views/manager/ManagerSetPriceView.vue')
+
+				},
+				{
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
-				},
+				},				
 				{
 					path: 'mechanic-roles/:id/mechanics',
 					name: 'managerMechanicRoleMechanics',
