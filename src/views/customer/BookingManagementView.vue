@@ -150,8 +150,6 @@ const loading = ref(false)
 const deletingId = ref(null)
 const menuItems = ref([])
 
-const menuItems = ref([])
-
 const searchQuery = ref('')
 const dateFilter = ref({ start: '', end: '' })
 const currentPage = ref(1)
