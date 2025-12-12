@@ -9,14 +9,7 @@
 				<!-- Toolbar -->
 				<div class="toolbar">
 					<div class="toolbar-left">
-						<GmsInput
-							v-model="searchQuery"
-							placeholder="Tìm theo mã hóa đơn, khách hàng, số điện thoại..."
-							prefix-icon="fa-search"
-							:clearable="true"
-							class="search-input"
-							@input="handleSearch"
-						/>
+						<GmsInput v-model="searchQuery" placeholder="Tìm theo mã hóa đơn, khách hàng, số điện thoại..." prefix-icon="fa-search" :clearable="true" class="search-input" @input="handleSearch" />
 					</div>
 				</div>
 
@@ -34,16 +27,7 @@
 
 				<!-- Table -->
 				<div class="table-container">
-					<GmsTable
-						:data="invoices"
-						:columns="tableColumns"
-						title="Danh sách hóa đơn"
-						:loading="loading"
-						:pagination="false"
-						:scrollable="true"
-						@sort="handleSort"
-						@filter-click="openFilterModal"
-					>
+					<GmsTable :data="invoices" :columns="tableColumns" title="Danh sách hóa đơn" :loading="loading" :pagination="false" :scrollable="true" @sort="handleSort" @filter-click="openFilterModal">
 						<template #cell-customer="{ row }">
 							<div>
 								<div class="customer-name">{{ row.customerName || 'N/A' }}</div>
@@ -93,13 +77,7 @@
 						</GmsButton>
 
 						<div class="pagination-pages">
-							<button
-								v-for="page in visiblePages"
-								:key="page"
-								class="pagination-page"
-								:class="{ active: page === currentPage }"
-								@click="goToPage(page)"
-							>
+							<button v-for="page in visiblePages" :key="page" class="pagination-page" :class="{ active: page === currentPage }" @click="goToPage(page)">
 								{{ page }}
 							</button>
 						</div>
@@ -142,19 +120,8 @@
 
 				<div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
 					<label class="form-label">Giá trị:</label>
-					<GmsInput
-						v-if="isNumericColumn(currentFilterColumn)"
-						v-model.number="filterForm.value"
-						type="number"
-						:placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`"
-						:min="0"
-					/>
-					<GmsInput
-						v-else-if="isDateColumn(currentFilterColumn)"
-						v-model="filterForm.value"
-						type="date"
-						:placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`"
-					/>
+					<GmsInput v-if="isNumericColumn(currentFilterColumn)" v-model.number="filterForm.value" type="number" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" :min="0" />
+					<GmsInput v-else-if="isDateColumn(currentFilterColumn)" v-model="filterForm.value" type="date" :placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`" />
 					<GmsInput v-else v-model="filterForm.value" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" />
 				</div>
 
@@ -210,7 +177,7 @@
 
 	const tableColumns = ref([
 		{ key: 'invoiceId', label: 'ID', sortable: true, filterable: false },
-		{ key: 'invoiceCode', label: 'Mã hóa đơn', sortable: true, filterable: true },
+		//{ key: 'invoiceCode', label: 'Mã hóa đơn', sortable: true, filterable: true },
 		{ key: 'serviceTicketCode', label: 'Mã phiếu', sortable: true, filterable: true },
 		{ key: 'customer', label: 'Khách hàng', sortable: false, filterable: false },
 		{ key: 'issueDate', label: 'Ngày xuất', sortable: true, filterable: true, isDate: true },
@@ -368,12 +335,7 @@
 
 		if (['empty', 'not_empty'].includes(filterForm.value.operator) && !filterForm.value.value) {
 			// Empty/not_empty doesn't need value
-		} else if (
-			!filterForm.value.value &&
-			filterForm.value.value !== 0 &&
-			filterForm.value.operator !== 'empty' &&
-			filterForm.value.operator !== 'not_empty'
-		) {
+		} else if (!filterForm.value.value && filterForm.value.value !== 0 && filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty') {
 			toast.error('Vui lòng nhập giá trị')
 			return
 		}
@@ -858,4 +820,3 @@
 		color: var(--primary, #ff7a00);
 	}
 </style>
-

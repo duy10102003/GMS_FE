@@ -29,6 +29,11 @@ const router = createRouter({
 					path: 'garage-services',
 					name: 'managerGarageService',
 					component: () => import('../views/manager/GarageServicesView.vue')
+				},
+				{
+					path: 'price-requests',
+					name: 'managerPriceRequests',
+					component: () => import('../views/manager/ManagerSetPriceView.vue')
 				}
 			]
 		},
@@ -130,6 +135,11 @@ const router = createRouter({
 					path: '/stocker/part-categories',
 					name: 'stockerPartCategories',
 					component: () => import('../views/stocker/PartCategoriesView.vue')
+				},
+				{
+					path: '/stocker/price-requests',
+					name: 'stockerPriceRequests',
+					component: () => import('../views/stocker/Part2View.vue')
 				}
 			]
 		},
