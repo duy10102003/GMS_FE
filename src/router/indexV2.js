@@ -34,6 +34,15 @@ const router = createRouter({
 					path: 'price-requests',
 					name: 'managerPriceRequests',
 					component: () => import('../views/manager/ManagerSetPriceView.vue')
+					path: 'mechanic-roles',
+					name: 'managerMechanicRoles',
+					component: () => import('../views/manager/MechanicRolesView.vue')
+				},
+				{
+					path: 'mechanic-roles/:id/mechanics',
+					name: 'managerMechanicRoleMechanics',
+					component: () => import('../views/manager/MechanicRoleMechanicsView.vue'),
+					props: true
 				}
 			]
 		},
@@ -53,6 +62,21 @@ const router = createRouter({
 					path: 'service-tickets',
 					name: 'serviceTickets',
 					component: () => import('../views/staff/ServiceTicketsView.vue')
+				},
+				{
+					path: 'bookings',
+					name: 'staffBookings',
+					component: () => import('../views/staff/BookingListStaffView.vue')
+				},
+				{
+					path: '/staff/bookings/:id',
+					name: 'staffBookingDetail',
+					component: () => import('../views/customer/BookingDetailView.vue')
+				},
+				{
+					path: '/staff/bookings/:id/edit',
+					name: 'staffBookingEdit',
+					component: () => import('../views/customer/BookingEditView.vue')
 				},
 				{
 					path: '/staff/service-tickets/:id',

@@ -71,19 +71,17 @@
                       {{ statusLabel(booking.status || booking.bookingStatus) }}
                     </span>
                   </td>
-                  <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
-                  <td class="action-cell">
+                <td>{{ formatDate(booking.bookingTime || booking.createdDate) }}</td>
+                                    <td class="action-cell">
                     <GmsButton variant="info" size="small" @click="viewDetail(booking)">
                       Xem chi tiết
                     </GmsButton>
-                    <GmsButton variant="primary" size="small" @click="viewDetail(booking)">
+                    <GmsButton variant="primary" size="small" @click="editBooking(booking)">
                       Sửa
                     </GmsButton>
-                    <GmsButton variant="danger" size="small" @click="viewDetail(booking)">
+                    <GmsButton variant="danger" size="small" @click="deleteBooking(booking)">
                       Xóa
-                    </GmsButton>                                        
-                    <!-- <a href="#" @click.prevent="viewDetail(booking)">Xem chi tiết  </a> -->
-
+                    </GmsButton>
                   </td>
                 </tr>
               </tbody>
@@ -133,12 +131,10 @@ const userEmail = ref(
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
-  return new Date(date).toLocaleString('vi-VN', {
+  return new Date(date).toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: '2-digit'
   })
 }
 
@@ -157,7 +153,29 @@ const statusLabel = (status) => {
 }
 
 const viewDetail = (booking) => {
-  console.log('View booking detail', booking.bookingId || booking.id)
+  const id = booking.bookingId || booking.id
+  if (!id) return
+  router.push(`/customer/booking/${id}`)
+}
+
+const editBooking = (booking) => {
+  const id = booking.bookingId || booking.id
+  if (!id) return
+  router.push(`/customer/booking/${id}/edit`)
+}
+
+const deleteBooking = async (booking) => {
+  const id = booking.bookingId || booking.id
+  if (!id) return
+  const confirmed = window.confirm('Bạn chắc chắn muốn xóa lịch đặt này?')
+  if (!confirmed) return
+  try {
+    await bookingService.delete(id)
+    toast.success('Xóa lịch đặt thành công')
+    await loadBookings()
+  } catch (error) {
+    toast.error('Không xóa được', error.message || 'Đã xảy ra lỗi')
+  }
 }
 
 const loadBookings = async () => {

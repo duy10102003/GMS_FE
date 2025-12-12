@@ -6,7 +6,7 @@
     @click="handleClick"
   >
     <i v-if="loading" class="fas fa-spinner fa-spin gms-button-icon"></i>
-    <i v-else-if="icon && !iconRight" :class="icon" class="gms-button-icon"></i>
+    <!-- <i v-else-if="icon && !iconRight" :class="icon" class="gms-button-icon"></i> -->
     
     <span v-if="$slots.default || label">
       <slot>{{ label }}</slot>

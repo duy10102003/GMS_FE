@@ -1,15 +1,9 @@
-﻿<template>
+<template>
   <div class="booking-list">
-    <TheSideBar
-      :collapsed="sidebarCollapsed"
-      :menu-items="menuItems"
-      :collapsible="true"
-      @update:collapsed="sidebarCollapsed = $event"
-      @logout="handleLogout"
-    />
+    <TheSideBar :collapsed="sidebarCollapsed" :collapsible="true" @update:collapsed="sidebarCollapsed = $event" @logout="handleLogout" />
     <div class="booking-list__body">
       <TheHeader
-        title="Danh sách đặt lịch"
+        title="Danh sách lịch đặt"
         :show-search="false"
         :notifications="notifications"
         @logout="handleLogout"
@@ -35,6 +29,15 @@
           <div class="filter-item wide">
             <label>Tìm (Tên khách, Xe, SĐT)</label>
             <input v-model="searchText" type="text" placeholder="Nhập từ khóa..." />
+          </div>
+          <div class="filter-item show-page-size">
+            <label>Hiển thị</label>
+            <select v-model.number="pageSize">
+              <option :value="5">5</option>
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="50">50</option>
+            </select>
           </div>
         </div>
 
@@ -69,9 +72,6 @@
                     <button class="filter-btn" @click="openFilter('id', 'MÃ', filterId, 'text')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
-                    <button class="sort-btn" @click="changeSort('id')">
-                      <i :class="getSortIcon('id')"></i>
-                    </button>
                   </th>
                   <th>
                     Tên khách
@@ -81,17 +81,11 @@
                     >
                       <i class="fa-solid fa-filter"></i>
                     </button>
-                    <button class="sort-btn" @click="changeSort('customer')">
-                      <i :class="getSortIcon('customer')"></i>
-                    </button>
                   </th>
                   <th>
                     Xe
                     <button class="filter-btn" @click="openFilter('vehicle', 'Xe', filterVehicle, 'text')">
                       <i class="fa-solid fa-filter"></i>
-                    </button>
-                    <button class="sort-btn" @click="changeSort('vehicle')">
-                      <i :class="getSortIcon('vehicle')"></i>
                     </button>
                   </th>
                   <th>
@@ -99,25 +93,14 @@
                     <button class="filter-btn" @click="openFilter('phone', 'Số điện thoại', filterPhone, 'text')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
-                    <button class="sort-btn" @click="changeSort('phone')">
-                      <i :class="getSortIcon('phone')"></i>
-                    </button>
                   </th>
                   <th>
                     Trạng thái
                     <button class="filter-btn" @click="openFilter('status', 'Trạng thái', filterStatus, 'status')">
                       <i class="fa-solid fa-filter"></i>
                     </button>
-                    <button class="sort-btn" @click="changeSort('status')">
-                      <i :class="getSortIcon('status')"></i>
-                    </button>
                   </th>
-                  <th>
-                    Thời gian
-                    <button class="sort-btn" @click="changeSort('time')">
-                      <i :class="getSortIcon('time')"></i>
-                    </button>
-                  </th>
+                  <th>Thời gian</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -135,8 +118,16 @@
                   <td>{{ formatDate(item.bookingTime || item.createdDate) }}</td>
                   <td class="actions">
                     <GmsButton size="small" variant="info" @click="viewDetail(item)">Xem</GmsButton>
-                    <GmsButton size="small" variant="primary" @click="editBooking(item)">Sửa</GmsButton>
-                    <GmsButton size="small" variant="danger" @click="deleteBooking(item)">Xóa</GmsButton>
+                    <GmsButton size="small" variant="success" @click="createService(item)">Tạo service</GmsButton>
+                    <select
+                      :value="item.status ?? item.bookingStatus ?? ''"
+                      :disabled="updatingId === (item.bookingId || item.id)"
+                      @change="(e) => changeStatus(item, e.target.value)"
+                    >
+                      <option :value="0">Chờ xử lý</option>
+                      <option :value="1">Đang thực hiện</option>
+                      <option :value="2">Đã hoàn thành</option>
+                    </select>
                   </td>
                 </tr>
               </tbody>
@@ -151,12 +142,6 @@
           <div class="pager" v-if="filteredBookings.length > 0">
             <div class="pager-info">
               Hiển thị
-              <select v-model.number="pageSize" class="page-size-select">
-                <option :value="5">5</option>
-                <option :value="10">10</option>
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-              </select>
               <strong>
                 {{ (page - 1) * pageSize + 1 }}
                 -
@@ -219,25 +204,24 @@ import { useRouter } from 'vue-router'
 import { TheHeader, TheSideBar } from '@/layout'
 import { GmsButton } from '@/components'
 import bookingService from '@/services/booking'
+import customerService from '@/services/customer'
 import authService from '@/services/auth'
 import { useToast } from '@/composables/useToast'
-import { getMenuByRole } from '@/utils/menu'
 
 const router = useRouter()
 const toast = useToast()
 const notifications = ref([])
 const sidebarCollapsed = ref(false)
-const menuItems = ref([])
 
 const bookings = ref([])
 const filteredBookings = ref([])
-const sortConfig = ref({ key: 'time', direction: 'DESC' })
 const loading = ref(false)
 const page = ref(1)
 const pageSize = ref(10)
 const dateFrom = ref('')
 const dateTo = ref('')
 const searchText = ref('')
+const updatingId = ref(null)
 const filterId = ref('')
 const filterCustomer = ref('')
 const filterVehicle = ref('')
@@ -270,10 +254,12 @@ const formatDate = (date) => {
   if (!date) return '-'
   const d = new Date(date)
   if (Number.isNaN(d.getTime())) return '-'
-  return d.toLocaleDateString('vi-VN', {
+  return d.toLocaleString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -342,48 +328,66 @@ const applyFilter = () => {
   page.value = 1
 }
 
-const sortedBookings = computed(() => {
-  const dir = sortConfig.value.direction === 'DESC' ? -1 : 1
-  const list = [...filteredBookings.value]
-  const dateVal = (item) => {
-    const d = item.bookingTime || item.createdDate
-    const dt = d ? new Date(d).getTime() : 0
-    return Number.isNaN(dt) ? 0 : dt
-  }
-  switch (sortConfig.value.key) {
-    case 'id':
-      return list.sort((a, b) => ((a.bookingId ?? a.id ?? 0) - (b.bookingId ?? b.id ?? 0)) * dir)
-    case 'customer':
-      return list.sort((a, b) => (a.customerName || '').localeCompare(b.customerName || '') * dir)
-    case 'vehicle':
-      return list.sort((a, b) => (a.vehicleName || '').localeCompare(b.vehicleName || '') * dir)
-    case 'phone':
-      return list.sort((a, b) => (a.customerPhone || '').localeCompare(b.customerPhone || '') * dir)
-    case 'status':
-      return list.sort((a, b) => ((a.status ?? a.bookingStatus ?? 0) - (b.status ?? b.bookingStatus ?? 0)) * dir)
-    case 'time':
-    default:
-      return list.sort((a, b) => (dateVal(a) - dateVal(b)) * dir)
-  }
-})
-
 const pagedBookings = computed(() => {
   const start = (page.value - 1) * pageSize.value
-  return sortedBookings.value.slice(start, start + pageSize.value)
+  return filteredBookings.value.slice(start, start + pageSize.value)
 })
 
 const viewDetail = (item) => {
   const id = item.bookingId || item.id
   if (!id) return
-  router.push(`/customer/booking/${id}`)
+  router.push(`/staff/bookings/${id}`)
 }
-const editBooking = (item) => {
+const createService = async (item) => {
+  const id = item.bookingId || item.id
+  let customerId = item.customerId || item.customerID || null
+  let customerEmail = item.customerEmail || item.email || ''
+  let customerName = item.customerName || ''
+  let customerPhone = item.customerPhone || ''
+  if (!id) return
+  try {
+    // lấy chi tiết booking để chắc chắn có customerId
+    const detail = await bookingService.getById(id)
+    const data = detail?.data || detail
+    customerId = customerId || data.customerId || data.customerID || null
+    customerName = customerName || data.customerName || ''
+    customerPhone = customerPhone || data.customerPhone || ''
+    // lấy email từ bảng customer nếu có customerId
+    if (customerId && !customerEmail) {
+      const cusRes = await customerService.getById(customerId)
+      const cus = cusRes?.data || cusRes
+      customerEmail = cus?.customerEmail || cus?.email || ''
+      customerName = customerName || cus?.customerName || cus?.fullName || ''
+      customerPhone = customerPhone || cus?.customerPhone || cus?.phone || ''
+    }
+  } catch (err) {
+    console.warn('Không lấy được thông tin customer/booking', err)
+  }
+  router.push({
+    path: '/staff/service-tickets/create',
+    query: { bookingId: id, customerId, customerEmail, customerName, customerPhone }
+  })
+}
+const changeStatus = async (item, newStatus) => {
   const id = item.bookingId || item.id
   if (!id) return
-  router.push(`/customer/booking/${id}/edit`)
-}
-const deleteBooking = (item) => {
-  console.log('delete', item)
+  const prevStatus = item.status ?? item.bookingStatus
+  if (newStatus === prevStatus) return
+  try {
+    const statusVal = Number.isNaN(Number(newStatus)) ? newStatus : Number(newStatus)
+    updatingId.value = id
+    item.status = statusVal
+    item.bookingStatus = statusVal
+    await bookingService.updateStatus(id, { bookingStatus: statusVal, note: '' })
+    toast.success('Đã cập nhật trạng thái')
+    applyFilter()
+  } catch (err) {
+    item.status = prevStatus
+    item.bookingStatus = prevStatus
+    toast.error('Không cập nhật được trạng thái', err?.message || '')
+  } finally {
+    updatingId.value = null
+  }
 }
 
 const openFilter = (field, label, currentValue, type = 'text') => {
@@ -431,21 +435,6 @@ const applyFilterModal = () => {
 
 const closeFilterModal = () => {
   filterModal.value.show = false
-}
-
-const changeSort = (key) => {
-  if (sortConfig.value.key === key) {
-    sortConfig.value.direction = sortConfig.value.direction === 'ASC' ? 'DESC' : 'ASC'
-  } else {
-    sortConfig.value.key = key
-    sortConfig.value.direction = 'ASC'
-  }
-  page.value = 1
-}
-
-const getSortIcon = (key) => {
-  if (sortConfig.value.key !== key) return 'fa-solid fa-sort'
-  return sortConfig.value.direction === 'ASC' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down'
 }
 
 const changePage = (newPage) => {
@@ -529,17 +518,11 @@ watch([searchText, dateFrom, dateTo, pageSize, filterId, filterCustomer, filterV
 
 const loadBookings = async () => {
   try {
-    const email = authService.getCurrentUser()?.email || ''
-    if (!email) {
-      toast.error('Không xác định được email đăng nhập')
-      return
-    }
     loading.value = true
     const res = await bookingService.getPaging({
       page: 1,
       pageSize: 200,
-      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
-      filters: [{ columnName: 'CustomerEmail', value: email }]
+      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }]
     })
     const items = res?.data?.items || res?.items || []
     bookings.value = items
@@ -556,13 +539,7 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-onMounted(async () => {
-  const user = authService.getCurrentUser()
-  if (user?.role) {
-    menuItems.value = getMenuByRole(user.role)
-  }
-  await loadBookings()
-})
+onMounted(loadBookings)
 </script>
 
 <style scoped>
@@ -728,19 +705,6 @@ onMounted(async () => {
   color: #9ca3af;
 }
 
-.sort-btn {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0 4px;
-  color: #9ca3af;
-}
-
-.sort-btn .fa-sort-up,
-.sort-btn .fa-sort-down {
-  color: #2563eb;
-}
-
 .actions {
   display: flex;
   gap: 6px;
@@ -782,9 +746,6 @@ onMounted(async () => {
 
 .pager-info {
   color: #4b5563;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .pager-actions {

@@ -2,7 +2,6 @@
   <div class="booking-edit">
     <TheSideBar
       :collapsed="sidebarCollapsed"
-      :menu-items="sidebarMenu"
       :collapsible="true"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
@@ -203,11 +202,6 @@ const route = useRoute()
 const toast = useToast()
 
 const sidebarCollapsed = ref(false)
-const sidebarMenu = [
-  { key: 'home', label: 'Trang chủ', icon: 'fa-house', path: '/customer/home' },
-  { key: 'bookings', label: 'Lịch đặt', icon: 'fa-calendar-check', path: '/customer/booking/all' },
-  { key: 'create', label: 'Đặt lịch mới', icon: 'fa-plus', path: '/booking/Guest' }
-]
 const notifications = ref([])
 
 const loading = ref(false)
