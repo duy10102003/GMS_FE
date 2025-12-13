@@ -170,7 +170,7 @@
 							<div v-for="part in partSearchResults" :key="part.partId" class="search-result-item" @click="addPart(part)">
 								<div class="result-info">
 									<strong>{{ part.partName }}</strong>
-									<span class="result-meta">Mã: {{ part.partCode }} | Tồn: {{ part.partStock }} {{ part.partUnit }} | Giá: {{ formatPrice(part.inventoryPrice) }}</span>
+									<span class="result-meta">Mã: {{ part.partCode }} | Tồn: {{ part.partQuantity }} {{ part.partUnit }} | Giá: {{ formatPrice(part.partPrice) }}</span>
 								</div>
 							</div>
 						</div>
@@ -185,7 +185,7 @@
 							</div>
 							<div class="item-actions">
 								<GmsInput v-model.number="part.quantity" type="number" :min="1" style="width: 100px; margin-right: 0.5rem" />
-								<GmsButton variant="danger" size="small" icon="fa-times" @click="removePart(index)" />
+								<GmsButton variant="danger" size="small" icon="fa-delete" @click="removePart(index)" />
 							</div>
 						</div>
 					</div>
@@ -214,7 +214,7 @@
 							<div class="item-info">
 								<strong>{{ service.garageServiceName }}</strong>
 								<span class="item-meta">{{ formatPrice(service.price) }}</span>
-								<span class="text-muted small">(Số lượng: 1)</span>
+								<!-- <span class="text-muted small">(Số lượng: 1)</span> -->
 							</div>
 							<div class="item-actions">
 								<GmsButton variant="danger" size="small" icon="fa-times" @click="removeService(index)" />
@@ -285,7 +285,7 @@
 		{ key: 'partCode', label: 'Mã', formatter: (val, row) => row.part?.partCode || val },
 		{ key: 'quantity', label: 'Số lượng' },
 		{ key: 'partUnit', label: 'Đơn vị', formatter: (val, row) => row.part?.partUnit || val },
-		{ key: 'inventoryPrice', label: 'Giá', formatter: (val, row) => formatPrice(row.part?.inventoryPrice || val) }
+		{ key: 'inventoryPrice', label: 'Giá', formatter: (val, row) => formatPrice(row.part?.partPrice || val) }
 	])
 
 	const servicesColumns = ref([
@@ -301,7 +301,7 @@
 		// Normalize status to number for comparison
 		const statusNum = Number(status)
 		// Có thể điều chỉnh khi service ticket status là PENDING_TECHNICAL_CONFIRMATION (0)
-		return statusNum === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === 0 || status === '0'
+		return statusNum === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === 0 || status === '0'
 	})
 
 	const canStartInProgress = computed(() => {
@@ -385,7 +385,7 @@
 					partId: p.part?.partId || p.partId,
 					partName: p.part?.partName || '',
 					quantity: p.quantity || 1,
-					price: p.part?.inventoryPrice || 0
+					price: p.part?.partPrice || 0
 				}))
 			}
 

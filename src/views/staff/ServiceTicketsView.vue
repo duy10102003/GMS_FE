@@ -55,10 +55,9 @@
 						</template>
 
 						<template #cell-mechanic="{ row }">
-							<div v-if="row.technicalTasks && row.technicalTasks.length > 0" class="mechanic-info">
-								<span>{{ row.technicalTasks[0].assignedToTechnicalName || 'N/A' }}</span>
+							<div class="mechanic-info">
+								<span>{{ row.assignedToTechnicalName || 'N/A' }}</span>
 							</div>
-							<span v-else class="text-muted">Chưa phân công</span>
 						</template>
 
 						<template #cell-serviceTicketStatus="{ row }">
