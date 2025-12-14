@@ -61,25 +61,40 @@
 
 				<div class="table-card">
 					<div class="table-header">
-						<h2>Danh sách yêu cầu</h2>
-						<p>{{ filteredRequests.length }} yêu cầu phù hợp</p>
+						<div>
+							<h2>Danh sách yêu cầu</h2>
+							<p class="table-subtitle">
+								Hiển thị {{ displayRange.start }} - {{ displayRange.end }} / {{ pagination.totalItems }} yêu cầu
+							</p>
+						</div>
 					</div>
 					<div class="table-wrapper">
 						<GmsTable :data="filteredRequests" :columns="tableColumns" :loading="loading" :pagination="false" :scrollable="true">
 							<template #cell-code="{ row }">
-								<strong>{{ row.code }}</strong>
+								<div>
+									<strong>{{ row.code }}</strong>
+									<span class="muted">#{{ row.internalId }}</span>
+								</div>
 							</template>
 
 							<template #cell-requestedBy="{ row }">
-								{{ row.requestedBy }}
+								<div class="supplier-cell">
+									<span class="supplier-name">{{ row.requestedBy }}</span>
+								</div>
 							</template>
 
-							<template #cell-lines="{ row }">
-								{{ row.lines }} mặt hàng
+							<template #cell-confirmedBy="{ row }">
+								<div class="supplier-cell">
+									<span class="supplier-name">{{ row.confirmedBy || 'Chưa có' }}</span>
+								</div>
 							</template>
 
 							<template #cell-requestDate="{ row }">
-								{{ row.requestDate }}
+								{{ formatDate(row.requestDate) }}
+							</template>
+
+							<template #cell-confirmedDate="{ row }">
+								{{ formatDate(row.confirmedDate) }}
 							</template>
 
 							<template #cell-status="{ row }">
@@ -89,8 +104,8 @@
 								</span>
 							</template>
 
-							<template #cell-totalAmount="{ row }">
-								{{ formatCurrency(row.totalAmount) }}
+							<template #cell-note="{ row }">
+								{{ row.note || '—' }}
 							</template>
 
 							<template #cell-actions="{ row }">
@@ -118,13 +133,52 @@
 							</template>
 						</GmsTable>
 					</div>
+					<div v-if="!loading && !filteredRequests.length" class="table-empty">
+						Không có yêu cầu phù hợp.
+					</div>
+
+					<div v-if="!loading && pagination.totalItems > 0" class="table-pagination">
+						<div class="pagination-info">
+							Hiển thị {{ displayRange.start }} - {{ displayRange.end }} / {{ pagination.totalItems }} yêu cầu
+						</div>
+						<div class="pagination-controls">
+							<button class="page-btn" :disabled="pagination.page === 1" @click="goToPage(pagination.page - 1)">
+								Trước
+							</button>
+							<button
+								v-for="page in pageNumbers"
+								:key="page"
+								class="page-btn"
+								:class="{ active: page === pagination.page }"
+								@click="goToPage(page)"
+							>
+								{{ page }}
+							</button>
+							<button class="page-btn" :disabled="pagination.page === totalPages" @click="goToPage(pagination.page + 1)">
+								Sau
+							</button>
+							<label class="page-size">
+								<span>Hiển thị</span>
+								<select v-model.number="pagination.size" @change="handlePageSizeChange">
+									<option v-for="size in pageSizeOptions" :key="size" :value="size">
+										{{ size }}
+									</option>
+								</select>
+								<span>/ trang</span>
+							</label>
+						</div>
+					</div>
 				</div>
 			</main>
 		</div>
 
 		<!-- Pricing Modal -->
 		<GmsDialog v-model="showPricingModal" :title="`Nhập giá bán cho ${currentRequest?.code || ''}`" size="large">
-			<div v-if="currentRequest" class="pricing-modal-content">
+			<div v-if="pricingLoading" class="detail-loading">
+				<span class="detail-spinner"></span>
+				<p>Đang tải danh sách phụ tùng...</p>
+			</div>
+			<div v-else-if="currentRequest" class="pricing-modal-content">
 				<div class="copy-all-section">
 					<label>Copy all giá bán:</label>
 					<GmsInput v-model.number="copyAllPrice" type="number" placeholder="Nhập giá (VD: 100000)" class="copy-all-input" />
@@ -177,15 +231,24 @@
 				</div>
 
 				<div class="dialog-actions">
-					<GmsButton variant="outline" @click="closePricingModal">Hủy</GmsButton>
-					<GmsButton variant="primary" @click="saveAllPricing">Lưu toàn bộ (Chuyển sang PRICED)</GmsButton>
+					<GmsButton variant="outline" @click="closePricingModal" :disabled="savingPricing">Hủy</GmsButton>
+					<GmsButton variant="primary" @click="saveAllPricing" :disabled="savingPricing">
+						{{ savingPricing ? 'Đang lưu...' : 'Lưu toàn bộ (Chuyển sang PRICED)' }}
+					</GmsButton>
 				</div>
+			</div>
+			<div v-else class="detail-loading">
+				<p>Không có dữ liệu để nhập giá.</p>
 			</div>
 		</GmsDialog>
 
 		<!-- Detail Modal -->
 		<GmsDialog v-model="showDetailModal" :title="`Chi tiết yêu cầu ${currentRequest?.code || ''}`" size="large">
-			<div v-if="currentRequest" class="detail-modal-content">
+			<div v-if="detailLoading" class="detail-loading">
+				<span class="detail-spinner"></span>
+				<p>Đang tải chi tiết phiếu...</p>
+			</div>
+			<div v-else-if="currentRequest" class="detail-modal-content">
 				<div class="detail-container">
 					<div class="detail-info-card">
 						<h3><i class="fas fa-info-circle"></i> Thông tin chung</h3>
@@ -199,7 +262,7 @@
 						</div>
 						<div class="info-row">
 							<span class="info-label">Ngày tạo:</span>
-							<span class="info-value">{{ currentRequest.requestDate }}</span>
+							<span class="info-value">{{ formatDate(currentRequest.requestDate) }}</span>
 						</div>
 						<div class="info-row">
 							<span class="info-label">Trạng thái:</span>
@@ -212,7 +275,7 @@
 						</div>
 						<div class="info-row">
 							<span class="info-label">Số mặt hàng:</span>
-							<span class="info-value">{{ currentRequest.lines }} mặt hàng</span>
+							<span class="info-value">{{ currentRequest.items?.length || 0 }} mặt hàng</span>
 						</div>
 						<div class="info-row">
 							<span class="info-label">Người xác nhận:</span>
@@ -220,7 +283,7 @@
 						</div>
 						<div class="info-row">
 							<span class="info-label">Ngày xác nhận:</span>
-							<span class="info-value">{{ currentRequest.confirmedDate || 'Chưa có' }}</span>
+							<span class="info-value">{{ formatDate(currentRequest.confirmedDate) }}</span>
 						</div>
 						<div class="info-row">
 							<span class="info-label">Ghi chú:</span>
@@ -284,6 +347,9 @@
 					</GmsButton>
 				</div>
 			</div>
+			<div v-else class="detail-loading">
+				<p>Chưa có dữ liệu chi tiết.</p>
+			</div>
 		</GmsDialog>
 
 		<!-- Toast -->
@@ -292,12 +358,13 @@
 </template>
 
 <script setup>
-	import { ref, computed, onMounted } from 'vue'
+	import { ref, computed, reactive, onMounted } from 'vue'
 	import { TheHeader, TheSideBar } from '@/layout'
 	import { GmsInput, GmsButton, GmsTable, GmsDialog, GmsToast } from '@/components'
 	import { useToast } from '@/composables/useToast'
 	import { getMenuByRole } from '@/utils/menu'
 	import authService from '@/services/auth'
+	import partService from '@/services/part'
 
 	const toastRef = ref(null)
 	const toast = useToast()
@@ -306,6 +373,9 @@
 	const loading = ref(false)
 	const showPricingModal = ref(false)
 	const showDetailModal = ref(false)
+	const detailLoading = ref(false)
+	const pricingLoading = ref(false)
+	const savingPricing = ref(false)
 	const notifications = ref([])
 	const menuItems = ref([])
 
@@ -315,81 +385,22 @@
 	const currentPricingIndex = ref(-1)
 	const currentDetailIndex = ref(-1)
 
-	// Mock data
-	const priceRequests = ref([
-		{
-			index: 0,
-			code: 'PR-2024-108',
-			requestedBy: 'Nguyễn Văn A',
-			lines: 3,
-			requestDate: '05/12/2024',
-			status: 'CREATED',
-			totalAmount: 0,
-			note: 'Yêu cầu cần định giá gấp cho đơn hàng lớn',
-			confirmedBy: null,
-			confirmedDate: null,
-			items: [
-				{ partId: 1, code: 'PT-001', name: 'Brake Pad Set', quantity: 5, oldPrice: 450000, newPrice: 0 },
-				{ partId: 2, code: 'PT-002', name: 'Engine Oil Filter', quantity: 10, oldPrice: 135000, newPrice: 0 },
-				{ partId: 3, code: 'PT-003', name: 'Spark Plug', quantity: 20, oldPrice: 72000, newPrice: 0 }
-			]
-		},
-		{
-			index: 1,
-			code: 'PR-2024-104',
-			requestedBy: 'Trần Thị B',
-			lines: 2,
-			requestDate: '03/12/2024',
-			status: 'PRICED',
-			totalAmount: 1760000,
-			note: 'Đã kiểm tra kỹ chất lượng sản phẩm',
-			confirmedBy: null,
-			confirmedDate: null,
-			items: [
-				{ partId: 4, code: 'PT-004', name: 'Air Filter', quantity: 8, oldPrice: 180000, newPrice: 220000 },
-				{ partId: 5, code: 'PT-005', name: 'Tire Valve', quantity: 50, oldPrice: 45000, newPrice: 55000 }
-			]
-		},
-		{
-			index: 2,
-			code: 'PR-2024-098',
-			requestedBy: 'Phạm Văn D',
-			lines: 1,
-			requestDate: '02/12/2024',
-			status: 'CONFIRMED',
-			totalAmount: 1100000,
-			note: 'Đã confirm với bộ phận kinh doanh',
-			confirmedBy: 'Manager X',
-			confirmedDate: '04/12/2024',
-			items: [{ partId: 6, code: 'PT-006', name: 'Battery Terminal', quantity: 10, oldPrice: 108000, newPrice: 132000 }]
-		},
-		{
-			index: 3,
-			code: 'PR-2024-109',
-			requestedBy: 'Lê Thị C',
-			lines: 4,
-			requestDate: '06/12/2024',
-			status: 'CREATED',
-			totalAmount: 0,
-			note: 'Hàng mới nhập, cần định giá trước khi bán',
-			confirmedBy: null,
-			confirmedDate: null,
-			items: [
-				{ partId: 7, code: 'PT-007', name: 'Oil Filter', quantity: 15, oldPrice: 120000, newPrice: 0 },
-				{ partId: 8, code: 'PT-008', name: 'Brake Disc', quantity: 2, oldPrice: 850000, newPrice: 0 },
-				{ partId: 9, code: 'PT-009', name: 'Wiper Blade', quantity: 30, oldPrice: 45000, newPrice: 0 },
-				{ partId: 10, code: 'PT-010', name: 'Headlight Bulb', quantity: 5, oldPrice: 200000, newPrice: 0 }
-			]
-		}
-	])
+	const priceRequests = ref([])
+	const pagination = reactive({
+		page: 1,
+		size: 10,
+		totalItems: 0
+	})
+	const pageSizeOptions = [5, 10, 15, 20]
 
 	const tableColumns = ref([
 		{ key: 'code', label: 'Mã yêu cầu', sortable: true, filterable: true },
 		{ key: 'requestedBy', label: 'Người tạo', sortable: true, filterable: true },
-		{ key: 'lines', label: 'Số dòng', sortable: true, filterable: false },
+		{ key: 'confirmedBy', label: 'Người xác nhận', sortable: true, filterable: true },
 		{ key: 'requestDate', label: 'Ngày tạo', sortable: true, filterable: true },
+		{ key: 'confirmedDate', label: 'Ngày xác nhận', sortable: true, filterable: true },
 		{ key: 'status', label: 'Trạng thái', sortable: true, filterable: true },
-		{ key: 'totalAmount', label: 'Tổng giá trị', sortable: true, filterable: true },
+		{ key: 'note', label: 'Ghi chú', sortable: false, filterable: true },
 		{ key: 'actions', label: 'Hành động', filterable: false }
 	])
 
@@ -404,33 +415,45 @@
 
 	const statusTabs = computed(() => {
 		return [
-			{ status: 'all', label: 'Tất cả', count: priceRequests.value.length },
+			{ status: 'all', label: 'Tất cả', count: pagination.totalItems },
 			{ status: 'CREATED', label: 'Chờ định giá', count: stats.value.created },
 			{ status: 'PRICED', label: 'Đã định giá', count: stats.value.priced },
 			{ status: 'CONFIRMED', label: 'Chờ đóng', count: stats.value.confirmed }
 		]
 	})
 
-	const filteredRequests = computed(() => {
-		let result = [...priceRequests.value]
+	const filteredRequests = computed(() => priceRequests.value)
 
-		// Filter by status
-		if (activeStatusTab.value !== 'all') {
-			result = result.filter((r) => r.status === activeStatusTab.value)
+	const totalPages = computed(() => {
+		if (!pagination.size || pagination.size <= 0) return 1
+		if (!pagination.totalItems) return 1
+		return Math.max(1, Math.ceil(pagination.totalItems / pagination.size))
+	})
+
+	const pageNumbers = computed(() => {
+		const pages = []
+		const maxVisible = 5
+		let start = Math.max(1, pagination.page - Math.floor(maxVisible / 2))
+		let end = Math.min(totalPages.value, start + maxVisible - 1)
+
+		if (end - start < maxVisible - 1) {
+			start = Math.max(1, end - maxVisible + 1)
 		}
 
-		// Filter by search
-		if (searchQuery.value) {
-			const query = searchQuery.value.toLowerCase()
-			result = result.filter((r) => r.code.toLowerCase().includes(query) || r.requestedBy.toLowerCase().includes(query))
+		for (let i = start; i <= end; i += 1) {
+			pages.push(i)
 		}
 
-		// Update totalAmount for each request
-		result.forEach((r) => {
-			r.totalAmount = r.items.reduce((sum, i) => sum + (i.newPrice || 0) * i.quantity, 0)
-		})
+		return pages
+	})
 
-		return result
+	const displayRange = computed(() => {
+		if (!pagination.totalItems) {
+			return { start: 0, end: 0 }
+		}
+		const start = (pagination.page - 1) * pagination.size + 1
+		const end = Math.min(start + filteredRequests.value.length - 1, pagination.totalItems)
+		return { start, end }
 	})
 
 	const currentRequest = computed(() => {
@@ -473,6 +496,30 @@
 		return (Number(num) || 0).toLocaleString('vi-VN') + ' đ'
 	}
 
+	const formatDate = (date) => {
+		if (!date) return 'Chưa có'
+
+		const parsed =
+			date instanceof Date
+				? date
+				: typeof date === 'string'
+					? new Date(date)
+					: null
+
+		if (!parsed || Number.isNaN(parsed.getTime())) {
+			return typeof date === 'string' ? date : 'Chưa có'
+		}
+
+		return new Intl.DateTimeFormat('vi-VN', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		}).format(parsed)
+	}
+
 	const getStatusLabel = (status) => {
 		const labels = {
 			CREATED: 'Chờ định giá',
@@ -501,23 +548,146 @@
 		return profit > 0 ? 'profit-positive' : profit < 0 ? 'profit-negative' : ''
 	}
 
+	const normalizeStockOutItem = (item = {}) => {
+		const quantity = Number(item.quantity ?? item.partQuantity ?? item.orderQty ?? 0)
+		const unitPrice = Number(
+			item.stockOutPrice ?? item.importPrice ?? item.oldPrice ?? item.unit_price ?? item.price ?? 0
+		)
+
+		return {
+			id: item.partStockOutItemId || item.id || item.partId,
+			partId: item.partId,
+			code: item.partCode || item.code || '',
+			name: item.partName || item.name || '',
+			quantity,
+			oldPrice: unitPrice,
+			newPrice: Number(item.partPrice ?? item.newPrice ?? 0),
+			total: quantity * unitPrice
+		}
+	}
+
+	const normalizeStockOutRequest = (item) => {
+		const normalizedItems = Array.isArray(item?.items) ? item.items.map((child) => normalizeStockOutItem(child)) : []
+		const totalAmount =
+			item.totalAmount != null
+				? Number(item.totalAmount)
+				: normalizedItems.reduce((sum, child) => sum + child.total, 0)
+
+		return {
+			index: item.partStockOutId,
+			id: item.partStockOutId,
+			code: item.partStockOutCode,
+			internalId: item.partStockOutId,
+			requestedBy: item.requestedByName || 'N/A',
+			requestedById: item.requestedById || null,
+			confirmedBy: item.confirmedByName || null,
+			confirmedById: item.confirmedById || null,
+			requestDate: item.requestedDate,
+			confirmedDate: item.confirmedDate,
+			status: item.status || 'CREATED',
+			note: item.note || '',
+			totalAmount,
+			items: normalizedItems,
+			raw: item
+		}
+	}
+
+	const loadPartStockOuts = async () => {
+		try {
+			loading.value = true
+			const params = {
+				page: Math.max(0, pagination.page - 1),
+				size: pagination.size,
+				direction: 'DESC'
+			}
+			if (searchQuery.value?.trim()) {
+				params.keyword = searchQuery.value.trim()
+			}
+			if (activeStatusTab.value && activeStatusTab.value !== 'all') {
+				params.status = activeStatusTab.value
+			}
+			const response = await partService.getStockOutList(params)
+			const payload = response?.data?.data || response?.data || {}
+			const items = Array.isArray(payload) ? payload : payload.items || []
+			priceRequests.value = items.map((item) => normalizeStockOutRequest(item))
+			const total = payload.totalItems ?? payload.total ?? items.length
+			const serverPage = payload.page ?? payload.currentPage ?? params.page ?? 0
+			pagination.totalItems = Number(total) || 0
+			pagination.size = payload.size ?? params.size ?? pagination.size
+			pagination.page = pagination.totalItems === 0 ? 1 : Number(serverPage) + 1
+		} catch (error) {
+			priceRequests.value = []
+			pagination.totalItems = 0
+			pagination.page = 1
+			toast.error(error?.message || 'Không thể tải danh sách yêu cầu')
+		} finally {
+			loading.value = false
+		}
+	}
+
+	const goToPage = (page) => {
+		if (page < 1 || page > totalPages.value) return
+		pagination.page = page
+		loadPartStockOuts()
+	}
+
+	const handlePageSizeChange = () => {
+		if (!pagination.size || pagination.size <= 0) {
+			pagination.size = 10
+		}
+		pagination.page = 1
+		loadPartStockOuts()
+	}
+
 	const setStatusTab = (status) => {
+		if (activeStatusTab.value === status) return
 		activeStatusTab.value = status
+		pagination.page = 1
+		loadPartStockOuts()
 	}
 
 	const handleSearch = () => {
-		// Search is handled in computed
+		pagination.page = 1
+		loadPartStockOuts()
 	}
 
-	const openPricingModal = (index) => {
+	const openPricingModal = async (index) => {
+		const request = priceRequests.value.find((r) => r.index === index)
+		if (!request?.id) {
+			toast.error('Không tìm thấy thông tin phiếu')
+			return
+		}
+
 		currentPricingIndex.value = index
 		copyAllPrice.value = null
-		// Create a deep copy of items to avoid direct mutation
-		const request = priceRequests.value.find((r) => r.index === index)
-		if (request) {
-			request.items = request.items.map((item) => ({ ...item }))
-		}
 		showPricingModal.value = true
+		pricingLoading.value = true
+
+		try {
+			const response = await partService.getItemsForPricing(request.id)
+			const items = response?.data?.data || response?.data || []
+
+			// Normalize items from API
+			const normalizedItems = items.map((item) => ({
+				id: item.partStockOutItemId,
+				partId: item.partId,
+				code: item.partCode,
+				name: item.partName,
+				quantity: Number(item.quantity) || 0,
+				oldPrice: Number(item.purchasePrice) || 0,
+				newPrice: item.proposedSellingPrice != null ? Number(item.proposedSellingPrice) : 0
+			}))
+
+			// Update request items
+			if (request) {
+				request.items = normalizedItems
+			}
+		} catch (error) {
+			toast.error(error?.message || 'Không thể tải danh sách phụ tùng để nhập giá')
+			showPricingModal.value = false
+		} finally {
+			pricingLoading.value = false
+		}
 	}
 
 	const closePricingModal = () => {
@@ -538,14 +708,14 @@
 		})
 
 		updatePricingTotals()
-		toast.success(`Đã copy giá ${formatCurrency(copyAllPrice.value)} cho tất cả ${currentRequest.value.lines} parts!`)
+		toast.success(`Đã copy giá ${formatCurrency(copyAllPrice.value)} cho tất cả ${currentRequest.value.items.length} parts!`)
 	}
 
 	const updatePricingTotals = () => {
 		// Totals are computed, no need to update manually
 	}
 
-	const saveAllPricing = () => {
+	const saveAllPricing = async () => {
 		if (!currentRequest.value) return
 
 		const unpricedItems = currentRequest.value.items.filter((i) => (i.newPrice || 0) <= 0)
@@ -554,15 +724,70 @@
 			return
 		}
 
-		currentRequest.value.status = 'PRICED'
-		currentRequest.value.totalAmount = pricingTotalAmount.value
-		closePricingModal()
-		toast.success(`Đã lưu toàn bộ định giá cho ${currentRequest.value.code}! Trạng thái: PRICED.`)
+		const request = priceRequests.value.find((r) => r.index === currentPricingIndex.value)
+		if (!request?.id) {
+			toast.error('Không tìm thấy thông tin phiếu')
+			return
+		}
+
+		// Prepare payload
+		const payload = {
+			items: currentRequest.value.items.map((item) => ({
+				partStockOutItemId: item.id,
+				proposedSellingPrice: Number(item.newPrice) || 0
+			}))
+		}
+
+		try {
+			savingPricing.value = true
+			const response = await partService.updatePrices(request.id, payload)
+
+			// Show success message from API if available
+			const message = response?.data?.message || `Đã lưu toàn bộ định giá cho ${currentRequest.value.code}! Trạng thái: PRICED.`
+			toast.success(message)
+
+			// Update local state
+			request.status = 'PRICED'
+			request.totalAmount = pricingTotalAmount.value
+
+			closePricingModal()
+
+			// Reload list to get updated data
+			await loadPartStockOuts()
+		} catch (error) {
+			toast.error(error?.message || 'Không thể cập nhật giá bán')
+		} finally {
+			savingPricing.value = false
+		}
 	}
 
-	const openDetailModal = (index) => {
+	const openDetailModal = async (index) => {
+		const baseRequest = priceRequests.value.find((r) => r.index === index)
+		if (!baseRequest?.id) {
+			toast.error('Không tìm thấy thông tin phiếu')
+			return
+		}
+
 		currentDetailIndex.value = index
 		showDetailModal.value = true
+		detailLoading.value = true
+		try {
+			const response = await partService.getStockOutDetail(baseRequest.id)
+			const payload = response?.data?.data || response?.data || {}
+			const normalized = normalizeStockOutRequest({
+				...baseRequest.raw,
+				...payload
+			})
+			// Update the request in the list
+			const requestIndex = priceRequests.value.findIndex((r) => r.index === index)
+			if (requestIndex >= 0) {
+				priceRequests.value[requestIndex] = normalized
+			}
+		} catch (error) {
+			toast.error(error?.message || 'Không thể tải chi tiết phiếu')
+		} finally {
+			detailLoading.value = false
+		}
 	}
 
 	const openPricingFromDetail = () => {
@@ -572,7 +797,7 @@
 		}
 	}
 
-	const confirmAll = (index) => {
+	const confirmAll = async (index) => {
 		const request = priceRequests.value.find((r) => r.index === index)
 		if (!request) return
 
@@ -581,14 +806,37 @@
 			return
 		}
 
-		if (!confirm(`Confirm toàn bộ phiếu ${request.code} này để stocker có thể close?`)) {
+		const user = authService.getCurrentUser()
+		if (!user) {
+			toast.error('Không xác định được thông tin người dùng')
 			return
 		}
 
-		request.status = 'CONFIRMED'
-		request.confirmedBy = 'Manager X'
-		request.confirmedDate = new Date().toLocaleDateString('vi-VN')
-		toast.success(`Đã chuyển yêu cầu ${request.code} sang trạng thái CHỜ ĐÓNG. Stocker có thể đóng phiếu.`)
+		// Lấy ID từ user object và parse thành số nguyên
+		const rawId = user?.id || user?.userId || user?.accountId
+		const confirmedById = rawId != null ? Number(rawId) : null
+
+		// Validate confirmedById là một số nguyên hợp lệ
+		if (!confirmedById || isNaN(confirmedById) || confirmedById <= 0) {
+			toast.error('Không xác định được ID người xác nhận hợp lệ')
+			console.error('Invalid confirmedById:', { rawId, confirmedById, user })
+			return
+		}
+
+		if (!confirm(`Xác nhận toàn bộ phiếu ${request.code} này để stocker có thể đóng?`)) {
+			return
+		}
+
+		try {
+			const response = await partService.confirmStockOut(request.id, { confirmedById })
+			const message = response?.data?.message || `Đã chuyển yêu cầu ${request.code} sang trạng thái CHỜ ĐÓNG. Stocker có thể đóng phiếu.`
+			toast.success(message)
+
+			// Reload list to get updated data
+			await loadPartStockOuts()
+		} catch (error) {
+			toast.error(error?.message || 'Không thể xác nhận yêu cầu')
+		}
 	}
 
 	const handleLogout = async () => {
@@ -608,6 +856,8 @@
 		if (user) {
 			menuItems.value = getMenuByRole(user.role)
 		}
+
+		await loadPartStockOuts()
 	})
 </script>
 
@@ -779,8 +1029,100 @@
 		margin: 0;
 	}
 
+	.table-header .table-subtitle {
+		color: #6b7280;
+	}
+
+	.table-empty {
+		text-align: center;
+		padding: 1rem;
+		color: #94a3b8;
+		font-style: italic;
+	}
+
+	.table-pagination {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #e5e7eb;
+	}
+
+	.pagination-info {
+		font-weight: 600;
+		color: #1f2937;
+	}
+
+	.pagination-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.page-btn {
+		min-width: 38px;
+		padding: 0.4rem 0.75rem;
+		border-radius: 8px;
+		border: 1px solid #d1d5db;
+		background: white;
+		cursor: pointer;
+		font-weight: 600;
+		transition: all 0.2s ease;
+	}
+
+	.page-btn:hover:not(:disabled) {
+		border-color: #1f7cff;
+		color: #1f7cff;
+	}
+
+	.page-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-btn.active {
+		background: #1f7cff;
+		color: #fff;
+		border-color: #1f7cff;
+	}
+
+	.page-size {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		font-weight: 600;
+		color: #374151;
+	}
+
+	.page-size select {
+		padding: 0.35rem 0.6rem;
+		border-radius: 8px;
+		border: 1px solid #d1d5db;
+		font-weight: 600;
+	}
+
 	.table-wrapper {
 		overflow-x: auto;
+	}
+
+	.muted {
+		color: #94a3b8;
+		font-size: 0.9rem;
+		margin-left: 0.5rem;
+	}
+
+	.supplier-cell {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.supplier-name {
+		font-weight: 600;
+		color: #1f2937;
 	}
 
 	.status-chip {
@@ -1103,6 +1445,37 @@
 		margin-top: 1.5rem;
 		padding-top: 1.5rem;
 		border-top: 1px solid #e2e8f0;
+	}
+
+	.detail-loading {
+		padding: 2rem;
+		text-align: center;
+		color: #475569;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		min-height: 200px;
+		justify-content: center;
+	}
+
+	.detail-spinner {
+		width: 48px;
+		height: 48px;
+		border-radius: 999px;
+		border: 4px solid #e5e7eb;
+		border-top-color: #f97316;
+		animation: detail-spin 0.8s linear infinite;
+		display: inline-block;
+	}
+
+	@keyframes detail-spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	@media (max-width: 1024px) {

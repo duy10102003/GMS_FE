@@ -652,7 +652,8 @@
 	const loadPartCategories = async () => {
 		try {
 			const response = await partCategoryService.getAll()
-			partCategories.value = response.data || []
+			const payload = response?.data?.data || response?.data || []
+			partCategories.value = Array.isArray(payload) ? payload : payload.items || []
 		} catch (error) {
 			console.error('Error loading part categories:', error)
 			partCategories.value = []

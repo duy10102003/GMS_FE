@@ -1,72 +1,192 @@
-import api from './api.js'
+import apiSpringbootV2 from './apiSpringbootV2'
+
+const RESOURCE = '/parts'
+
+const wrap = async (promise) => {
+	const response = await promise
+	return { data: response?.data ?? response }
+}
 
 /**
- * Part API Service
+ * Part API Service (Spring Boot v2)
  */
 class PartService {
-	/**
-	 * Lấy tất cả Part (cho select)
-	 */
-	async getAll() {
-		return await api.get('/Part/all')
+	async getPaging(params = {}) {
+		const {
+			page = 1,
+			pageSize = 10,
+			columnFilters = [],
+			columnSorts = [],
+			sortBy,
+			direction,
+			keyword,
+			search,
+			searchKeyword,
+			filters,
+			filtersKeyword
+		} = params
+
+		const primarySort = columnSorts?.[0]
+		const zeroBased = params.zeroBased === true
+		const normalizedPage = zeroBased ? Math.max(0, Number(page)) : Math.max(0, Number(page) - 1)
+
+		const body = {
+			page: normalizedPage,
+			size: Number(pageSize) > 0 ? Number(pageSize) : 10,
+			sortBy: sortBy || primarySort?.columnName || 'partId',
+			sortDirection: (direction || primarySort?.sortDirection || 'DESC').toUpperCase()
+		}
+
+		const keywordValue = filtersKeyword || keyword || search || searchKeyword || ''
+		if (keywordValue) {
+			body.keyword = keywordValue.trim()
+		}
+
+		const filtersPayload = Array.isArray(filters) && filters.length ? filters : columnFilters
+		if (Array.isArray(filtersPayload) && filtersPayload.length) {
+			body.filters = filtersPayload
+			body.columnFilters = filtersPayload
+		}
+
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}/paging`, body))
 	}
 
-	/**
-	 * Phân trang Part
-	 */
-	async getPaging(params) {
-		return await api.post('/Part/paging', params)
+	// Alias for compatibility
+	async list(params = {}) {
+		return this.getPaging(params)
 	}
 
-	/**
-	 * Lấy chi tiết Part
-	 */
+	async getAll({ size = 200, direction = 'ASC' } = {}) {
+		return await this.getPaging({
+			page: 0,
+			pageSize: size,
+			sortBy: 'partId',
+			direction,
+			zeroBased: true
+		})
+	}
+
+	async getImportedAvailable(params = {}) {
+		const query = {
+			page: Number(params.page) ?? 0,
+			size: Number(params.size) ?? 10,
+			direction: params.direction || 'DESC'
+		}
+
+		if (params.keyword) {
+			query.keyword = params.keyword.trim()
+		}
+
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/imported-available`, query))
+	}
+
+	async getStockOutList(params = {}) {
+		const query = {
+			page: Number(params.page) ?? 0,
+			size: Number(params.size) ?? 10,
+			direction: params.direction || 'DESC'
+		}
+
+		if (params.keyword) {
+			query.keyword = params.keyword.trim()
+		}
+
+		if (params.status && params.status !== 'ALL') {
+			query.status = params.status
+		}
+
+		return await wrap(apiSpringbootV2.get('/part-stock-out/list', query))
+	}
+
+	async getStockOutDetail(id) {
+		if (!id) {
+			throw new Error('Missing stock-out id')
+		}
+		return await wrap(apiSpringbootV2.get(`/part-stock-out/${id}`))
+	}
+
+	async createStockOutRequest(payload = {}) {
+		return await wrap(apiSpringbootV2.post('/part-stock-out', payload))
+	}
+
+	async getItemsForPricing(id) {
+		if (!id) {
+			throw new Error('Missing stock-out id')
+		}
+		return await wrap(apiSpringbootV2.get(`/part-stock-out/${id}/items-for-pricing`))
+	}
+
+	async updatePrices(id, payload = {}) {
+		if (!id) {
+			throw new Error('Missing stock-out id')
+		}
+		return await wrap(apiSpringbootV2.put(`/part-stock-out/${id}/update-prices`, payload))
+	}
+
+	async confirmStockOut(id, payload = {}) {
+		if (!id) {
+			throw new Error('Missing stock-out id')
+		}
+		return await wrap(apiSpringbootV2.put(`/part-stock-out/${id}/confirm`, payload))
+	}
+
+	async closeStockOut(id, payload = {}) {
+		if (!id) {
+			throw new Error('Missing stock-out id')
+		}
+		return await wrap(apiSpringbootV2.put(`/part-stock-out/${id}/close`, payload))
+	}
+
+	async getSelect(params = {}) {
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/select`, params))
+	}
+
+	async search(searchKeyword = '', limit = 50) {
+		const params = {}
+		if (searchKeyword) {
+			params.keyword = searchKeyword
+		}
+		if (limit) {
+			params.limit = limit
+		}
+		return await this.getSelect(params)
+	}
+
 	async getById(id) {
-		return await api.get(`/Part/${id}`)
+		if (!id) {
+			throw new Error('Missing part id')
+		}
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/${id}`))
 	}
 
-	/**
-	 * Tạo mới Part
-	 */
 	async create(data) {
-		return await api.post('/Part', data)
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}`, data))
 	}
 
-	/**
-	 * Cập nhật Part
-	 */
 	async update(id, data) {
-		return await api.put(`/Part/${id}`, data)
+		if (!id) {
+			throw new Error('Missing part id')
+		}
+		return await wrap(apiSpringbootV2.put(`${RESOURCE}/${id}`, data))
 	}
 
-	/**
-	 * Xóa Part (soft delete)
-	 */
 	async delete(id) {
-		return await api.delete(`/Part/${id}`)
+		if (!id) {
+			throw new Error('Missing part id')
+		}
+		return await wrap(apiSpringbootV2.delete(`${RESOURCE}/${id}`))
 	}
 
-	/**
-	 * Kiểm tra mã Part trùng
-	 */
 	async checkCode(partCode, excludeId = null) {
+		if (!partCode) {
+			return { data: { exists: false } }
+		}
+
 		const params = { partCode }
 		if (excludeId) {
 			params.excludeId = excludeId
 		}
-		return await api.get('/Part/check-code', params)
-	}
-
-	/**
-	 * Tìm kiếm Part cho Select
-	 * POST /api/Part/search
-	 * Request Body: { "searchKeyword": "string", "limit": 0 }
-	 */
-	async search(searchKeyword = '', limit = 50) {
-		return await api.post('/Part/search', {
-			searchKeyword: searchKeyword || '',
-			limit: limit || 0
-		})
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/check-code`, params))
 	}
 }
 
