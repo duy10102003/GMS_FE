@@ -3,10 +3,16 @@
  */
 const DEFAULT_NODE_API = 'https://localhost:8080/api'
 const DEFAULT_SPRINGBOOT_API = 'http://localhost:8888/api'
+const DEFAULT_SPRINGBOOT_V2_API = 'http://localhost:6868/api'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_NODE_API
 
 export const API_BASE_URL_SPRINGBOOT = import.meta.env.VITE_API_BASE_URL_SPRINGBOOT?.trim() || import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_SPRINGBOOT_API
+
+export const API_BASE_URL_SPRINGBOOT_V2 =
+	import.meta.env.VITE_API_BASE_URL_SPRINGBOOT_V2?.trim() ||
+	import.meta.env.VITE_PART_CATEGORY_API?.trim() ||
+	DEFAULT_SPRINGBOOT_V2_API
 
 export const API_ENDPOINTS = {
 	// Auth

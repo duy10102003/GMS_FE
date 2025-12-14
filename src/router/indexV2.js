@@ -34,6 +34,8 @@ const router = createRouter({
 					path: 'price-requests',
 					name: 'managerPriceRequests',
 					component: () => import('../views/manager/ManagerSetPriceView.vue')
+				},
+				{
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
@@ -153,7 +155,7 @@ const router = createRouter({
 				{
 					path: '/stocker/parts',
 					name: 'stockerParts',
-					component: () => import('../views/stocker/PartsView.vue')
+					component: () => import('../views/stocker/PartsViewV2.vue')
 				},
 				{
 					path: '/stocker/part-categories',
@@ -161,9 +163,19 @@ const router = createRouter({
 					component: () => import('../views/stocker/PartCategoriesView.vue')
 				},
 				{
+					path: '/stocker/part-categories-v2',
+					name: 'stockerPartCategoriesV2',
+					component: () => import('../views/stocker/PartCategoriesViewV2.vue')
+				},
+				{
 					path: '/stocker/price-requests',
 					name: 'stockerPriceRequests',
-					component: () => import('../views/stocker/Part2View.vue')
+					component: () => import('../views/stocker/PartPriceRequestView.vue')
+				},
+				{
+					path: '/stocker/category-test',
+					name: 'stockerCategoryTest',
+					component: () => import('../views/stocker/CategoryTest.vue')
 				}
 			]
 		},
