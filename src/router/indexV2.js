@@ -39,7 +39,7 @@ const router = createRouter({
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
-				},
+				},				
 				{
 					path: 'mechanic-roles/:id/mechanics',
 					name: 'managerMechanicRoleMechanics',
