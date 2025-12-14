@@ -36,6 +36,16 @@ const router = createRouter({
 					component: () => import('../views/manager/ManagerSetPriceView.vue')
 				},
 				{
+					path: 'report/mechanics',
+					name: 'managerMechanicReport',
+					component: () => import('../views/manager/MechanicReportView.vue')
+				},
+				{
+					path: 'report/parts',
+					name: 'managerPartsReport',
+					component: () => import('../views/manager/PartsReportView.vue')
+				},
+				{
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
@@ -69,6 +79,11 @@ const router = createRouter({
 					path: 'bookings',
 					name: 'staffBookings',
 					component: () => import('../views/staff/BookingListStaffView.vue')
+				},
+				{
+					path: 'report/bookings',
+					name: 'staffBookingReport',
+					component: () => import('../views/staff/BookingReportStaffView.vue')
 				},
 				{
 					path: '/staff/bookings/:id',

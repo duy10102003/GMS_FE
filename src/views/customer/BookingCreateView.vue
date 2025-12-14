@@ -1,14 +1,18 @@
 <template>
-  <div class="booking-create" >
-
-   <TheSideBar
+  <div
+    class="booking-create"
+    :style="{
+      '--sidebar-space': isAuthenticated ? (sidebarCollapsed ? '80px' : '260px') : '0px'
+    }"
+  >
+    <TheSideBar
       :collapsed="sidebarCollapsed"
       :menu-items="menuItems"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
 
-    <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
+    <div class="content-wrapper">
           <TheHeader
         title="Tạo đặt lịch mới"
         :show-search="false"
@@ -19,10 +23,9 @@
 
     <div
       class="booking-create__content"
-      :style="isAuthenticated ? { marginLeft: sidebarCollapsed ? '80px' : '260px' } : { marginLeft: '0' }"
     >
 
-      <div class="layout" display="flex">
+      <div class="layout">
         <div class="main-column">
           <section class="card" id="step-customer">
             <div class="card-title">
@@ -160,6 +163,7 @@ import { useToast } from '@/composables/useToast'
 import { GmsToast } from '@/components'
 import TheHeader from '@/layout/TheHeader.vue'
 import { getMenuByRole } from '@/utils/menu'
+import user from '@/services/user'
 
 const router = useRouter()
 const toast = useToast()
@@ -170,7 +174,7 @@ const notifications = ref([])
 const isAuthenticated = computed(() => authService.isAuthenticated())
 const submitting = ref(false)
 const currentUser = ref(authService.getCurrentUser())
-
+const user1 = authService.getCurrentUser()
 const form = reactive({
   customerName: '',
   phone: '',
@@ -246,8 +250,9 @@ const handleSubmit = async () => {
     } else {
       finalNotes = reasonText || noteText || null
     }
-
+  console.log('Final notes:', user1.userId || user1.id || user1.value.id || user1.value.userId)
     const payload = {
+      userId: currentUser.userId || currentUser.id || currentUser.value.id || currentUser.value.userId,
       customerName: form.customerName?.trim() || 'Guest',
       customerPhone: form.phone.trim(),
       customerEmail: form.email?.trim() || null,
@@ -320,20 +325,29 @@ onMounted(async () => {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
 
 .booking-create {
+  --sidebar-space: 260px;
   padding-top: 80px;
-  padding-right: 0px;
+  padding-right: 0;
   display: flex;
   min-height: 100vh;
   background: #f4f7fb;
 }
 
-.booking-create__content {
+.content-wrapper {
   flex: 1;
   width: 100%;
-  max-width: 100%;
+  min-width: 0;
+  margin-left: var(--sidebar-space);
+  transition: margin-left 0.2s ease;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+
+.booking-create__content {
+  width: 100%;
+  max-width: 1200px;
   padding: 32px 24px 48px;
   margin: 0 auto;
-  transition: margin-left 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -358,13 +372,13 @@ onMounted(async () => {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
 .main-column {
-min-width: 100vh;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -580,6 +594,13 @@ textarea {
 }
 
 @media (max-width: 1024px) {
+  .booking-create {
+    padding-top: 70px;
+  }
+  .content-wrapper {
+    margin-left: 0;
+    padding: 0 16px 32px;
+  }
   .layout {
     grid-template-columns: 1fr;
   }
@@ -587,8 +608,11 @@ textarea {
     grid-template-columns: 1fr;
   }
   .booking-create__content {
-    margin-left: 0 !important;
-    padding: 20px;
+    padding: 20px 0 32px;
+  }
+  .process-card {
+    position: relative;
+    top: 0;
   }
 }
 </style>

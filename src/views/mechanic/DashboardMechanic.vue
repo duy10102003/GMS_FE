@@ -195,7 +195,6 @@ const loadDashboardData = async () => {
       return
     }
 
-    // Load tasks đang thực hiện (InProgress)
     const inProgressParams = {
       page: 1,
       pageSize: 5,
@@ -206,18 +205,16 @@ const loadDashboardData = async () => {
     const inProgressResponse = await technicalTaskService.getPaging(inProgressParams)
     currentTasks.value = inProgressResponse.data?.items || []
 
-    // Load tasks đã hoàn thành gần đây
     const completedParams = {
       page: 1,
       pageSize: 5,
       assignedToTechnical: currentUser.userId,
-      taskStatus: 2, // Completed
+      taskStatus: 2,
       columnSorts: [{ columnName: 'AssignedAt', sortDirection: 'DESC' }]
     }
     const completedResponse = await technicalTaskService.getPaging(completedParams)
     recentCompleted.value = completedResponse.data?.items || []
 
-    // Tính toán thống kê
     const allTasksParams = {
       page: 1,
       pageSize: 1000,
@@ -226,7 +223,6 @@ const loadDashboardData = async () => {
     const allTasksResponse = await technicalTaskService.getPaging(allTasksParams)
     const allTasks = allTasksResponse.data?.items || []
 
-    // Tính toán stats
     stats.value.inProgress = allTasks.filter(t => 
       t.serviceTicketStatus === SERVICE_TICKET_STATUS.IN_PROGRESS || 
       t.serviceTicketStatus === 2
@@ -237,7 +233,6 @@ const loadDashboardData = async () => {
       t.serviceTicketStatus === 0
     ).length
 
-    // Tính completed tháng này
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const completedThisMonth = allTasks.filter(t => {
@@ -401,9 +396,8 @@ onMounted(async () => {
 }
 
 .task-description {
-  color: var(--dark, #2c3a47);
   margin: 0 0 0.75rem 0;
-  line-height: 1.5;
+  color: #555;
 }
 
 .task-footer {
@@ -417,62 +411,44 @@ onMounted(async () => {
 .task-info {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
+  color: #666;
 }
 
 .task-info span {
-  font-size: 0.875rem;
-  color: #666;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-}
-
-.task-info i {
-  color: var(--primary, #ff7a00);
+  gap: 0.35rem;
 }
 
 .task-date {
+  color: #999;
   font-size: 0.875rem;
-  color: #999;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 3rem;
-  color: #999;
-}
-
-.loading-state i {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  display: block;
-}
-
+.loading-state,
 .empty-state {
   text-align: center;
-  padding: 3rem;
+  padding: 3rem 1rem;
   color: #999;
 }
 
+.loading-state i,
 .empty-state i {
-  font-size: 3rem;
+  font-size: 2.5rem;
   margin-bottom: 1rem;
   display: block;
+}
+
+.empty-state p {
+  margin: 0.5rem 0 0 0;
 }
 
 .badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
-  white-space: nowrap;
-}
-
-.badge-primary {
-  background: rgba(255, 122, 0, 0.1);
-  color: var(--primary, #ff7a00);
 }
 
 .badge-success {
@@ -485,19 +461,13 @@ onMounted(async () => {
   color: var(--warning, #f7b731);
 }
 
+.badge-primary {
+  background: rgba(255, 122, 0, 0.1);
+  color: var(--primary, #ff7a00);
+}
+
 .badge-info {
   background: rgba(84, 160, 255, 0.1);
   color: var(--info, #54a0ff);
-}
-
-.badge-secondary {
-  background: rgba(108, 117, 125, 0.1);
-  color: #6c757d;
-}
-
-@media (max-width: 992px) {
-  .dashboard-mechanic-body {
-    margin-left: 0;
-  }
 }
 </style>
