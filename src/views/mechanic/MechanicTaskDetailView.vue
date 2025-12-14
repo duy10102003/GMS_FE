@@ -301,7 +301,7 @@
 		// Normalize status to number for comparison
 		const statusNum = Number(status)
 		// Có thể điều chỉnh khi service ticket status là PENDING_TECHNICAL_CONFIRMATION (0)
-		return statusNum === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === 0 || status === '0'
+		return statusNum === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === SERVICE_TICKET_STATUS.CONFIRM_BY_CUSTOMER || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || status === 0 || status === '0'
 	})
 
 	const canStartInProgress = computed(() => {
@@ -312,7 +312,7 @@
 		// Normalize status to number for comparison
 		const statusNum = Number(status)
 		// Có thể bắt đầu xử lý khi service ticket status là ADJUSTED_BY_TECHNICAL (1)
-		return statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === 1 || status === '1'
+		return statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.CONFIRM_BY_CUSTOMER || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === 1 || status === '1'
 	})
 
 	const canComplete = computed(() => {

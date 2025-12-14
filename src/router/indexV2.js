@@ -138,6 +138,11 @@ const router = createRouter({
 					path: 'service-tickets',
 					name: 'customerServiceTickets',
 					component: () => import('../views/customer/CustomerServiceTicketsView.vue')
+				},
+				{
+					path: '/customer/service-tickets/:id',
+					name: 'customerServiceTicketDetail',
+					component: () => import('../views/customer/CustomerServiceTicketDetail.vue')
 				}
 			]
 		},

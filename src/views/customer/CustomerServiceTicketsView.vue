@@ -2,25 +2,13 @@
 	<div class="customer-service-tickets-view">
 		<TheSideBar @logout="handleLogout" />
 		<div class="dashboard-customer-body">
-			<TheHeader
-				title="Phiếu dịch vụ của tôi"
-				:show-search="false"
-				:notifications="notifications"
-				@logout="handleLogout"
-			/>
+			<TheHeader title="Phiếu dịch vụ của tôi" :show-search="false" :notifications="notifications" @logout="handleLogout" />
 
 			<main class="main-content">
 				<!-- Toolbar -->
 				<div class="toolbar">
 					<div class="toolbar-left">
-						<GmsInput
-							v-model="searchQuery"
-							placeholder="Tìm theo mã phiếu, xe, biển số..."
-							prefix-icon="fa-search"
-							:clearable="true"
-							class="search-input"
-							@input="handleSearch"
-						/>
+						<GmsInput v-model="searchQuery" placeholder="Tìm theo mã phiếu, xe, biển số..." prefix-icon="fa-search" :clearable="true" class="search-input" @input="handleSearch" />
 					</div>
 				</div>
 
@@ -38,16 +26,7 @@
 
 				<!-- Table -->
 				<div class="table-container">
-					<GmsTable
-						:data="tickets"
-						:columns="tableColumns"
-						title="Danh sách phiếu dịch vụ"
-						:loading="loading"
-						:pagination="false"
-						:scrollable="true"
-						@sort="handleSort"
-						@filter-click="openFilterModal"
-					>
+					<GmsTable :data="tickets" :columns="tableColumns" title="Danh sách phiếu dịch vụ" :loading="loading" :pagination="false" :scrollable="true" @sort="handleSort" @filter-click="openFilterModal">
 						<template #cell-vehicle="{ row }">
 							<div>
 								<div class="vehicle-name">{{ row.vehicleName || 'N/A' }}</div>
@@ -73,7 +52,7 @@
 							<div class="action-buttons">
 								<GmsButton variant="outline" size="small" icon="fa-eye" @click.stop="viewDetail(row)">Chi tiết</GmsButton>
 
-								<GmsButton
+								<!-- <GmsButton
 									v-if="canConfirm(row)"
 									variant="primary"
 									size="small"
@@ -82,7 +61,7 @@
 									@click.stop="handleConfirm(row)"
 								>
 									Xác nhận
-								</GmsButton>
+								</GmsButton> -->
 							</div>
 						</template>
 					</GmsTable>
@@ -91,9 +70,7 @@
 				<!-- Pagination -->
 				<div v-if="totalItems > 0" class="pagination mt-4">
 					<div class="pagination-left">
-						<div class="pagination-info">
-							Hiển thị {{ startIndex + 1 }}-{{ endIndex }} trong tổng {{ totalItems }} phiếu
-						</div>
+						<div class="pagination-info">Hiển thị {{ startIndex + 1 }}-{{ endIndex }} trong tổng {{ totalItems }} phiếu</div>
 						<div class="pagination-size">
 							<label>Số lượng/trang:</label>
 							<select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
@@ -110,13 +87,7 @@
 						</GmsButton>
 
 						<div class="pagination-pages">
-							<button
-								v-for="page in visiblePages"
-								:key="page"
-								class="pagination-page"
-								:class="{ active: page === currentPage }"
-								@click="goToPage(page)"
-							>
+							<button v-for="page in visiblePages" :key="page" class="pagination-page" :class="{ active: page === currentPage }" @click="goToPage(page)">
 								{{ page }}
 							</button>
 						</div>
@@ -159,19 +130,8 @@
 
 				<div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
 					<label class="form-label">Giá trị:</label>
-					<GmsInput
-						v-if="isNumericColumn(currentFilterColumn)"
-						v-model.number="filterForm.value"
-						type="number"
-						:placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`"
-						:min="0"
-					/>
-					<GmsInput
-						v-else-if="isDateColumn(currentFilterColumn)"
-						v-model="filterForm.value"
-						type="date"
-						:placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`"
-					/>
+					<GmsInput v-if="isNumericColumn(currentFilterColumn)" v-model.number="filterForm.value" type="number" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" :min="0" />
+					<GmsInput v-else-if="isDateColumn(currentFilterColumn)" v-model="filterForm.value" type="date" :placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`" />
 					<GmsInput v-else v-model="filterForm.value" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" />
 				</div>
 
@@ -359,12 +319,7 @@
 
 		if (['empty', 'not_empty'].includes(filterForm.value.operator) && !filterForm.value.value) {
 			// Empty/not_empty doesn't need value
-		} else if (
-			!filterForm.value.value &&
-			filterForm.value.value !== 0 &&
-			filterForm.value.operator !== 'empty' &&
-			filterForm.value.operator !== 'not_empty'
-		) {
+		} else if (!filterForm.value.value && filterForm.value.value !== 0 && filterForm.value.operator !== 'empty' && filterForm.value.operator !== 'not_empty') {
 			toast.error('Vui lòng nhập giá trị')
 			return
 		}
@@ -463,35 +418,31 @@
 		loadTickets()
 	}
 
-	const canConfirm = (row) => {
-		// Hiển thị nút xác nhận khi status là ADJUSTED_BY_TECHNICAL (1) hoặc PENDING_TECHNICAL_CONFIRMATION (0)
-		return (
-			row.serviceTicketStatus === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL ||
-			row.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION
-		)
-	}
+	// const canConfirm = (row) => {
+	// 	// Hiển thị nút xác nhận khi status là ADJUSTED_BY_TECHNICAL (1) hoặc PENDING_TECHNICAL_CONFIRMATION (0)
+	// 	return row.serviceTicketStatus === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || row.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION
+	// }
 
-	const handleConfirm = async (ticket) => {
-		if (!confirm('Bạn có chắc chắn muốn xác nhận phiếu dịch vụ này?')) {
-			return
-		}
+	// const handleConfirm = async (ticket) => {
+	// 	if (!confirm('Bạn có chắc chắn muốn xác nhận phiếu dịch vụ này?')) {
+	// 		return
+	// 	}
 
-		try {
-			confirmingId.value = ticket.serviceTicketId
-			await serviceTicketService.confirmByCustomer(ticket.serviceTicketId)
-			toast.success('Xác nhận thành công!', `Đã xác nhận phiếu #${ticket.serviceTicketCode}`)
-			await loadTickets()
-		} catch (error) {
-			toast.error('Lỗi khi xác nhận', error.message || error.userMsg || 'Có lỗi xảy ra')
-		} finally {
-			confirmingId.value = null
-		}
-	}
+	// 	try {
+	// 		confirmingId.value = ticket.serviceTicketId
+	// 		await serviceTicketService.confirmByCustomer(ticket.serviceTicketId)
+	// 		toast.success('Xác nhận thành công!', `Đã xác nhận phiếu #${ticket.serviceTicketCode}`)
+	// 		await loadTickets()
+	// 	} catch (error) {
+	// 		toast.error('Lỗi khi xác nhận', error.message || error.userMsg || 'Có lỗi xảy ra')
+	// 	} finally {
+	// 		confirmingId.value = null
+	// 	}
+	// }
 
 	const viewDetail = (ticket) => {
-		// Navigate to detail page if exists, or show in dialog
-		console.log('View ticket detail', ticket.serviceTicketId)
-		// router.push(`/customer/service-tickets/${ticket.serviceTicketId}`)
+		//console.log('View ticket detail', ticket.serviceTicketId)
+		router.push(`/customer/service-tickets/${ticket.serviceTicketId}`)
 	}
 
 	const loadTickets = async () => {
@@ -895,4 +846,3 @@
 		}
 	}
 </style>
-

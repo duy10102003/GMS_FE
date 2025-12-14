@@ -28,10 +28,15 @@
 					</div>
 					<GmsButton variant="outline" size="small" icon="fa-times" @click="clearAllFilters">Xóa tất cả</GmsButton>
 				</div>
-
 				<!-- Table -->
+				<!-- Table Header -->
+				<!-- <div class="table-header">
+					<h3 class="table-title">Danh sách phiếu dịch vụ</h3>
+
+					<GmsButton variant="outline" size="small" icon="fa-rotate-right" :loading="loading" @click="handleRefresh">Làm mới</GmsButton>
+				</div> -->
 				<div class="table-container">
-					<GmsTable :data="tickets" :columns="tableColumns" title="Danh sách phiếu dịch vụ" :loading="loading" :pagination="false" :scrollable="true" @sort="handleSort" @filter-click="openFilterModal">
+					<GmsTable :data="tickets" title="Danh sách phiếu dịch vụ" :columns="tableColumns" :loading="loading" :pagination="false" :scrollable="true" @sort="handleSort" @filter-click="openFilterModal">
 						<template #cell-customer="{ row }">
 							<div>
 								<div class="customer-name">
@@ -590,6 +595,15 @@
 		}
 	}
 
+	const handleRefresh = async () => {
+		loading.value = true
+		try {
+			await loadTickets() // hàm load dữ liệu
+		} finally {
+			loading.value = false
+		}
+	}
+
 	const getStatusLabel = (status) => {
 		return SERVICE_TICKET_STATUS_LABELS[status] || 'N/A'
 	}
@@ -703,6 +717,19 @@
 
 	.filter-tag i:hover {
 		opacity: 1;
+	}
+
+	.table-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1rem;
+	}
+
+	.table-title {
+		font-size: 1.1rem;
+		font-weight: 600;
+		color: var(--dark, #2c3a47);
 	}
 
 	.table-container {
@@ -944,5 +971,9 @@
 
 	.mt-4 {
 		margin-top: 1.5rem;
+	}
+
+	.fa-search {
+		color: #888;
 	}
 </style>
