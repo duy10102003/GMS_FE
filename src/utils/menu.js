@@ -140,7 +140,7 @@ export const MANAGER_MENU = [
 				key: 'restock',
 				label: 'Nhập kho',
 				icon: 'fa-shopping-cart',
-				path: '/manager/inventory/restock',
+				path: '/manager/price-requests',
 				permission: PERMISSIONS.APPROVE_RESTOCK
 			}
 		]
@@ -187,7 +187,7 @@ export const STOCKER_MENU = [
 		key: 'inventory',
 		label: 'Kho hàng',
 		icon: 'fa-warehouse',
-		path: '/stocker/inventory',
+		path: '/stocker/price-requests',
 		permission: PERMISSIONS.VIEW_INVENTORY
 	},
 	{

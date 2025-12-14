@@ -31,10 +31,16 @@ const router = createRouter({
 					component: () => import('../views/manager/GarageServicesView.vue')
 				},
 				{
+					path: 'price-requests',
+					name: 'managerPriceRequests',
+					component: () => import('../views/manager/ManagerSetPriceView.vue')
+
+				},
+				{
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
-				},
+				},				
 				{
 					path: 'mechanic-roles/:id/mechanics',
 					name: 'managerMechanicRoleMechanics',
@@ -156,6 +162,11 @@ const router = createRouter({
 					path: '/stocker/part-categories',
 					name: 'stockerPartCategories',
 					component: () => import('../views/stocker/PartCategoriesView.vue')
+				},
+				{
+					path: '/stocker/price-requests',
+					name: 'stockerPriceRequests',
+					component: () => import('../views/stocker/Part2View.vue')
 				}
 			]
 		},
