@@ -9,17 +9,7 @@
 				<div class="detail-header">
 					<GmsButton variant="outline" icon="fa-arrow-left" @click="$router.back()">Quay lại</GmsButton>
 					<div class="header-actions">
-						<GmsButton v-if="canUpdate" variant="primary" icon="fa-edit" @click="openUpdateDialog">Cập nhật</GmsButton>
-
-						<GmsButton v-if="canAssign" variant="success" icon="fa-user-plus" @click="openAssignDialog">Phân công thợ</GmsButton>
-
-						<GmsButton v-if="canConfirmAdjustment" variant="warning" icon="fa-check" @click="confirmAdjustment">Xác nhận điều chỉnh</GmsButton>
-
-						<GmsButton v-if="canStartInProgress" variant="primary" icon="fa-play" @click="handleStartInProgress">Bắt đầu xử lý</GmsButton>
-
-						<GmsButton v-if="canCreateInvoice" variant="info" icon="fa-file-invoice" @click="openInvoiceDialog">Tạo hóa đơn</GmsButton>
-
-						<GmsButton v-if="canCancel" variant="danger" icon="fa-times" @click="openCancelDialog">Hủy phiếu</GmsButton>
+						<GmsButton v-if="canConfirm" variant="primary" size="small" icon="fa-check" @click="handleConfirm">Xác nhận</GmsButton>
 					</div>
 				</div>
 
@@ -73,58 +63,6 @@
 						</div>
 					</div>
 
-					<!-- Thông tin khách hàng -->
-					<div class="info-card">
-						<h5 class="card-title">
-							<i class="fas fa-user me-2"></i>
-							Thông tin khách hàng
-						</h5>
-						<div class="info-grid">
-							<div class="info-item">
-								<label>Tên:</label>
-								<span class="value">{{ serviceTicket.customer?.customerName || 'N/A' }}</span>
-							</div>
-							<div class="info-item">
-								<label>Số điện thoại:</label>
-								<span class="value">{{ serviceTicket.customer?.customerPhone || 'N/A' }}</span>
-							</div>
-							<div class="info-item">
-								<label>Email:</label>
-								<span class="value">{{ serviceTicket.customer?.customerEmail || 'N/A' }}</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Thông tin xe -->
-					<div class="info-card">
-						<h5 class="card-title">
-							<i class="fas fa-car me-2"></i>
-							Thông tin xe
-						</h5>
-						<div class="info-grid">
-							<div class="info-item">
-								<label>Tên xe:</label>
-								<span class="value">{{ serviceTicket.vehicle?.vehicleName || 'N/A' }}</span>
-							</div>
-							<div class="info-item">
-								<label>Biển số:</label>
-								<span class="value">{{ serviceTicket.vehicle?.vehicleLicensePlate || 'N/A' }}</span>
-							</div>
-							<div class="info-item">
-								<label>Hãng:</label>
-								<span class="value">{{ serviceTicket.vehicle?.make || 'N/A' }}</span>
-							</div>
-							<div class="info-item">
-								<label>Model:</label>
-								<span class="value">{{ serviceTicket.vehicle?.model || 'N/A' }}</span>
-							</div>
-							<div class="info-item">
-								<label>Số km hiện tại:</label>
-								<span class="value">{{ serviceTicket.vehicle?.currentKm?.toLocaleString() || 'N/A' }} km</span>
-							</div>
-						</div>
-					</div>
-
 					<!-- Parts -->
 					<div class="info-card">
 						<h5 class="card-title">
@@ -174,6 +112,58 @@
 						<div v-else class="empty-state">
 							<i class="fas fa-inbox"></i>
 							<p>Chưa có dịch vụ nào</p>
+						</div>
+					</div>
+
+					<!-- Thông tin khách hàng -->
+					<div class="info-card">
+						<h5 class="card-title">
+							<i class="fas fa-user me-2"></i>
+							Thông tin khách hàng
+						</h5>
+						<div class="info-grid">
+							<div class="info-item">
+								<label>Tên:</label>
+								<span class="value">{{ serviceTicket.customer?.customerName || 'N/A' }}</span>
+							</div>
+							<div class="info-item">
+								<label>Số điện thoại:</label>
+								<span class="value">{{ serviceTicket.customer?.customerPhone || 'N/A' }}</span>
+							</div>
+							<div class="info-item">
+								<label>Email:</label>
+								<span class="value">{{ serviceTicket.customer?.customerEmail || 'N/A' }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Thông tin xe -->
+					<div class="info-card">
+						<h5 class="card-title">
+							<i class="fas fa-car me-2"></i>
+							Thông tin xe
+						</h5>
+						<div class="info-grid">
+							<div class="info-item">
+								<label>Tên xe:</label>
+								<span class="value">{{ serviceTicket.vehicle?.vehicleName || 'N/A' }}</span>
+							</div>
+							<div class="info-item">
+								<label>Biển số:</label>
+								<span class="value">{{ serviceTicket.vehicle?.vehicleLicensePlate || 'N/A' }}</span>
+							</div>
+							<div class="info-item">
+								<label>Hãng:</label>
+								<span class="value">{{ serviceTicket.vehicle?.make || 'N/A' }}</span>
+							</div>
+							<div class="info-item">
+								<label>Model:</label>
+								<span class="value">{{ serviceTicket.vehicle?.model || 'N/A' }}</span>
+							</div>
+							<div class="info-item">
+								<label>Số km hiện tại:</label>
+								<span class="value">{{ serviceTicket.vehicle?.currentKm?.toLocaleString() || 'N/A' }} km</span>
+							</div>
 						</div>
 					</div>
 
@@ -451,43 +441,35 @@
 	})
 
 	// Computed
-	const canUpdate = computed(() => {
+	const canConfirm = computed(() => {
 		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CLOSED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED
-	})
 
-	const canAssign = computed(() => {
-		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION || serviceTicket.value.serviceTicketStatus === 0
+		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION
 	})
+	const handleConfirm = async () => {
+		if (!serviceTicket.value) return
 
-	const canConfirmAdjustment = computed(() => {
-		if (!serviceTicket.value) return false
-		const status = serviceTicket.value.serviceTicketStatus
-		const statusNum = Number(status)
-		const can = statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === 1 || status === '1'
-		return can
-	})
+		const ticketId = serviceTicket.value.serviceTicketId
+		const ticketCode = serviceTicket.value.serviceTicketCode
 
-	const canStartInProgress = computed(() => {
-		if (!serviceTicket.value) return false
-		const status = serviceTicket.value.serviceTicketStatus
-		const statusNum = Number(status)
-		// Staff có thể chuyển status thành InProgress từ AdjustedByTechnical (1)
-		const can = statusNum === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || status === 1 || status === '1'
-		return can
-	})
+		if (!confirm(`Bạn có chắc chắn muốn xác nhận phiếu dịch vụ #${ticketCode}?`)) {
+			return
+		}
 
-	const canCreateInvoice = computed(() => {
-		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.COMPLETED || serviceTicket.value.serviceTicketStatus === 3
-	})
+		try {
+			loading.value = true
 
-	const canCancel = computed(() => {
-		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CLOSED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED && serviceTicket.value.serviceTicketStatus !== 3 && serviceTicket.value.serviceTicketStatus !== 4 && serviceTicket.value.serviceTicketStatus !== 5
-	})
+			await serviceTicketService.confirmByCustomer(ticketId)
 
+			toast.success('Xác nhận thành công!', `Đã xác nhận phiếu dịch vụ #${ticketCode}`)
+
+			await loadServiceTicket()
+		} catch (error) {
+			toast.error('Lỗi khi xác nhận', error.message || error.userMsg || 'Có lỗi xảy ra')
+		} finally {
+			loading.value = false
+		}
+	}
 	// Methods
 	const formatPrice = (price) => {
 		if (!price && price !== 0) return '0 đ'

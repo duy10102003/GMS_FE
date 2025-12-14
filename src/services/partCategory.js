@@ -1,63 +1,81 @@
-import api from './api.js'
+import apiSpringbootV2 from './apiSpringbootV2'
 
-/**
- * Part Category API Service
- */
+const RESOURCE = '/part-category'
+
+const wrap = async (promise) => {
+	const data = await promise
+	return { data }
+}
+
 class PartCategoryService {
-  /**
-   * Lấy tất cả Part Category (cho select)
-   */
-  async getAll() {
-    return await api.get('/PartCategory/all')
-  }
+	async getList(params = {}) {
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/list`, params))
+	}
 
-  /**
-   * Phân trang Part Category
-   */
-  async getPaging(params) {
-    return await api.post('/PartCategory/paging', params)
-  }
+	async getSelect() {
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/select`))
+	}
 
-  /**
-   * Lấy chi tiết Part Category
-   */
-  async getById(id) {
-    return await api.get(`/PartCategory/${id}`)
-  }
+	async paging(payload = {}) {
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}/paging`, payload))
+	}
 
-  /**
-   * Tạo mới Part Category
-   */
-  async create(data) {
-    return await api.post('/PartCategory', data)
-  }
+	async getAll() {
+		const response = await this.getSelect()
+		const payload = response?.data?.data || response?.data || []
+		return { data: Array.isArray(payload) ? payload : payload.items || payload }
+	}
 
-  /**
-   * Cập nhật Part Category
-   */
-  async update(id, data) {
-    return await api.put(`/PartCategory/${id}`, data)
-  }
+	async getPaging({ page = 1, pageSize = 10, sortKey = 'partCategoryId', sortOrder = 'DESC', search = '' } = {}) {
+		const params = {
+			page: Math.max(0, page - 1),
+			size: pageSize,
+			sortBy: sortKey,
+			direction: sortOrder
+		}
 
-  /**
-   * Xóa Part Category (soft delete)
-   */
-  async delete(id) {
-    return await api.delete(`/PartCategory/${id}`)
-  }
+		if (search) {
+			params.search = search
+			params.keyword = search
+		}
 
-  /**
-   * Kiểm tra mã Part Category trùng
-   */
-  async checkCode(partCategoryCode, excludeId = null) {
-    const params = { partCategoryCode }
-    if (excludeId) {
-      params.excludeId = excludeId
-    }
-    return await api.get('/PartCategory/check-code', { params })
-  }
+		return await this.getList(params)
+	}
+
+	async getById(id) {
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/${id}`))
+	}
+
+	async create(data) {
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}`, data))
+	}
+
+	async update(id, data) {
+		return await wrap(apiSpringbootV2.put(`${RESOURCE}/${id}`, data))
+	}
+
+	async delete(id) {
+		return await wrap(apiSpringbootV2.delete(`${RESOURCE}/${id}`))
+	}
+
+	async checkCode(partCategoryCode, excludeId = null) {
+		if (!partCategoryCode) {
+			return { data: { exists: false } }
+		}
+
+		const response = await this.getList({ page: 0, size: 200 })
+		const payload = response?.data?.data || response?.data || []
+		const items = payload.items || payload
+
+		const exists = items.some((item) => {
+			const sameCode =
+				item.partCategoryCode?.toLowerCase().trim() === partCategoryCode.toLowerCase().trim()
+			const differentId = !excludeId || Number(item.partCategoryId) !== Number(excludeId)
+			return sameCode && differentId
+		})
+
+		return { data: { exists } }
+	}
 }
 
 export default new PartCategoryService()
-
-

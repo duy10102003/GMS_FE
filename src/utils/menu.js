@@ -17,7 +17,7 @@ export const CUSTOMER_MENU = [
 		icon: 'fa-gauge',
 		path: '/customer/home',
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
-	},	
+	},
 	{
 		key: 'vehicles',
 		label: 'Xe của tôi',
@@ -57,24 +57,24 @@ export const CUSTOMER_MENU = [
 
 export const STAFF_MENU = [
 	{
-		key: "dashboard",
-		label: "Dashboard",
-		icon: "fa-gauge",
-		path: "/staff/dashboard",
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: 'fa-gauge',
+		path: '/staff/dashboard',
 		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
 	},
 	{
-		key: "service-tickets",
-		label: "Phieu dich vu",
-		icon: "fa-clipboard-list",
-		path: "/staff/service-tickets",
+		key: 'service-tickets',
+		label: 'Phiếu dịch vụ',
+		icon: 'fa-clipboard-list',
+		path: '/staff/service-tickets',
 		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
 	},
 	{
-		key: "bookings",
-		label: "Lich dat",
-		icon: "fa-calendar-check",
-		path: "/staff/bookings",
+		key: 'bookings',
+		label: 'Lịch đặt',
+		icon: 'fa-calendar-check',
+		path: '/staff/bookings',
 		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
 	},
 	{
@@ -85,10 +85,10 @@ export const STAFF_MENU = [
 		permission: PERMISSIONS.PROCESS_PAYMENT
 	},
 	{
-		key: "inventory-alerts",
-		label: "Canh bao kho",
-		icon: "fa-exclamation-triangle",
-		path: "/staff/inventory-alerts",
+		key: 'inventory-alerts',
+		label: 'Cảnh báo tồn kho',
+		icon: 'fa-exclamation-triangle',
+		path: '/staff/inventory-alerts',
 		permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
 	}
 ]
@@ -161,7 +161,7 @@ export const MANAGER_MENU = [
 	},
 	{
 		key: 'mechanic-roles',
-		label: 'Vai tro tho may',
+		label: 'Vai trò thợ máy',
 		icon: 'fa-user-gear',
 		path: '/manager/mechanic-roles',
 		permission: PERMISSIONS.MANAGE_STAFF
@@ -184,17 +184,10 @@ export const STOCKER_MENU = [
 		permission: PERMISSIONS.VIEW_INVENTORY
 	},
 	{
-		key: 'inventory',
-		label: 'Kho hàng',
-		icon: 'fa-warehouse',
-		path: '/stocker/price-requests',
-		permission: PERMISSIONS.VIEW_INVENTORY
-	},
-	{
-		key: 'part-categories',
+		key: 'part-categories-v2',
 		label: 'Danh mục phụ tùng',
-		icon: 'fa-list',
-		path: '/stocker/part-categories',
+		icon: 'fa-list-check',
+		path: '/stocker/part-categories-v2',
 		permission: PERMISSIONS.MANAGE_PARTS
 	},
 	{
@@ -205,10 +198,10 @@ export const STOCKER_MENU = [
 		permission: PERMISSIONS.MANAGE_PARTS
 	},
 	{
-		key: 'restock-requests',
-		label: 'Yêu cầu nhập kho',
+		key: 'price-requests',
+		label: 'Yêu cầu xét giá',
 		icon: 'fa-shopping-cart',
-		path: '/stocker/restock-requests',
+		path: '/stocker/price-requests',
 		permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
 	}
 ]
@@ -278,6 +271,3 @@ export function getMenuByRole(role) {
 	console.warn('getMenuByRole: No menu found for role:', role, 'normalized:', normalizedRole)
 	return []
 }
-
-
-

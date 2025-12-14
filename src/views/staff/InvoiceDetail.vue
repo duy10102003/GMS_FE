@@ -27,8 +27,14 @@
 							<p class="invoice-code">Mã hóa đơn: {{ invoice.invoiceCode || `INV-${invoice.invoiceId}` }}</p>
 						</div>
 						<div class="invoice-date">
-							<p><strong>Ngày xuất:</strong> {{ formatDate(invoice.issueDate) }}</p>
-							<p v-if="invoice.serviceTicketCode"><strong>Mã phiếu:</strong> {{ invoice.serviceTicketCode }}</p>
+							<p>
+								<strong>Ngày xuất:</strong>
+								{{ formatDate(invoice.issueDate) }}
+							</p>
+							<p v-if="invoice.serviceTicketCode">
+								<strong>Mã phiếu:</strong>
+								{{ invoice.serviceTicketCode }}
+							</p>
 						</div>
 					</div>
 
@@ -36,17 +42,41 @@
 					<div class="info-section">
 						<div class="info-block">
 							<h3>Thông tin khách hàng</h3>
-							<p><strong>Tên:</strong> {{ invoice.customer?.customerName || 'N/A' }}</p>
-							<p><strong>Điện thoại:</strong> {{ invoice.customer?.customerPhone || 'N/A' }}</p>
-							<p v-if="invoice.customer?.customerEmail"><strong>Email:</strong> {{ invoice.customer.customerEmail }}</p>
+							<p>
+								<strong>Tên:</strong>
+								{{ invoice.customer?.customerName || 'N/A' }}
+							</p>
+							<p>
+								<strong>Điện thoại:</strong>
+								{{ invoice.customer?.customerPhone || 'N/A' }}
+							</p>
+							<p v-if="invoice.customer?.customerEmail">
+								<strong>Email:</strong>
+								{{ invoice.customer.customerEmail }}
+							</p>
 						</div>
 						<div class="info-block">
 							<h3>Thông tin xe</h3>
-							<p><strong>Tên xe:</strong> {{ invoice.vehicle?.vehicleName || 'N/A' }}</p>
-							<p><strong>Biển số:</strong> {{ invoice.vehicle?.vehicleLicensePlate || 'N/A' }}</p>
-							<p v-if="invoice.vehicle?.make"><strong>Hãng:</strong> {{ invoice.vehicle.make }}</p>
-							<p v-if="invoice.vehicle?.model"><strong>Model:</strong> {{ invoice.vehicle.model }}</p>
-							<p v-if="invoice.vehicle?.currentKm"><strong>Số km:</strong> {{ invoice.vehicle.currentKm.toLocaleString() }} km</p>
+							<p>
+								<strong>Tên xe:</strong>
+								{{ invoice.vehicle?.vehicleName || 'N/A' }}
+							</p>
+							<p>
+								<strong>Biển số:</strong>
+								{{ invoice.vehicle?.vehicleLicensePlate || 'N/A' }}
+							</p>
+							<p v-if="invoice.vehicle?.make">
+								<strong>Hãng:</strong>
+								{{ invoice.vehicle.make }}
+							</p>
+							<p v-if="invoice.vehicle?.model">
+								<strong>Model:</strong>
+								{{ invoice.vehicle.model }}
+							</p>
+							<p v-if="invoice.vehicle?.currentKm">
+								<strong>Số km:</strong>
+								{{ invoice.vehicle.currentKm.toLocaleString() }} km
+							</p>
 						</div>
 					</div>
 
@@ -88,19 +118,19 @@
 							<thead>
 								<tr>
 									<th>STT</th>
-									<th>Mã dịch vụ</th>
+									<!-- <th>Mã dịch vụ</th> -->
 									<th>Tên dịch vụ</th>
-									<th>Mô tả</th>
+									<!-- <th>Mô tả</th> -->
 									<th>Giá</th>
 								</tr>
 							</thead>
 							<tbody>
-								<tr v-for="(service, index) in invoice.garageServices" :key="service.garageServiceId || index">
+								<tr v-for="(service, index) in invoice.garageServices" :key="service.serviceTicketDetailId || index">
 									<td>{{ index + 1 }}</td>
-									<td>{{ service.garageServiceCode || 'N/A' }}</td>
-									<td>{{ service.garageServiceName || 'N/A' }}</td>
-									<td>{{ service.description || 'N/A' }}</td>
-									<td>{{ formatCurrency(service.price || 0) }}</td>
+									<!-- <td>{{ service.garageService?.garageServiceCode || 'N/A' }}</td> -->
+									<td>{{ service.garageService?.garageServiceName || 'N/A' }}</td>
+									<!-- <td>{{ service.garageService?.description || 'N/A' }}</td> -->
+									<td>{{ formatCurrency(service.garageService?.garageServicePrice || 0) }}</td>
 								</tr>
 							</tbody>
 						</table>
@@ -130,13 +160,16 @@
 						</div>
 						<div class="summary-row total">
 							<span><strong>Tổng cộng:</strong></span>
-							<span><strong>{{ formatCurrency(invoice.totalAmount || 0) }}</strong></span>
+							<span>
+								<strong>{{ formatCurrency(invoice.totalAmount || 0) }}</strong>
+							</span>
 						</div>
 					</div>
 
 					<!-- Invoice Status -->
 					<div class="invoice-status">
-						<p><strong>Trạng thái:</strong> 
+						<p>
+							<strong>Trạng thái:</strong>
 							<span :class="`status-badge status-${getInvoiceStatusClass(invoice.invoiceStatus)}`">
 								{{ getInvoiceStatusLabel(invoice.invoiceStatus) }}
 							</span>
