@@ -453,6 +453,7 @@
 			const customerId = authStore.user?.userId
 			if (!customerId) {
 				toast.error('Không xác định được thông tin khách hàng')
+				console.log('Id tu local', customerId)
 				return
 			}
 
