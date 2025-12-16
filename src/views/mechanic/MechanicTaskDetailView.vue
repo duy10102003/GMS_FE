@@ -185,7 +185,7 @@
 							</div>
 							<div class="item-actions">
 								<GmsInput v-model.number="part.quantity" type="number" :min="1" style="width: 100px; margin-right: 0.5rem" />
-								<GmsButton variant="danger" size="small" icon="fa-delete" @click="removePart(index)" />
+								<GmsButton variant="danger" size="small" icon="fa-times" @click="removePart(index)" />
 							</div>
 						</div>
 					</div>

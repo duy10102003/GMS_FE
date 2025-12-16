@@ -61,7 +61,7 @@
 								<span :class="`badge badge-${getTaskStatusColor(task.taskStatus)}`">
 									{{ getTaskStatusLabel(task.taskStatus) }}
 								</span>
-								<span :class="`badge badge-${getServiceTicketStatusColor(task.serviceTicketStatus)}`">
+								<span :class="`badge badge-${getServiceTicketStatusColor(task.serviceTicketStatus)}`" style="text-wrap-mode: wrap">
 									{{ getServiceTicketStatusLabel(task.serviceTicketStatus) }}
 								</span>
 							</div>
@@ -79,10 +79,10 @@
 								<i class="fas fa-user"></i>
 								<span>{{ task.customerName || 'N/A' }}</span>
 							</div>
-							<div class="info-row">
+							<!-- <div class="info-row">
 								<i class="fas fa-phone"></i>
 								<span>{{ task.customerPhone || 'N/A' }}</span>
-							</div>
+							</div> -->
 						</div>
 
 						<div class="task-description">
@@ -437,6 +437,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+		flex-wrap: wrap;
 		align-items: flex-end;
 	}
 
