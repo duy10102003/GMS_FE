@@ -9,7 +9,7 @@
 
     <div class="page-shell" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
-        title="Danh sách vai trò thợ máy"
+        title="Danh sách vai trò thợ"
         :show-search="false"
         :notifications="notifications"
         @logout="handleLogout"
@@ -791,12 +791,13 @@ const deleteRole = async () => {
 
 const viewMechanics = (role) => {
   const id = role?.mechanicRoleId || role?.id
+  const roleName = role?.mechanicRoleName || "Không tên"
   if (!id) {
     toast.error("Không xác định được vai trò")
     return
   }
   // Điều hướng sang trang danh sách thợ cho role (cần có route target nếu có sẵn)
-  router.push(`/manager/mechanic-roles/${id}/mechanics`)
+  router.push(`/manager/mechanic-roles/${id}/${roleName}/mechanics`)
 }
 
 const handleLogout = async () => {
