@@ -36,15 +36,30 @@ const router = createRouter({
 					component: () => import('../views/manager/ManagerSetPriceView.vue')
 				},
 				{
+					path: 'report/mechanics',
+					name: 'managerMechanicReport',
+					component: () => import('../views/manager/MechanicReportView.vue')
+				},
+				{
+					path: 'report/parts',
+					name: 'managerPartsReport',
+					component: () => import('../views/manager/PartsReportView.vue')
+				},
+				{
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
 				},				
 				{
-					path: 'mechanic-roles/:id/mechanics',
+					path: 'mechanic-roles/:id/:roleName/mechanics',
 					name: 'managerMechanicRoleMechanics',
 					component: () => import('../views/manager/MechanicRoleMechanicsView.vue'),
 					props: true
+				},
+				{
+					path: 'invoices',
+					name: 'customerInvoicesManagerView',
+					component: () => import('../views/staff/InvoicesView.vue')
 				}
 			]
 		},
@@ -69,6 +84,11 @@ const router = createRouter({
 					path: 'bookings',
 					name: 'staffBookings',
 					component: () => import('../views/staff/BookingListStaffView.vue')
+				},
+				{
+					path: 'report/bookings',
+					name: 'staffBookingReport',
+					component: () => import('../views/staff/BookingReportStaffView.vue')
 				},
 				{
 					path: '/staff/bookings/:id',
@@ -143,6 +163,16 @@ const router = createRouter({
 					path: '/customer/service-tickets/:id',
 					name: 'customerServiceTicketDetail',
 					component: () => import('../views/customer/CustomerServiceTicketDetail.vue')
+				},
+				{
+					path: 'invoices',
+					name: 'customerInvoices',
+					component: () => import('../views/customer/InvoiceListView.vue')
+				},
+				{
+					path: 'invoices/:id',
+					name: 'customerInvoiceDetail',
+					component: () => import('../views/customer/InvoiceDetailView.vue')
 				}
 			]
 		},
@@ -211,6 +241,11 @@ const router = createRouter({
 			path: '/verify-otp',
 			name: 'verifyOtp',
 			component: () => import('../views/VerifyOtpView.vue')
+		},
+		{
+			path: '/payment-success',
+			name: 'paymentSuccess',
+			component: () => import('../views/PaymentSuccessView.vue')
 		},
 		{
 			path: '/booking/Guest',

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="dashboard-customer">
     <TheSideBar @logout="handleLogout" />
     <div class="dashboard-customer-body">
@@ -34,9 +34,14 @@
         <div class="content-card">
           <div class="table-head-row">
             <h3>Lịch gần nhất</h3>
-            <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
-              Đặt lịch mới
-            </GmsButton>
+            <div>
+              <GmsButton variant="primary" size="small" icon="" @click="$router.push('/customer/booking/all')" style="padding-right: 8px">
+                Xem tất cả
+              </GmsButton>
+              <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
+                Đặt lịch mới
+              </GmsButton>
+            </div>
           </div>
 
           <div v-if="loading" class="loading-state">

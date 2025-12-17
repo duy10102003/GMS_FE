@@ -1,15 +1,21 @@
 <template>
-  <div class="booking-create" >
-
-   <TheSideBar
+  <div
+    class="booking-create"
+    :style="{
+      '--sidebar-space': isAuthenticated ? (sidebarCollapsed ? '80px' : '260px') : '0px'
+    }"
+  >
+    <TheSideBar
+      v-if="isAuthenticated"
       :collapsed="sidebarCollapsed"
       :menu-items="menuItems"
       @update:collapsed="sidebarCollapsed = $event"
       @logout="handleLogout"
     />
 
-    <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
+    <div class="content-wrapper">
           <TheHeader
+        v-if="isAuthenticated"
         title="Tạo đặt lịch mới"
         :show-search="false"
         :notifications="notifications"
@@ -19,10 +25,9 @@
 
     <div
       class="booking-create__content"
-      :style="isAuthenticated ? { marginLeft: sidebarCollapsed ? '80px' : '260px' } : { marginLeft: '0' }"
     >
 
-      <div class="layout" display="flex">
+      <div class="layout">
         <div class="main-column">
           <section class="card" id="step-customer">
             <div class="card-title">
@@ -61,7 +66,12 @@
                 <label>Thời gian đặt lịch <span class="required">*</span></label>
                 <div class="input-icon">
                   <i class="fa-regular fa-calendar"></i>
-                  <input v-model="form.bookingTime" type="datetime-local" />
+                  <input 
+                    v-model="form.bookingTime" 
+                    type="datetime-local" 
+                    :min="minDateTime"
+                    required
+                  />
                 </div>
               </div>
               <div class="form-control">
@@ -69,8 +79,8 @@
                 <input v-model="form.vehicleName" type="text" placeholder="Nhập tên hoặc dòng xe" />
               </div>
               <div class="form-control">
-                <label>Lý do</label>
-                <select v-model="form.reason">
+                <label>Lý do <span class="required">*</span></label>
+                <select v-model="form.reason" required>
                   <option value="">Chọn lý do</option>
                   <option value="Bảo dưỡng">Bảo dưỡng</option>
                   <option value="Sửa chữa">Sửa chữa</option>
@@ -160,6 +170,8 @@ import { useToast } from '@/composables/useToast'
 import { GmsToast } from '@/components'
 import TheHeader from '@/layout/TheHeader.vue'
 import { getMenuByRole } from '@/utils/menu'
+import user from '@/services/user'
+import customerService from '@/services/customer'
 
 const router = useRouter()
 const toast = useToast()
@@ -170,6 +182,20 @@ const notifications = ref([])
 const isAuthenticated = computed(() => authService.isAuthenticated())
 const submitting = ref(false)
 const currentUser = ref(authService.getCurrentUser())
+const user1 = authService.getCurrentUser()
+const customerInfo = ref(null)
+
+// Tính toán min datetime cho input (ngày giờ hiện tại)
+const minDateTime = computed(() => {
+  const now = new Date()
+  // Format: YYYY-MM-DDTHH:mm
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+})
 
 const form = reactive({
   customerName: '',
@@ -178,11 +204,15 @@ const form = reactive({
   bookingTime: '',
   vehicleName: '',
   reason: '',
-  notes: ''
+  notes: '',
 })
 
 const goBack = () => {
+  if (isAuthenticated.value) {
   router.push('/customer/home')
+  } else {
+    router.push('/home')
+  }
 }
 
 const scrollTo = (id) => {
@@ -206,31 +236,61 @@ const formatDate = (date) => {
 }
 
 const validateForm = () => {
+  // Validate tên khách hàng
   if (!form.customerName.trim()) {
     toast.error('Vui lòng nhập tên khách hàng')
     return false
   }
+
+  // Validate số điện thoại
   if (!form.phone.trim()) {
     toast.error('Vui lòng nhập số điện thoại')
     return false
   }
-  if (!form.email.trim()) {
-    toast.error('Vui lòng nhập email')
+  // Số điện thoại Việt Nam: 10 chữ số, bắt đầu bằng 0, số thứ 2 là 3, 5, 7, 8, hoặc 9
+  const phonePattern = /^0[35789][0-9]{8}$/
+  const phoneCleaned = form.phone.trim().replace(/\s+/g, '').replace(/[-\/]/g, '')
+  if (!phonePattern.test(phoneCleaned)) {
+    toast.error('Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 0 (ví dụ: 0912345678)')
     return false
   }
+
+  // Validate email - chỉ bắt buộc nếu đã nhập, không bắt buộc cho guest
+  if (form.email.trim()) {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailPattern.test(form.email.trim())) {
     toast.error('Email không hợp lệ')
     return false
   }
+  }
+
+  // Validate thời gian đặt lịch
   if (!form.bookingTime) {
     toast.error('Vui lòng chọn thời gian đặt lịch')
     return false
   }
+  const selectedDate = new Date(form.bookingTime)
+  const now = new Date()
+  // So sánh đến phút (bỏ giây và milliseconds)
+  now.setSeconds(0, 0)
+  selectedDate.setSeconds(0, 0)
+  if (selectedDate < now) {
+    toast.error('Thời gian đặt lịch không được trước thời điểm hiện tại')
+    return false
+  }
+
+  // Validate tên xe
   if (!form.vehicleName.trim()) {
     toast.error('Vui lòng nhập tên xe')
     return false
   }
+
+  // Validate lý do
+  if (!form.reason || !form.reason.trim()) {
+    toast.error('Vui lòng chọn lý do đặt lịch')
+    return false
+  }
+
   return true
 }
 
@@ -246,8 +306,9 @@ const handleSubmit = async () => {
     } else {
       finalNotes = reasonText || noteText || null
     }
-
+  // console.log('Final notes:', user1.userId || user1.id || user1.value.id || user1.value.userId)
     const payload = {
+      // userId: currentUser.userId || currentUser.id || currentUser.value.id || currentUser.value.userId,
       customerName: form.customerName?.trim() || 'Guest',
       customerPhone: form.phone.trim(),
       customerEmail: form.email?.trim() || null,
@@ -258,8 +319,19 @@ const handleSubmit = async () => {
     }
 
     if (isAuthenticated.value) {
-      await bookingService.createByUser(payload)
+      // Đối với user đã đăng nhập: luôn gửi số điện thoại đúng như người dùng nhập
+      // (không override bằng phone từ customer info để tránh tạo customer mới trên BE)
+      const phone = form.phone.trim()
+
+      await bookingService.createByUser({
+        ...payload,
+        customerPhone: phone,
+        userId:
+          currentUser.value?.userId ||
+          currentUser.value?.id
+      })
     } else {
+      delete payload.userId
       await bookingService.createByGuest(payload)
     }
 
@@ -320,20 +392,29 @@ onMounted(async () => {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
 
 .booking-create {
+  --sidebar-space: 260px;
   padding-top: 80px;
-  padding-right: 0px;
+  padding-right: 0;
   display: flex;
   min-height: 100vh;
   background: #f4f7fb;
 }
 
-.booking-create__content {
+.content-wrapper {
   flex: 1;
   width: 100%;
-  max-width: 100%;
+  min-width: 0;
+  margin-left: var(--sidebar-space);
+  transition: margin-left 0.2s ease;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+
+.booking-create__content {
+  width: 100%;
+  max-width: 1200px;
   padding: 32px 24px 48px;
   margin: 0 auto;
-  transition: margin-left 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -358,13 +439,13 @@ onMounted(async () => {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
 .main-column {
-min-width: 100vh;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -580,6 +661,13 @@ textarea {
 }
 
 @media (max-width: 1024px) {
+  .booking-create {
+    padding-top: 70px;
+  }
+  .content-wrapper {
+    margin-left: 0;
+    padding: 0 16px 32px;
+  }
   .layout {
     grid-template-columns: 1fr;
   }
@@ -587,8 +675,12 @@ textarea {
     grid-template-columns: 1fr;
   }
   .booking-create__content {
-    margin-left: 0 !important;
-    padding: 20px;
+    padding: 20px 0 32px;
+  }
+  .process-card {
+    position: relative;
+    top: 0;
   }
 }
 </style>
+

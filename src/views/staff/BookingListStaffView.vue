@@ -111,14 +111,7 @@
                   <td>{{ item.vehicleName || '-' }}</td>
                   <td>{{ item.customerPhone || '-' }}</td>
                   <td>
-                    <span class="status" :class="statusClass(item.status ?? item.bookingStatus)">
-                      {{ statusLabel(item.status ?? item.bookingStatus) }}
-                    </span>
-                  </td>
-                  <td>{{ formatDate(item.bookingTime || item.createdDate) }}</td>
-                  <td class="actions">
-                    <GmsButton size="small" variant="info" @click="viewDetail(item)">Xem</GmsButton>
-                    <GmsButton size="small" variant="success" @click="createService(item)">Tạo service</GmsButton>
+                    <span class="status" >
                     <select
                       :value="item.status ?? item.bookingStatus ?? ''"
                       :disabled="updatingId === (item.bookingId || item.id)"
@@ -128,6 +121,21 @@
                       <option :value="1">Đang thực hiện</option>
                       <option :value="2">Đã hoàn thành</option>
                     </select>
+                    </span>
+                  </td>
+                  <td>{{ formatDate(item.bookingTime || item.createdDate) }}</td>
+                  <td class="actions">
+                    <GmsButton size="small" variant="info" @click="viewDetail(item)">Xem</GmsButton>
+                    <GmsButton size="small" variant="success" @click="createService(item)">Tạo service</GmsButton>
+                    <!-- <select
+                      :value="item.status ?? item.bookingStatus ?? ''"
+                      :disabled="updatingId === (item.bookingId || item.id)"
+                      @change="(e) => changeStatus(item, e.target.value)"
+                    >
+                      <option :value="0">Chờ xử lý</option>
+                      <option :value="1">Đang thực hiện</option>
+                      <option :value="2">Đã hoàn thành</option>
+                    </select> -->
                   </td>
                 </tr>
               </tbody>

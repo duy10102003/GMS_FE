@@ -21,6 +21,14 @@ class InvoiceService {
   }
 
   /**
+   * Lấy danh sách Invoice theo user đang đăng nhập
+   * GET /api/Invoice/by-user/{userId}
+   */
+  async getByUser(userId, params = {}) {
+    return await api.get(`/Invoice/by-user/${userId}`, params)
+  }
+
+  /**
    * Lấy chi tiết Invoice
    * GET /api/Invoice/{id}
    */
@@ -49,6 +57,14 @@ class InvoiceService {
   async setStatusPaid(id, modifiedBy) {
     return await api.put(`/Invoice/${id}/status/paid?modifiedBy=${modifiedBy}`)
   }
+
+async getCustomerInvoices(customerId, query) {
+  return api.get('/Invoice/customer', {
+    CustomerId: customerId,
+    ...query
+  })
+}
+
 }
 
 export default new InvoiceService()
