@@ -542,18 +542,14 @@
 	const loadTickets = async () => {
 		try {
 			loading.value = true
-
+			const searchKeyWord = searchQuery.value && searchQuery.value.trim() ? searchQuery.value.trim() : '';
 			// Build column filters
 			const filters = [...columnFilters.value]
 
 			// Search filter
-			if (searchQuery.value && searchQuery.value.trim()) {
-				filters.push({
-					columnName: 'ServiceTicketCode',
-					operator: 'contains',
-					value: searchQuery.value.trim()
-				})
-			}
+			// if (searchQuery.value && searchQuery.value.trim()) {
+			// 	searchKeyWord = searchQuery.value.trim()
+			// }
 
 			// Build sort
 			const columnSorts = []
@@ -579,6 +575,7 @@
 			const params = {
 				page: currentPage.value,
 				pageSize: pageSize.value,
+        keyWord: searchKeyWord,
 				columnFilters: filters,
 				columnSorts
 			}

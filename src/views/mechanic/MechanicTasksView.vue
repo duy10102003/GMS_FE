@@ -32,7 +32,10 @@
 							<option :value="SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION">Chờ xác nhận kỹ thuật</option>
 							<option :value="SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL">Đã điều chỉnh</option>
 							<option :value="SERVICE_TICKET_STATUS.IN_PROGRESS">Đang xử lý</option>
-							<option :value="SERVICE_TICKET_STATUS.COMPLETED">Hoàn thành</option>
+							<option :value="SERVICE_TICKET_STATUS.COMPLETED">Hoàn thành sửa chữa</option>
+							<option :value="SERVICE_TICKET_STATUS.COMPLETED_PAYMENT">Đã thanh toán</option>
+							<option :value="SERVICE_TICKET_STATUS.CLOSED">Đã hoàn thành dịch vụ</option>
+							<option :value="SERVICE_TICKET_STATUS.CANCELLED">Đã hủy</option>
 						</select>
 					</div>
 
@@ -79,10 +82,10 @@
 								<i class="fas fa-user"></i>
 								<span>{{ task.customerName || 'N/A' }}</span>
 							</div>
-							<!-- <div class="info-row">
+							<div class="info-row">
 								<i class="fas fa-phone"></i>
 								<span>{{ task.customerPhone || 'N/A' }}</span>
-							</div> -->
+							</div>
 						</div>
 
 						<div class="task-description">
@@ -238,24 +241,27 @@
 				return
 			}
 
+			const searchKeyWord = searchQuery.value && searchQuery.value.trim() ? searchQuery.value.trim() : ''
+
 			const params = {
 				page: currentPage.value,
 				pageSize: pageSize.value,
+				keyWord: searchKeyWord,
 				assignedToTechnical: currentUser.userId,
 				taskStatus: filters.value.taskStatus,
 				serviceTicketStatus: filters.value.serviceTicketStatus
 			}
 
 			// Add search filter if exists
-			if (searchQuery.value && searchQuery.value.trim()) {
-				params.columnFilters = [
-					{
-						columnName: 'ServiceTicketCode',
-						operator: 'contains',
-						value: searchQuery.value.trim()
-					}
-				]
-			}
+			// if (searchQuery.value && searchQuery.value.trim()) {
+			// 	params.columnFilters = [
+			// 		{
+			// 			columnName: 'ServiceTicketCode',
+			// 			operator: 'contains',
+			// 			value: searchQuery.value.trim()
+			// 		}
+			// 	]
+			// }
 
 			const response = await technicalTaskService.getPaging(params)
 			tasks.value = response.data.items || []

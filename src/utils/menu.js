@@ -19,13 +19,6 @@ export const CUSTOMER_MENU = [
 		permission: PERMISSIONS.VIEW_OWN_PROFILE
 	},
 	{
-		key: 'vehicles',
-		label: 'Xe của tôi',
-		icon: 'fa-car',
-		path: '/customer/vehicles',
-		permission: PERMISSIONS.VIEW_OWN_VEHICLES
-	},
-	{
 		key: 'service-tickets',
 		label: 'Lịch sử sửa chữa',
 		icon: 'fa-wrench',
@@ -38,21 +31,21 @@ export const CUSTOMER_MENU = [
 		icon: 'fa-file-invoice',
 		path: '/customer/invoices',
 		permission: PERMISSIONS.VIEW_OWN_INVOICES
-	},
-	{
-		key: 'contact',
-		label: 'Liên hệ mua xe',
-		icon: 'fa-phone',
-		path: '/customer/contact',
-		permission: PERMISSIONS.VIEW_OWN_PROFILE
-	},
-	{
-		key: 'profile',
-		label: 'Hồ sơ',
-		icon: 'fa-user',
-		path: '/customer/profile',
-		permission: PERMISSIONS.VIEW_OWN_PROFILE
 	}
+	// {
+	// 	key: 'contact',
+	// 	label: 'Liên hệ mua xe',
+	// 	icon: 'fa-phone',
+	// 	path: '/customer/contact',
+	// 	permission: PERMISSIONS.VIEW_OWN_PROFILE
+	// },
+	// {
+	// 	key: 'profile',
+	// 	label: 'Hồ sơ',
+	// 	icon: 'fa-user',
+	// 	path: '/customer/profile',
+	// 	permission: PERMISSIONS.VIEW_OWN_PROFILE
+	// }
 ]
 
 export const STAFF_MENU = [
@@ -83,14 +76,14 @@ export const STAFF_MENU = [
 		icon: 'fa-credit-card',
 		path: '/staff/invoices',
 		permission: PERMISSIONS.PROCESS_PAYMENT
-	},
-	{
-		key: 'inventory-alerts',
-		label: 'Cảnh báo tồn kho',
-		icon: 'fa-exclamation-triangle',
-		path: '/staff/inventory-alerts',
-		permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
 	}
+	// {
+	// 	key: 'inventory-alerts',
+	// 	label: 'Cảnh báo tồn kho',
+	// 	icon: 'fa-exclamation-triangle',
+	// 	path: '/staff/inventory-alerts',
+	// 	permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
+	// }
 ]
 
 export const MANAGER_MENU = [
@@ -220,14 +213,14 @@ export const MECHANIC_MENU = [
 		icon: 'fa-wrench',
 		path: '/mechanic/tasks',
 		permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
-	},
-	{
-		key: 'history',
-		label: 'Lịch sử',
-		icon: 'fa-history',
-		path: '/mechanic/history',
-		permission: PERMISSIONS.VIEW_HISTORY
 	}
+	// {
+	// 	key: 'history',
+	// 	label: 'Lịch sử',
+	// 	icon: 'fa-history',
+	// 	path: '/mechanic/history',
+	// 	permission: PERMISSIONS.VIEW_HISTORY
+	// }
 ]
 
 /**
