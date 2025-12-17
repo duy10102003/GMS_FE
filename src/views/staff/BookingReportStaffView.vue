@@ -2,7 +2,7 @@
   <div class="booking-report">
     <TheSideBar :collapsed="sidebarCollapsed" :collapsible="true" @update:collapsed="sidebarCollapsed = $event" @logout="handleLogout" />
     <div class="booking-report__body">
-      <TheHeader title="Báo cáo booking" :show-search="false" @logout="handleLogout" />
+      <TheHeader title="Báo cáo lịch đặt" :show-search="false" @logout="handleLogout" />
 
       <main class="page">
         <div class="filters">
@@ -26,7 +26,7 @@
         <div class="summary-grid">
           <div class="stat-card">
             <div class="stat-icon soft-blue"><i class="fas fa-calendar-check"></i></div>
-            <div class="stat-label">Tổng booking</div>
+            <div class="stat-label">Tổng lịch đặt</div>
             <div class="stat-value">{{ filteredBookings.length }}</div>
           </div>
           <div class="stat-card">
@@ -93,7 +93,7 @@
             <div class="panel-header">
               <div>
                 <p class="eyebrow">Theo ngày</p>
-                <h3>Số booking gần đây</h3>
+                <h3>Số lịch đặt gần đây</h3>
               </div>
               <span class="pill ghost">7 ngày</span>
             </div>
@@ -143,9 +143,10 @@
                   <td>{{ row.customerPhone || '-' }}</td>
                   <td>{{ formatDate(row.bookingTime || row.createdDate) }}</td>
                   <td>
-                    <span class="status" :class="statusClass(row.status || row.bookingStatus)">
-                      {{ statusLabel(row.status || row.bookingStatus) }}
+                    <span class="status" :class="statusClass(row.bookingStatus)">
+                      {{ statusLabel(row.bookingStatus) }}
                     </span>
+
                   </td>
                 </tr>
               </tbody>
@@ -233,7 +234,7 @@ const normalizeBooking = (item = {}) => ({
   customerPhone: item.customerPhone || item.phone,
   vehicleName: item.vehicleName || item.vehicle,
   bookingTime: item.bookingTime || item.createdDate,
-  status: item.status ?? item.bookingStatus
+  bookingStatus: Number(item.bookingStatus) // ÉP KIỂU TẠI NGUỒN
 })
 
 const applyFilters = () => {
@@ -303,28 +304,47 @@ const donutStyle = computed(() => {
 const recentSeries = computed(() => {
   const days = 7
   const today = new Date()
+  today.setHours(0, 0, 0, 0) // chuẩn hóa ngày
+
   const start = new Date(today)
-  start.setDate(today.getDate() - days + 1)
+  const end = new Date(today)
+  end.setDate(today.getDate() + days - 1)
 
   const bucket = {}
+
   filteredBookings.value.forEach((b) => {
     const d = b.bookingTime ? new Date(b.bookingTime) : null
-    if (!d || d < start) return
+    if (!d) return
+    d.setHours(0, 0, 0, 0)
+
+    // ✅ chỉ lấy booking trong 7 ngày tới
+    if (d < start || d > end) return
+
     const key = d.toISOString().slice(0, 10)
     bucket[key] = (bucket[key] || 0) + 1
   })
 
+  // tạo labels cho 7 ngày tới
   const labels = []
   for (let i = 0; i < days; i++) {
     const d = new Date(start)
     d.setDate(start.getDate() + i)
-    const key = d.toISOString().slice(0, 10)
-    labels.push(key)
+    labels.push(d.toISOString().slice(0, 10))
   }
-  const counts = labels.map((label) => ({ label, count: bucket[label] || 0 }))
-  const max = Math.max(...counts.map((c) => c.count), 1)
-  return counts.map((c) => ({ ...c, percent: c.count ? Math.round((c.count / max) * 100) : 0 }))
+
+  const counts = labels.map((label) => ({
+    label,
+    count: bucket[label] || 0
+  }))
+
+  const max = Math.max(...counts.map(c => c.count), 1)
+
+  return counts.map(c => ({
+    ...c,
+    percent: c.count ? Math.round((c.count / max) * 100) : 0
+  }))
 })
+
 
 const changePage = (page) => {
   if (page < 1 || page > totalPages.value) return

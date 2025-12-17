@@ -1,7 +1,8 @@
 import api from './api.js'
 import { API_ENDPOINTS } from '../constant/api.js'
 import { ROLES } from '../constant/roles.js'
-
+import { defineStore } from 'pinia'
+import authService from '@/services/auth'
 /**
  * Auth Service
  * Xử lý authentication và user management
@@ -112,7 +113,40 @@ class AuthService {
     }
   }
 }
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: authService.getCurrentUser(),
+    loading: false
+  }),
 
+  getters: {
+    isAuthenticated: (state) => !!state.user
+  },
+
+  actions: {
+    async fetchUser() {
+      // Nếu đã có user thì không gọi API nữa
+      if (this.user) return this.user
+
+      try {
+        this.loading = true
+        const profile = await authService.getProfile()
+        this.user = profile
+        return profile
+      } catch (error) {
+        this.user = null
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async logout() {
+      await authService.logout()
+      this.user = null
+    }
+  }
+})
 export default new AuthService()
 
 

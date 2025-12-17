@@ -9,7 +9,7 @@
 
     <div class="page-shell" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
       <TheHeader
-        :title="`Thợ của vai trò #${roleIdNumber || roleId}`"
+        :title="`Thợ của vai trò #${roleName}`"
         :show-search="false"
         :notifications="notifications"
         @logout="handleLogout"
@@ -18,7 +18,7 @@
       <main class="page">
         <div class="page-head">
           <div>
-            <h2>Danh sách thợ</h2>
+            <!-- <h2>Danh sách thợ</h2> -->
             <p>Hiển thị thợ thuộc vai trò đang chọn</p>
           </div>
           <div class="page-head__actions">
@@ -371,6 +371,8 @@ const toast = useToast()
 
 const roleId = route.params.id
 const roleIdNumber = computed(() => Number(roleId))
+
+const roleName = route.params.roleName || ""
 const sidebarCollapsed = ref(false)
 const notifications = ref([])
 const menuItems = ref([])
