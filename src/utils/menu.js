@@ -4,101 +4,86 @@ import { ROLES, PERMISSIONS } from '../constant/roles.js'
  * Menu items cho từng role
  */
 export const CUSTOMER_MENU = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    icon: 'fa-gauge',
-    path: '/customer/dashboard',
-    permission: PERMISSIONS.VIEW_OWN_PROFILE
-  },
-  {
-    key: 'Booking',
-    label: 'booking',
-    icon: 'fa-gauge',
-    path: '/customer/home',
-    permission: PERMISSIONS.VIEW_OWN_PROFILE
-  },
-  {
-    key: 'vehicles',
-    label: 'Xe của tôi',
-    icon: 'fa-car',
-    path: '/customer/vehicles',
-    permission: PERMISSIONS.VIEW_OWN_VEHICLES
-  },
-  {
-    key: 'service-tickets',
-    label: 'Lịch sử sửa chữa',
-    icon: 'fa-wrench',
-    path: '/customer/service-tickets',
-    permission: PERMISSIONS.VIEW_OWN_INVOICES
-  },
-  {
-    key: 'invoices',
-    label: 'Hóa đơn',
-    icon: 'fa-file-invoice',
-    path: '/customer/invoices',
-    permission: PERMISSIONS.VIEW_OWN_INVOICES
-  },
-  {
-    key: 'contact',
-    label: 'Liên hệ mua xe',
-    icon: 'fa-phone',
-    path: '/customer/contact',
-    permission: PERMISSIONS.VIEW_OWN_PROFILE
-  },
-  {
-    key: 'profile',
-    label: 'Hồ sơ',
-    icon: 'fa-user',
-    path: '/customer/profile',
-    permission: PERMISSIONS.VIEW_OWN_PROFILE
-  }
+	{
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: 'fa-gauge',
+		path: '/customer/dashboard',
+		permission: PERMISSIONS.VIEW_OWN_PROFILE
+	},
+	{
+		key: 'Booking',
+		label: 'booking',
+		icon: 'fa-gauge',
+		path: '/customer/home',
+		permission: PERMISSIONS.VIEW_OWN_PROFILE
+	},
+	{
+		key: 'service-tickets',
+		label: 'Lịch sử sửa chữa',
+		icon: 'fa-wrench',
+		path: '/customer/service-tickets',
+		permission: PERMISSIONS.VIEW_OWN_INVOICES
+	},
+	{
+		key: 'invoices',
+		label: 'Hóa đơn',
+		icon: 'fa-file-invoice',
+		path: '/customer/invoices',
+		permission: PERMISSIONS.VIEW_OWN_INVOICES
+	}
+	// {
+	// 	key: 'contact',
+	// 	label: 'Liên hệ mua xe',
+	// 	icon: 'fa-phone',
+	// 	path: '/customer/contact',
+	// 	permission: PERMISSIONS.VIEW_OWN_PROFILE
+	// },
+	// {
+	// 	key: 'profile',
+	// 	label: 'Hồ sơ',
+	// 	icon: 'fa-user',
+	// 	path: '/customer/profile',
+	// 	permission: PERMISSIONS.VIEW_OWN_PROFILE
+	// }
 ]
 
 export const STAFF_MENU = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    icon: 'fa-gauge',
-    path: '/staff/dashboard',
-    permission: PERMISSIONS.VIEW_SERVICE_TICKETS
-  },
-  {
-    key: 'service-tickets',
-    label: 'Phiếu dịch vụ',
-    icon: 'fa-clipboard-list',
-    path: '/staff/service-tickets',
-    permission: PERMISSIONS.VIEW_SERVICE_TICKETS
-  },
-  {
-    key: 'bookings',
-    label: 'Lịch đặt',
-    icon: 'fa-calendar-check',
-    path: '/staff/bookings',
-    permission: PERMISSIONS.VIEW_SERVICE_TICKETS
-  },
-  {
-    key: 'payment',
-    label: 'Hóa đơn',
-    icon: 'fa-credit-card',
-    path: '/staff/invoices',
-    permission: PERMISSIONS.PROCESS_PAYMENT
-  },
-  {
-    key: 'inventory-alerts',
-    label: 'Cảnh báo kho',
-    icon: 'fa-exclamation-triangle',
-    path: '/staff/inventory-alerts',
-    permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
-  },
-  {
-    key: 'inventory-alerts',
-    label: 'Báo cáo',
-    icon: 'fa-exclamation-triangle',
-    path: '/staff/report/bookings',
-    permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
-  }
-  
+	{
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: 'fa-gauge',
+		path: '/staff/dashboard',
+		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
+	},
+	{
+		key: 'service-tickets',
+		label: 'Phiếu dịch vụ',
+		icon: 'fa-clipboard-list',
+		path: '/staff/service-tickets',
+		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
+	},
+	{
+		key: 'bookings',
+		label: 'Lịch đặt',
+		icon: 'fa-calendar-check',
+		path: '/staff/bookings',
+		permission: PERMISSIONS.VIEW_SERVICE_TICKETS
+	},
+	{
+		key: 'payment',
+		label: 'Hóa Đơn',
+		icon: 'fa-credit-card',
+		path: '/staff/invoices',
+		permission: PERMISSIONS.PROCESS_PAYMENT
+	}
+	// {
+	// 	key: 'inventory-alerts',
+	// 	label: 'Cảnh báo tồn kho',
+	// 	icon: 'fa-exclamation-triangle',
+	// 	path: '/staff/inventory-alerts',
+	// 	permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
+	// }
 ]
 
 export const MANAGER_MENU = [
@@ -238,27 +223,27 @@ export const STOCKER_MENU = [
 ]
 
 export const MECHANIC_MENU = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    icon: 'fa-gauge',
-    path: '/mechanic/dashboard',
-    permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
-  },
-  {
-    key: 'tickets',
-    label: 'Phiếu dịch vụ',
-    icon: 'fa-wrench',
-    path: '/mechanic/tasks',
-    permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
-  },
-  {
-    key: 'history',
-    label: 'Lịch sử',
-    icon: 'fa-history',
-    path: '/mechanic/history',
-    permission: PERMISSIONS.VIEW_HISTORY
-  }
+	{
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: 'fa-gauge',
+		path: '/mechanic/dashboard',
+		permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
+	},
+	{
+		key: 'tickets',
+		label: 'Phiếu dịch vụ',
+		icon: 'fa-wrench',
+		path: '/mechanic/tasks',
+		permission: PERMISSIONS.VIEW_ASSIGNED_TICKETS
+	}
+	// {
+	// 	key: 'history',
+	// 	label: 'Lịch sử',
+	// 	icon: 'fa-history',
+	// 	path: '/mechanic/history',
+	// 	permission: PERMISSIONS.VIEW_HISTORY
+	// }
 ]
 
 /**
