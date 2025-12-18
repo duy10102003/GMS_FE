@@ -46,7 +46,7 @@ const router = createRouter({
 					component: () => import('../views/manager/PartsReportView.vue')
 				},
 				{
-					path: 'warranties',
+					path: '/manager/warranties',
 					name: 'managerWarranties',
 					component: () => import('../views/manager/WarrantyListView.vue')
 				},
