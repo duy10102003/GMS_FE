@@ -115,7 +115,7 @@
 							</h5>
 							<div class="mb-3">
 								<label class="form-label">Mô tả vấn đề</label>
-								<textarea v-model="formData.initialIssue" class="form-control" rows="4" placeholder="Nhập mô tả vấn đề của xe..." required></textarea>
+								<textarea v-model="formData.initialIssue" class="form-control" rows="4" maxlength="255" placeholder="Nhập mô tả vấn đề của xe..." required></textarea>
 							</div>
 						</div>
 
