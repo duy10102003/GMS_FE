@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="dashboard-customer">
     <TheSideBar @logout="handleLogout" />
     <div class="dashboard-customer-body">
@@ -35,7 +35,7 @@
           <div class="table-head-row">
             <h3>Lịch gần nhất</h3>
             <div>
-              <GmsButton variant="primary" size="small" icon="" @click="$router.push('/customer/booking/all')" style="padding-right: 8px">
+              <GmsButton variant="primary" size="small" icon="" @click="$router.push('/customer/booking/all')" style="margin-right: 8px">
                 Xem tất cả
               </GmsButton>
               <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
@@ -101,9 +101,6 @@
             </GmsButton>
           </div>
 
-          <div class="table-footer" v-if="bookings.length > 0">
-            <a href="#" @click.prevent="$router.push('/customer/booking/all')">Xem tất cả →</a>
-          </div>
         </div>
       </main>
     </div>

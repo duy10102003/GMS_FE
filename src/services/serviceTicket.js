@@ -92,6 +92,22 @@ class ServiceTicketService {
   }
 
   /**
+   * Lấy danh sách task của mechanic (paging)
+   * POST /api/ServiceTicket/mechanic/{mechanicId}/tasks
+   */
+  async getMechanicTasks(mechanicId, params) {
+    return await api.post(`/ServiceTicket/mechanic/${mechanicId}/tasks`, params)
+  }
+
+  /**
+   * Lấy chi tiết task của mechanic
+   * GET /api/ServiceTicket/mechanic/{mechanicId}/tasks/{technicalTaskId}
+   */
+  async getMechanicTaskDetail(mechanicId, technicalTaskId) {
+    return await api.get(`/ServiceTicket/mechanic/${mechanicId}/tasks/${technicalTaskId}`)
+  }
+
+  /**
    * Customer xác nhận Service Ticket
    * PUT /api/ServiceTicket/{id}/status/customerConfirm
    */
@@ -108,4 +124,3 @@ class ServiceTicketService {
 }
 
 export default new ServiceTicketService()
-

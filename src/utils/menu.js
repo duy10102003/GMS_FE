@@ -3,6 +3,7 @@ import { ROLES, PERMISSIONS } from '../constant/roles.js'
 /**
  * Menu items cho từng role
  */
+
 export const CUSTOMER_MENU = [
 	{
 		key: 'dashboard',
@@ -87,139 +88,146 @@ export const STAFF_MENU = [
 ]
 
 export const MANAGER_MENU = [
-  // {
-  //   key: 'dashboard',
-  //   label: 'Dashboard',
-  //   icon: 'fa-gauge',
-  //   path: '/manager/dashboard',
-  //   permission: PERMISSIONS.VIEW_REPORTS
-  // },
-  {
-    key: 'reports',
-    label: 'Báo cáo tổng hợp',
-    icon: 'fa-chart-pie',
-    path: '/manager/reports',
-    permission: PERMISSIONS.VIEW_REPORTS,
-    children: [
-      {
-        key: 'report-mechanics',
-        label: 'Báo cáo thợ máy',
-        icon: 'fa-gear',
-        path: '/manager/report/mechanics',
-        permission: PERMISSIONS.VIEW_REPORTS
-      },
-      {
-        key: 'report-parts',
-        label: 'Báo cáo phụ tùng',
-        icon: 'fa-boxes-stacked',
-        path: '/manager/report/parts',
-        permission: PERMISSIONS.VIEW_REPORTS
-      }
-    ]
-  },
-  {
-    key: 'staff',
-    label: 'Nhân sự',
-    icon: 'fa-users',
-    path: '/manager/staff',
-    permission: PERMISSIONS.MANAGE_STAFF
-  },
-  {
-    key: 'inventory',
-    label: 'Kho phụ tùng',
-    icon: 'fa-warehouse',
-    path: '/manager/inventory',
-    permission: PERMISSIONS.MANAGE_INVENTORY,
-    children: [
-      {
-        key: 'manage-parts',
-        label: 'Quản lý phụ tùng',
-        icon: 'fa-cogs',
-        path: '/manager/inventory/parts',
-        permission: PERMISSIONS.MANAGE_INVENTORY
-      },
-      {
-        key: 'low-stock',
-		label: 'Cảnh báo từ Staff',
-        icon: 'fa-exclamation-triangle',
-        path: '/manager/inventory/low-stock',
-        permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
-      },
-      {
-        key: 'restock',
-        label: 'Nhập kho',
-        icon: 'fa-shopping-cart',
-        path: '/manager/price-requests',
-        permission: PERMISSIONS.APPROVE_RESTOCK
-      }
-    ]
-  },
-  {
-    key: 'revenue',
-    label: 'Doanh thu',
-    icon: 'fa-dollar-sign',
-    path: '/manager/revenue',
-    permission: PERMISSIONS.VIEW_REVENUE
-  },
-  {
-    key: 'garage-services',
-    label: 'Dịch vụ garage',
-    icon: 'fa-tools',
-    path: '/manager/garage-services',
-    permission: PERMISSIONS.VIEW_REPORTS
-  },
-  {
-    key: 'mechanic-roles',
-    label: 'Vai trò thợ máy',
-    icon: 'fa-user-gear',
-    path: '/manager/mechanic-roles',
-    permission: PERMISSIONS.MANAGE_STAFF
-  },
-  {
-    key: 'settings',
-    label: 'Cài đặt hệ thống',
-    icon: 'fa-cog',
-    path: '/manager/settings',
-    permission: PERMISSIONS.VIEW_REPORTS
-  }
+	{
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: 'fa-gauge',
+		path: '/manager/dashboard',
+		permission: PERMISSIONS.VIEW_REPORTS
+	},
+	{
+		key: 'reports',
+		label: 'Báo cáo tổng hợp',
+		icon: 'fa-chart-pie',
+		path: '/manager/reports',
+		permission: PERMISSIONS.VIEW_REPORTS,
+		children: [
+			{
+				key: 'report-mechanics',
+				label: 'Báo cáo thợ máy',
+				icon: 'fa-gear',
+				path: '/manager/report/mechanics',
+				permission: PERMISSIONS.VIEW_REPORTS
+			},
+			{
+				key: 'report-parts',
+				label: 'Báo cáo phụ tùng',
+				icon: 'fa-boxes-stacked',
+				path: '/manager/report/parts',
+				permission: PERMISSIONS.VIEW_REPORTS
+			}
+		]
+	},
+	{
+		key: 'staff',
+		label: 'Nhân sự',
+		icon: 'fa-users',
+		path: '/manager/staff',
+		permission: PERMISSIONS.MANAGE_STAFF
+	},
+	{
+		key: 'inventory',
+		label: 'Kho phụ tùng',
+		icon: 'fa-warehouse',
+		path: '/manager/inventory',
+		permission: PERMISSIONS.MANAGE_INVENTORY,
+		children: [
+			{
+				key: 'manage-parts',
+				label: 'Quản lý phụ tùng',
+				icon: 'fa-cogs',
+				path: '/manager/inventory/parts',
+				permission: PERMISSIONS.MANAGE_INVENTORY
+			},
+			{
+				key: 'low-stock',
+				label: 'Cảnh báo tồn kho',
+				icon: 'fa-exclamation-triangle',
+				path: '/manager/inventory/low-stock',
+				permission: PERMISSIONS.VIEW_INVENTORY_ALERTS
+			},
+			{
+				key: 'restock',
+				label: 'Nhập kho',
+				icon: 'fa-shopping-cart',
+				path: '/manager/price-requests',
+				permission: PERMISSIONS.APPROVE_RESTOCK
+			}
+		]
+	},
+	{
+		key: 'revenue',
+		label: 'Doanh thu',
+		icon: 'fa-dollar-sign',
+		path: '/manager/revenue',
+		permission: PERMISSIONS.VIEW_REVENUE
+	},
+	{
+		key: 'garage-services',
+		label: 'Dịch vụ garage',
+		icon: 'fa-tools',
+		path: '/manager/garage-services',
+		permission: PERMISSIONS.VIEW_REPORTS
+	},
+	{
+		key: 'warranties',
+		label: 'Bảo hành',
+		icon: 'fa-shield-alt',
+		path: '/manager/warranties',
+		permission: PERMISSIONS.VIEW_REPORTS
+	},
+	{
+		key: 'mechanic-roles',
+		label: 'Vai trò thợ máy',
+		icon: 'fa-user-gear',
+		path: '/manager/mechanic-roles',
+		permission: PERMISSIONS.MANAGE_STAFF
+	},
+	{
+		key: 'settings',
+		label: 'Cài đặt hệ thống',
+		icon: 'fa-cog',
+		path: '/manager/settings',
+		permission: PERMISSIONS.VIEW_REPORTS
+	}
 ]
 
 export const STOCKER_MENU = [
-  {
-    key: 'dashboard',
-    label: 'Dashboard',
-    icon: 'fa-gauge',
-    path: '/stocker/dashboard',
-    permission: PERMISSIONS.VIEW_INVENTORY
-  },
-  {
-    key: 'inventory',
-    label: 'Kho hàng',
-    icon: 'fa-warehouse',
-    path: '/stocker/price-requests',
-    permission: PERMISSIONS.VIEW_INVENTORY
-  },
-  {
-    key: 'part-categories',
-    label: 'Danh mục phụ tùng',
-    icon: 'fa-list',
-    path: '/stocker/part-categories',
-    permission: PERMISSIONS.MANAGE_PARTS
-  },
-  {
-    key: 'parts',
-    label: 'Quản lý phụ tùng',
-    icon: 'fa-cogs',
-    path: '/stocker/parts',
-    permission: PERMISSIONS.MANAGE_PARTS
-  },
-  {
-    key: 'restock-requests',
-    label: 'Yêu cầu nhập kho',
-    icon: 'fa-shopping-cart',
-    path: '/stocker/restock-requests',
-    permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
-  }
+	{
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: 'fa-gauge',
+		path: '/stocker/dashboard',
+		permission: PERMISSIONS.VIEW_INVENTORY
+	},
+	{
+		key: 'inventory',
+		label: 'Kho hàng',
+		icon: 'fa-warehouse',
+		path: '/stocker/price-requests',
+		permission: PERMISSIONS.VIEW_INVENTORY
+	},
+	{
+		key: 'part-categories',
+		label: 'Danh mục phụ tùng',
+		icon: 'fa-list',
+		path: '/stocker/part-categories',
+		permission: PERMISSIONS.MANAGE_PARTS
+	},
+	{
+		key: 'parts',
+		label: 'Quản lý phụ tùng',
+		icon: 'fa-cogs',
+		path: '/stocker/parts',
+		permission: PERMISSIONS.MANAGE_PARTS
+	},
+	{
+		key: 'restock-requests',
+		label: 'Yêu cầu nhập kho',
+		icon: 'fa-shopping-cart',
+		path: '/stocker/restock-requests',
+		permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
+	}
 ]
 
 export const MECHANIC_MENU = [
@@ -247,33 +255,34 @@ export const MECHANIC_MENU = [
 ]
 
 /**
- * Lấy menu items dựa trên role
+ * Lấy menu theo role
  */
 export function getMenuByRole(role) {
-  if (!role) {
-    console.warn('getMenuByRole: role is empty')
-    return []
-  }
+	if (!role) {
+		console.warn('getMenuByRole: role is empty')
+		return []
+	}
 
-  const normalizedRole = role.toLowerCase().trim()
-  const menuMap = {
-    [ROLES.CUSTOMER]: CUSTOMER_MENU,
-    [ROLES.STAFF]: STAFF_MENU,
-    [ROLES.MANAGER]: MANAGER_MENU,
-    [ROLES.STOCKER]: STOCKER_MENU,
-    [ROLES.MECHANIC]: MECHANIC_MENU
-  }
+	const normalizedRole = role.toLowerCase().trim()
 
-  if (menuMap[role]) return menuMap[role]
-  if (menuMap[normalizedRole]) return menuMap[normalizedRole]
+	const menuMap = {
+		[ROLES.CUSTOMER]: CUSTOMER_MENU,
+		[ROLES.STAFF]: STAFF_MENU,
+		[ROLES.MANAGER]: MANAGER_MENU,
+		[ROLES.STOCKER]: STOCKER_MENU,
+		[ROLES.MECHANIC]: MECHANIC_MENU
+	}
 
-  const roleKeys = Object.keys(ROLES)
-  for (const key of roleKeys) {
-    if (ROLES[key].toLowerCase() === normalizedRole) {
-      return menuMap[ROLES[key]] || []
-    }
-  }
+	if (menuMap[role]) return menuMap[role]
+	if (menuMap[normalizedRole]) return menuMap[normalizedRole]
 
-  console.warn('getMenuByRole: No menu found for role:', role, 'normalized:', normalizedRole)
-  return []
+	const roleKeys = Object.keys(ROLES)
+	for (const key of roleKeys) {
+		if (ROLES[key].toLowerCase() === normalizedRole) {
+			return menuMap[ROLES[key]] || []
+		}
+	}
+
+	console.warn('getMenuByRole: No menu found for role:', role, 'normalized:', normalizedRole)
+	return []
 }
