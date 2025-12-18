@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div
     class="booking-create"
     :style="{
@@ -306,43 +306,40 @@ const handleSubmit = async () => {
     } else {
       finalNotes = reasonText || noteText || null
     }
-  // console.log('Final notes:', user1.userId || user1.id || user1.value.id || user1.value.userId)
     const payload = {
-      // userId: currentUser.userId || currentUser.id || currentUser.value.id || currentUser.value.userId,
       customerName: form.customerName?.trim() || 'Guest',
       customerPhone: form.phone.trim(),
       customerEmail: form.email?.trim() || null,
       vehicleName: form.vehicleName?.trim() || null,
       bookingTime: form.bookingTime ? new Date(form.bookingTime).toISOString() : null,
       notes: finalNotes || '',
-      note: finalNotes || '' // phòng trường hợp BE dùng field note
+      note: finalNotes || ''
     }
 
     if (isAuthenticated.value) {
-      // Đối với user đã đăng nhập: luôn gửi số điện thoại đúng như người dùng nhập
-      // (không override bằng phone từ customer info để tránh tạo customer mới trên BE)
       const phone = form.phone.trim()
+      const userId = currentUser.value?.userId || currentUser.value?.id
 
       await bookingService.createByUser({
         ...payload,
         customerPhone: phone,
-        userId:
-          currentUser.value?.userId ||
-          currentUser.value?.id
+        userId
       })
+      toast.success('Đặt lịch thành công.')
+      setTimeout(() => router.push('/customer/home'), 1000)
     } else {
-      delete payload.userId
       await bookingService.createByGuest(payload)
+      toast.success('Đặt lịch thành công. Vui lòng đăng nhập bằng Gmail để xem chi tiết lịch đặt.')
+      setTimeout(() => router.push('/home'), 1000)
     }
 
-    toast.success('Đặt lịch thành công. Vui lòng đăng nhập bằng email để xem danh sách booking.')
-    form.customerName = ''
-    form.phone = ''
-    form.email = ''
-    form.bookingTime = ''
-    form.vehicleName = ''
-    form.reason = ''
-    form.notes = ''
+    // form.customerName = ''
+    // form.phone = ''
+    // form.email = ''
+    // form.bookingTime = ''
+    // form.vehicleName = ''
+    // form.reason = ''
+    // form.notes = ''
   } catch (error) {
     toast.error('Không tạo được đặt lịch', error.message || error.userMsg || '')
   } finally {
@@ -683,4 +680,5 @@ textarea {
   }
 }
 </style>
+
 
