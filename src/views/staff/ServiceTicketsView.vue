@@ -523,7 +523,7 @@
 			toast.success('Phân công thành công!', `Đã giao phiếu #${selectedTicket.value.serviceTicketCode} cho thợ`)
 			await loadTickets()
 		} catch (error) {
-			toast.error('Lỗi khi phân công', error.message || error.userMsg || 'Có lỗi xảy ra')
+			toast.error('Mô tả không được vượt quá 255 ký tự.')
 		} finally {
 			assignLoading.value = false
 		}
@@ -542,7 +542,7 @@
 	const loadTickets = async () => {
 		try {
 			loading.value = true
-			const searchKeyWord = searchQuery.value && searchQuery.value.trim() ? searchQuery.value.trim() : '';
+			const searchKeyWord = searchQuery.value && searchQuery.value.trim() ? searchQuery.value.trim() : ''
 			// Build column filters
 			const filters = [...columnFilters.value]
 
@@ -575,7 +575,7 @@
 			const params = {
 				page: currentPage.value,
 				pageSize: pageSize.value,
-        keyWord: searchKeyWord,
+				keyWord: searchKeyWord,
 				columnFilters: filters,
 				columnSorts
 			}
