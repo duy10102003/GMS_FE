@@ -102,7 +102,11 @@
 
           <div class="cell actions-cell" @click.stop>
             <button class="btn-action info" @click="viewBooking(booking)">Xem</button>
-            <button class="btn-action primary" @click="editBooking(booking)">Sửa</button>
+            <button
+              v-if="![1, 2, 'REJECT', 'CONFIRMED'].includes(booking.status ?? booking.bookingStatus)"
+              class="btn-action primary"
+              @click="editBooking(booking)"
+            >Sửa</button>
             <button class="btn-action danger" @click="deleteBooking(booking)">Xóa</button>
           </div>
         </div>
@@ -168,6 +172,11 @@ const viewBooking = (booking) => {
 }
 
 const editBooking = (booking) => {
+  const status = booking.status ?? booking.bookingStatus
+  if (status === 1 || status === 2 || status === 'REJECT' || status === 'CONFIRMED') {
+    toast.error('Booking đang thực hiện hoặc đã hoàn thành, không thể sửa')
+    return
+  }
   const id = booking.bookingId || booking.id
   if (!id) return
   router.push(`/customer/booking/${id}/edit`)
