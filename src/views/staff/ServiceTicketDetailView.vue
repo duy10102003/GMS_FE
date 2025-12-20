@@ -13,7 +13,7 @@
 
 						<GmsButton v-if="canAssign" variant="success" icon="fa-user-plus" @click="openAssignDialog">Phân công thợ</GmsButton>
 
-						<GmsButton v-if="canConfirmAdjustment" variant="warning" icon="fa-check" @click="confirmAdjustment">Xác nhận điều chỉnh</GmsButton>
+						<!-- <GmsButton v-if="canConfirmAdjustment" variant="warning" icon="fa-check" @click="confirmAdjustment">Xác nhận điều chỉnh</GmsButton> -->
 
 						<GmsButton v-if="canStartInProgress" variant="primary" icon="fa-play" @click="handleStartInProgress">Bắt đầu xử lý</GmsButton>
 						<GmsButton v-if="canComplete" variant="success" icon="fa-check" @click="handleCompleteTask">Hoàn thành công việc</GmsButton>
