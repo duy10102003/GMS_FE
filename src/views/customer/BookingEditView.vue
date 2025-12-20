@@ -283,6 +283,11 @@ const loadBooking = async () => {
     form.vehicleName = data.vehicleName || data.vehicle || ''
     form.reason = data.reason || ''
     form.notes = data.notes || data.note || ''
+    if (form.status === 1 || form.status === 2 || form.status === 'IN_PROGRESS' || form.status === 'COMPLETED') {
+      toast.error('Booking dang thuc hien hoac da hoan thanh, khong the sua')
+      router.replace(`/customer/booking/${id}`)
+      return
+    }
   } catch (err) {
     console.error(err)
     error.value = err?.response?.data?.message || err?.message || 'Không tải được chi tiết booking'

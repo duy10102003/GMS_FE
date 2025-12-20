@@ -22,6 +22,10 @@ class CustomerService {
     return await api.get(`/Customer/${id}`)
   }
 
+  async getByUserId(userId) {
+    return await api.get(`/Customer/${userId}`)
+  }
+
   /**
    * Tạo mới Customer
    */
@@ -38,5 +42,4 @@ class CustomerService {
 }
 
 export default new CustomerService()
-
 
