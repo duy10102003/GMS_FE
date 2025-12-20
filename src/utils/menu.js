@@ -208,17 +208,10 @@ export const STOCKER_MENU = [
     permission: PERMISSIONS.VIEW_INVENTORY
   },
   {
-    key: 'inventory',
-    label: 'Kho hàng',
-    icon: 'fa-warehouse',
-    path: '/stocker/price-requests',
-    permission: PERMISSIONS.VIEW_INVENTORY
-  },
-  {
     key: 'part-categories',
     label: 'Danh mục phụ tùng',
     icon: 'fa-list',
-    path: '/stocker/part-categories',
+    path: '/stocker/part-categories-v2',
     permission: PERMISSIONS.MANAGE_PARTS
   },
   {
@@ -232,7 +225,7 @@ export const STOCKER_MENU = [
     key: 'restock-requests',
     label: 'Yêu cầu nhập kho',
     icon: 'fa-shopping-cart',
-    path: '/stocker/restock-requests',
+    path: '/stocker/price-requests',
     permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
   }
 ]

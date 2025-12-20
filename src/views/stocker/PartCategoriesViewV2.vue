@@ -389,8 +389,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { TheHeader, TheSideBar } from '@/layout'
 import { GmsToast } from '@/components'
 import { setToastInstance, useToast } from '@/composables/useToast'
@@ -398,7 +397,6 @@ import { getMenuByRole } from '@/utils/menu'
 import authService from '@/services/auth'
 import partCategoryService from '@/services/partCategory'
 
-const router = useRouter()
 const toastRef = ref(null)
 const toast = useToast()
 
@@ -456,7 +454,7 @@ const displayRange = computed(() => {
 const showEmptyState = computed(() => !loading.value && categories.value.length === 0)
 
 const tableColumns = [
-  { key: 'partCategoryId', backendKey: 'id', label: 'ID', sortable: true, filterable: true, isNumeric: true },
+  { key: 'partCategoryId', backendKey: 'Id', label: 'ID', sortable: true, filterable: true, isNumeric: true },
   { key: 'partCategoryCode', backendKey: 'partCategoryCode', label: 'Mã danh mục', sortable: false, filterable: true },
   { key: 'partCategoryName', backendKey: 'partCategoryName', label: 'Tên danh mục', sortable: false, filterable: true },
   {
@@ -633,8 +631,8 @@ const formError = ref('')
 const formSuccess = ref('')
 
 const handleLogout = async () => {
-  await authService.logout()
-  router.push('/home')
+  // authService.logout() sẽ tự động redirect và reload trang
+  await authService.logout(true)
 }
 
 const resetForm = () => {
@@ -692,8 +690,10 @@ const buildPagingPayload = () => {
   }
 
   const activeSortColumn = tableColumns.find((column) => column.key === sortConfig.columnKey)
-  payload.sortBy = getBackendColumnName(activeSortColumn) || sortConfig.columnKey || 'id'
-  payload.sortDirection = sortConfig.direction
+  const sortByValue = getBackendColumnName(activeSortColumn) || sortConfig.columnKey || 'Id'
+  // Đảm bảo sortBy là 'Id' (chữ I viết hoa) khi sort theo ID
+  payload.sortBy = sortByValue === 'partCategoryId' || sortByValue === 'Id' ? 'Id' : sortByValue
+  payload.direction = sortConfig.direction || 'DESC'
 
   if (filters.keyword && filters.keyword.trim()) {
     payload.keyword = filters.keyword.trim()
@@ -706,28 +706,61 @@ const loadCategories = async () => {
   try {
     loading.value = true
     listError.value = ''
+    // Clear categories trước khi load để tránh hiển thị dữ liệu cũ
+    categories.value = []
 
     const requestPayload = buildPagingPayload()
-    const response = await partCategoryService.paging(requestPayload)
-    const payload = response?.data?.data || response?.data || {}
-    const items = Array.isArray(payload) ? payload : payload.items || []
+    const response = await partCategoryService.getList(requestPayload)
 
-    categories.value = items
-    const totalFromPayload = payload.totalItems ?? payload.total ?? payload.totalElements ?? items.length
-    const pageFromPayload = payload.page ?? payload.currentPage ?? requestPayload.page ?? 0
-    const sizeFromPayload = payload.size ?? payload.pageSize ?? requestPayload.size ?? 10
+    // Response structure: response = { data: { success: true, data: { items: [...], totalItems, page, size }, message } }
+    const rawData = response?.data || {}
 
-    pagination.totalItems = Number.isFinite(Number(totalFromPayload))
+    // Parse payload - xử lý cả 2 trường hợp: có success wrapper và không có
+    let payload = rawData
+    if (rawData?.success && rawData?.data) {
+      payload = rawData.data
+    } else if (rawData?.data) {
+      payload = rawData.data
+    }
+
+    // Lấy items từ payload - ưu tiên payload.items
+    let items = []
+    if (Array.isArray(payload?.items)) {
+      items = payload.items
+    } else if (Array.isArray(payload)) {
+      items = payload
+    } else if (Array.isArray(payload?.content)) {
+      items = payload.content
+    }
+
+    // Gán items vào categories - đảm bảo là array mới để trigger reactivity
+    categories.value = Array.isArray(items) ? [...items] : []
+
+    // Parse pagination info từ payload
+    const totalFromPayload = payload?.totalItems ?? payload?.total ?? payload?.totalElements ?? payload?.totalRecords ?? items.length
+    const pageFromPayload = payload?.page ?? payload?.currentPage ?? payload?.number ?? requestPayload.page ?? 0
+    const sizeFromPayload = payload?.size ?? payload?.pageSize ?? requestPayload.size ?? 10
+
+    pagination.totalItems = Number.isFinite(Number(totalFromPayload)) && Number(totalFromPayload) >= 0
       ? Number(totalFromPayload)
       : items.length
-    pagination.page = Number.isFinite(Number(pageFromPayload)) ? Number(pageFromPayload) : 0
+    pagination.page = Number.isFinite(Number(pageFromPayload)) && Number(pageFromPayload) >= 0
+      ? Number(pageFromPayload)
+      : 0
     pagination.size = Number.isFinite(Number(sizeFromPayload)) && Number(sizeFromPayload) > 0
       ? Number(sizeFromPayload)
       : 10
     currentPage.value = pagination.totalItems === 0 ? 1 : Number(pagination.page) + 1
+
+    // Đảm bảo Vue đã update DOM trước khi tắt loading
+    await nextTick()
   } catch (error) {
-    console.error(error)
-    listError.value = error.message || 'Không thể tải danh mục'
+    console.error('Error loading categories:', error)
+    listError.value = error?.message || 'Không thể tải danh mục'
+    categories.value = []
+    pagination.totalItems = 0
+    pagination.page = 0
+    currentPage.value = 1
   } finally {
     loading.value = false
   }
@@ -1331,7 +1364,6 @@ onMounted(async () => {
   margin-top: 0.75rem;
 }
 </style>
-
 
 
 

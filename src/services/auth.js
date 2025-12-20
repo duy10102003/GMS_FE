@@ -1,6 +1,5 @@
 import api from './api.js'
-import { API_ENDPOINTS } from '../constant/api.js'
-import { ROLES } from '../constant/roles.js'
+import { API_ENDPOINTS, API_BASE_URL_SPRINGBOOT } from '../constant/api.js'
 
 /**
  * Auth Service
@@ -13,12 +12,12 @@ class AuthService {
   async login(credentials) {
     try {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials)
-      
+
       if (response.token) {
         api.setToken(response.token)
         this.saveUser(response.user)
       }
-      
+
       return response
     } catch (error) {
       throw error
@@ -26,17 +25,80 @@ class AuthService {
   }
 
   /**
-   * Đăng xuất
+   * Đăng xuất - Gọi API logout và clear session ở FE
+   * @param {boolean} redirect - Có redirect về home không (default: true)
    */
-  async logout() {
+  async logout(redirect = true) {
     try {
-      await api.post(API_ENDPOINTS.AUTH.LOGOUT)
+      // Gọi API logout đến Spring Boot (port 8888) để revoke token ở BE
+      const token = this.getToken()
+      if (token) {
+        try {
+          // Gọi trực tiếp với fetch để đảm bảo gọi đúng endpoint
+          await fetch(`${API_BASE_URL_SPRINGBOOT}${API_ENDPOINTS.AUTH.LOGOUT}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          })
+
+          // Không cần check response.ok vì BE đã xử lý revoke token
+          // Chỉ cần clear session ở FE
+        } catch (apiError) {
+          console.warn('Logout API call failed, but clearing session anyway:', apiError)
+        }
+      }
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
-      api.setToken(null)
-      this.clearUser()
+      // Luôn clear session ở FE dù API call có thành công hay không
+      this.clearSession()
+
+      // Hiển thị toast thành công trước khi redirect
+      try {
+        const { useToast } = await import('../composables/useToast')
+        const toast = useToast()
+        toast.success('Đăng xuất thành công', 'Hẹn gặp lại!')
+
+        // Delay một chút để toast hiển thị trước khi redirect
+        setTimeout(() => {
+          if (redirect) {
+            window.location.href = '/'
+          }
+        }, 500)
+      } catch (toastError) {
+        // Nếu không thể hiển thị toast, redirect ngay
+        if (redirect) {
+          window.location.href = '/'
+        }
+      }
     }
+  }
+
+  /**
+   * Clear toàn bộ session và token ở FE
+   */
+  clearSession() {
+    // Clear token từ api service
+    api.setToken(null)
+
+    // Clear tất cả token và user data từ localStorage
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+
+    // Clear user từ auth service
+    this.clearUser()
+  }
+
+  /**
+   * Lấy token từ localStorage
+   */
+  getToken() {
+    // Ưu tiên lấy từ accessToken (Spring Boot API), nếu không có thì lấy từ token
+    return localStorage.getItem('accessToken') || localStorage.getItem('token') || null
   }
 
   /**
