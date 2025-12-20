@@ -149,10 +149,31 @@
 					</select>
 				</div>
 
-				<div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
+				<!-- <div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
 					<label class="form-label">Giá trị:</label>
 					<GmsInput v-if="isNumericColumn(currentFilterColumn)" v-model.number="filterForm.value" type="number" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" :min="0" />
 					<GmsInput v-else-if="isDateColumn(currentFilterColumn)" v-model="filterForm.value" type="date" :placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`" />
+					<GmsInput v-else v-model="filterForm.value" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" />
+				</div> -->
+
+				<div v-if="!['empty', 'not_empty'].includes(filterForm.operator)" class="mb-3">
+					<label class="form-label">Giá trị:</label>
+
+					<!-- STATUS SELECT -->
+					<select v-if="isStatusColumn(currentFilterColumn)" v-model.number="filterForm.value" class="form-select">
+						<option value="">-- Chọn trạng thái --</option>
+						<option v-for="(label, value) in SERVICE_TICKET_STATUS_LABELS" :key="value" :value="Number(value)">
+							{{ label }}
+						</option>
+					</select>
+
+					<!-- NUMBER -->
+					<GmsInput v-else-if="isNumericColumn(currentFilterColumn)" v-model.number="filterForm.value" type="number" :min="0" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" />
+
+					<!-- DATE -->
+					<GmsInput v-else-if="isDateColumn(currentFilterColumn)" v-model="filterForm.value" type="date" :placeholder="`Chọn ${currentFilterColumn.label.toLowerCase()}...`" />
+
+					<!-- TEXT -->
 					<GmsInput v-else v-model="filterForm.value" :placeholder="`Nhập ${currentFilterColumn.label.toLowerCase()}...`" />
 				</div>
 
@@ -297,7 +318,11 @@
 
 	// Methods
 	const isNumericColumn = (column) => {
-		return column?.isNumeric || ['serviceTicketStatus', 'serviceTicketId'].includes(column?.key)
+		return column?.isNumeric || ['serviceTicketId'].includes(column?.key)
+	}
+
+	const isStatusColumn = (column) => {
+		return column?.key === 'serviceTicketStatus'
 	}
 
 	const isDateColumn = (column) => {

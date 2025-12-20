@@ -16,7 +16,7 @@
 						<GmsButton v-if="canConfirmAdjustment" variant="warning" icon="fa-check" @click="confirmAdjustment">Xác nhận điều chỉnh</GmsButton>
 
 						<GmsButton v-if="canStartInProgress" variant="primary" icon="fa-play" @click="handleStartInProgress">Bắt đầu xử lý</GmsButton>
-
+						<GmsButton v-if="canComplete" variant="success" icon="fa-check" @click="handleCompleteTask">Hoàn thành công việc</GmsButton>
 						<GmsButton v-if="canCreateInvoice" variant="info" icon="fa-file-invoice" @click="openInvoiceDialog">Tạo hóa đơn</GmsButton>
 
 						<GmsButton v-if="canCancel" variant="danger" icon="fa-times" @click="openCancelDialog">Hủy phiếu</GmsButton>
@@ -483,9 +483,14 @@
 		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.COMPLETED || serviceTicket.value.serviceTicketStatus === 3
 	})
 
+	const canComplete = computed(() => {
+		if (!serviceTicket.value) return false
+		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.IN_PROGRESS || serviceTicket.value.serviceTicketStatus === 4
+	})
+
 	const canCancel = computed(() => {
 		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CLOSED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED && serviceTicket.value.serviceTicketStatus !== 3 && serviceTicket.value.serviceTicketStatus !== 4 && serviceTicket.value.serviceTicketStatus !== 5
+		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.IN_PROGRESS && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CLOSED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED && serviceTicket.value.serviceTicketStatus !== 3 && serviceTicket.value.serviceTicketStatus !== 4 && serviceTicket.value.serviceTicketStatus !== 5
 	})
 
 	// Methods
@@ -820,6 +825,29 @@
 			await loadServiceTicket()
 		} catch (error) {
 			toast.error('Lỗi khi xác nhận điều chỉnh', error.message || error.userMsg || 'Có lỗi xảy ra')
+		}
+	}
+	const handleCompleteTask = async () => {
+		if (!serviceTicket.value?.serviceTicketId) {
+			toast.error('Không tìm thấy service ticket')
+			return
+		}
+
+		if (!confirm('Bạn có chắc muốn hoàn thành xử lý phiếu dịch vụ này?')) return
+
+		try {
+			const currentUser = authService.getCurrentUser()
+			const modifiedBy = currentUser?.userId || 1
+
+			await serviceTicketService.setStatusCompleted(serviceTicket.value.serviceTicketId, {
+				modifiedBy,
+				note: 'Staff hoàn thành xử lý phiếu dịch vụ'
+			})
+
+			toast.success('Đã hoàn thành xử lý phiếu dịch vụ!')
+			await loadServiceTicket()
+		} catch (error) {
+			toast.error('Lỗi khi hoàn thành xử lý', error.message || error.userMsg || 'Có lỗi xảy ra')
 		}
 	}
 
