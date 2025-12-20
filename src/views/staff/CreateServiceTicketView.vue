@@ -52,7 +52,7 @@
 									<GmsInput v-model="newCustomer.customerPhone" label="Số điện thoại *" type="tel" placeholder="0912345678" />
 								</div>
 								<div class="col-md-4">
-									<GmsInput v-model="newCustomer.customerEmail" label="Email" type="email" placeholder="email@example.com" />
+									<GmsInput v-model="newCustomer.customerEmail" label="Email" type="text" placeholder="email@example.com" />
 								</div>
 							</div>
 						</div>
@@ -96,7 +96,7 @@
 									<GmsInput v-model="newVehicle.vehicleLicensePlate" label="Biển số *" placeholder="30A-12345" />
 								</div>
 								<div class="col-md-2">
-									<GmsInput v-model.number="newVehicle.currentKm" label="Số km hiện tại" type="number" placeholder="0" />
+									<GmsInput v-model.number="newVehicle.currentKm" label="Số km hiện tại" type="number" placeholder="0" :min="0" />
 								</div>
 								<div class="col-md-2">
 									<GmsInput v-model="newVehicle.make" label="Hãng xe" placeholder="Honda" />
@@ -115,7 +115,7 @@
 							</h5>
 							<div class="mb-3">
 								<label class="form-label">Mô tả vấn đề</label>
-								<textarea v-model="formData.initialIssue" class="form-control" rows="4" placeholder="Nhập mô tả vấn đề của xe..." required></textarea>
+								<textarea v-model="formData.initialIssue" class="form-control" rows="4" maxlength="255" placeholder="Nhập mô tả vấn đề của xe..."></textarea>
 							</div>
 						</div>
 
@@ -301,25 +301,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { TheHeader, TheSideBar } from '@/layout'
-import { GmsInput, GmsButton, GmsDialog, GmsToast } from '@/components'
-import { useToast } from '@/composables/useToast'
-import { getMenuByRole } from '@/utils/menu'
-import authService from '@/services/auth'
-import bookingService from '@/services/booking'
-import serviceTicketService from '@/services/serviceTicket'
-import customerService from '@/services/customer'
-import vehicleService from '@/services/vehicle'
-import partService from '@/services/part'
-import garageServiceService from '@/services/garageService'
-import userService from '@/services/user'
+	import { ref, computed, onMounted, watch } from 'vue'
+	import { useRouter, useRoute } from 'vue-router'
+	import { TheHeader, TheSideBar } from '@/layout'
+	import { GmsInput, GmsButton, GmsDialog, GmsToast } from '@/components'
+	import { useToast } from '@/composables/useToast'
+	import { getMenuByRole } from '@/utils/menu'
+	import authService from '@/services/auth'
+	import bookingService from '@/services/booking'
+	import serviceTicketService from '@/services/serviceTicket'
+	import customerService from '@/services/customer'
+	import vehicleService from '@/services/vehicle'
+	import partService from '@/services/part'
+	import garageServiceService from '@/services/garageService'
+	import userService from '@/services/user'
 
-const router = useRouter()
-const route = useRoute()
-const toastRef = ref(null)
-const toast = useToast()
+	const router = useRouter()
+	const route = useRoute()
+	const toastRef = ref(null)
+	const toast = useToast()
 
 	const sidebarCollapsed = ref(false)
 	const submitting = ref(false)
@@ -562,13 +562,40 @@ const toast = useToast()
 		formData.value.assignDescription = ''
 	}
 
+	const isValidPhoneNumber = (phone) => {
+		if (!phone) return false
+		return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone.trim())
+	}
+
+	const isValidEmail = (email) => {
+		if (!email) return false
+		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+	}
+
 	const handleSubmit = async () => {
 		// Validation - Không bắt buộc chọn customer, có thể tạo mới khi nhập thông tin
 		// Nếu không chọn customer, phải nhập thông tin mới
 		if (!selectedCustomer.value) {
-			if (!newCustomer.value.customerName?.trim() || !newCustomer.value.customerPhone?.trim()) {
-				toast.error('Vui lòng chọn khách hàng hoặc nhập đầy đủ thông tin khách hàng mới (Tên và Số điện thoại)')
+			if (!newCustomer.value.customerName?.trim()) {
+				toast.error('Vui lòng nhập tên khách hàng')
 				return
+			}
+
+			if (!newCustomer.value.customerPhone?.trim()) {
+				toast.error('Vui lòng nhập số điện thoại')
+				return
+			}
+
+			if (!isValidPhoneNumber(newCustomer.value.customerPhone)) {
+				toast.error('Số điện thoại không đúng định dạng (VD: 0912345678)')
+				return
+			}
+
+			if (newCustomer.value.customerEmail?.trim()) {
+				if (!isValidEmail(newCustomer.value.customerEmail)) {
+					toast.error('Email không đúng định dạng')
+					return
+				}
 			}
 		}
 
@@ -594,10 +621,10 @@ const toast = useToast()
 			}
 		}
 
-  try {
-    submitting.value = true
-    const currentUser = authService.getCurrentUser()
-    const bookingId = route.query.bookingId ? Number(route.query.bookingId) : null
+		try {
+			submitting.value = true
+			const currentUser = authService.getCurrentUser()
+			const bookingId = route.query.bookingId ? Number(route.query.bookingId) : null
 
 			const payload = {
 				createdBy: currentUser?.userId,
@@ -609,20 +636,20 @@ const toast = useToast()
 				garageServiceIds: selectedServices.value.map((s) => s.garageServiceId)
 			}
 
-    if (bookingId) {
-      payload.bookingId = bookingId
-    }
+			if (bookingId) {
+				payload.bookingId = bookingId
+			}
 
-    // Customer
-    if (selectedCustomer.value) {
-      payload.customerId = selectedCustomer.value.customerId
-    } else {
-      payload.customerInfo = {
-        customerName: newCustomer.value.customerName.trim(),
-        customerPhone: newCustomer.value.customerPhone.trim(),
-        customerEmail: newCustomer.value.customerEmail?.trim() || null
-      }
-    }
+			// Customer
+			if (selectedCustomer.value) {
+				payload.customerId = selectedCustomer.value.customerId
+			} else {
+				payload.customerInfo = {
+					customerName: newCustomer.value.customerName.trim(),
+					customerPhone: newCustomer.value.customerPhone.trim(),
+					customerEmail: newCustomer.value.customerEmail?.trim() || null
+				}
+			}
 
 			// Vehicle
 			if (selectedVehicle.value) {
@@ -682,48 +709,48 @@ const toast = useToast()
 			menuItems.value = getMenuByRole(user.role)
 		}
 
-  await loadTechnicalStaff()
+		await loadTechnicalStaff()
 
-  // Prefill từ booking (nếu có)
-  const bookingId = route.query.bookingId
-  if (bookingId) {
-    try {
-      const res = await bookingService.getById(bookingId)
-      const data = res?.data || res
-      const customerId = route.query.customerId || data.customerId || data.customerID
-      const prefillCustomer = {
-        customerId: customerId ? Number(customerId) : null,
-        customerName: route.query.customerName || data.customerName || '',
-        customerPhone: route.query.customerPhone || data.customerPhone || '',
-        customerEmail: route.query.customerEmail || data.customerEmail || data.email || ''
-      }
-      // Nếu chưa có email nhưng có customerId, cố lấy thêm từ Customer
-      if (!prefillCustomer.customerEmail && prefillCustomer.customerId) {
-        try {
-          const cusRes = await customerService.getById(prefillCustomer.customerId)
-          const cus = cusRes?.data || cusRes
-          prefillCustomer.customerEmail = cus?.customerEmail || cus?.email || ''
-        } catch (err) {
-          console.warn('Không lấy được email khách hàng', err)
-        }
-      }
-      // Chỉ gán khi có tên/sđt để tránh tạo bản rỗng
-      if (prefillCustomer.customerName || prefillCustomer.customerPhone) {
-        selectedCustomer.value = prefillCustomer
-        customerSearch.value = prefillCustomer.customerName
-        newCustomer.value = {
-          customerName: '',
-          customerPhone: '',
-          customerEmail: ''
-        }
-      }
-    } catch (err) {
-      console.warn('Không prefill được từ booking', err)
-    }
-  }
+		// Prefill từ booking (nếu có)
+		const bookingId = route.query.bookingId
+		if (bookingId) {
+			try {
+				const res = await bookingService.getById(bookingId)
+				const data = res?.data || res
+				const customerId = route.query.customerId || data.customerId || data.customerID
+				const prefillCustomer = {
+					customerId: customerId ? Number(customerId) : null,
+					customerName: route.query.customerName || data.customerName || '',
+					customerPhone: route.query.customerPhone || data.customerPhone || '',
+					customerEmail: route.query.customerEmail || data.customerEmail || data.email || ''
+				}
+				// Nếu chưa có email nhưng có customerId, cố lấy thêm từ Customer
+				if (!prefillCustomer.customerEmail && prefillCustomer.customerId) {
+					try {
+						const cusRes = await customerService.getById(prefillCustomer.customerId)
+						const cus = cusRes?.data || cusRes
+						prefillCustomer.customerEmail = cus?.customerEmail || cus?.email || ''
+					} catch (err) {
+						console.warn('Không lấy được email khách hàng', err)
+					}
+				}
+				// Chỉ gán khi có tên/sđt để tránh tạo bản rỗng
+				if (prefillCustomer.customerName || prefillCustomer.customerPhone) {
+					selectedCustomer.value = prefillCustomer
+					customerSearch.value = prefillCustomer.customerName
+					newCustomer.value = {
+						customerName: '',
+						customerPhone: '',
+						customerEmail: ''
+					}
+				}
+			} catch (err) {
+				console.warn('Không prefill được từ booking', err)
+			}
+		}
 
-  document.addEventListener('click', handleClickOutside)
-})
+		document.addEventListener('click', handleClickOutside)
+	})
 
 	// Watch for customer changes to update vehicle search
 	watch([selectedCustomer, () => newCustomer.value.customerName], () => {

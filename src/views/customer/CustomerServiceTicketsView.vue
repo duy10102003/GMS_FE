@@ -453,20 +453,21 @@
 			const customerId = authStore.user?.userId
 			if (!customerId) {
 				toast.error('Không xác định được thông tin khách hàng')
+				//console.log('Id tu local', customerId)
 				return
 			}
 
 			// Build column filters (không cần filter customerId vì đã có trong URL)
 			const filters = [...columnFilters.value]
-
+			const searchKeyWord = searchQuery.value && searchQuery.value.trim() ? searchQuery.value.trim() : ''
 			// Search filter
-			if (searchQuery.value && searchQuery.value.trim()) {
-				filters.push({
-					columnName: 'ServiceTicketCode',
-					operator: 'contains',
-					value: searchQuery.value.trim()
-				})
-			}
+			// if (searchQuery.value && searchQuery.value.trim()) {
+			// 	filters.push({
+			// 		columnName: 'ServiceTicketCode',
+			// 		operator: 'contains',
+			// 		value: searchQuery.value.trim()
+			// 	})
+			// }
 
 			// Build sort
 			const columnSorts = []
@@ -492,6 +493,7 @@
 			const params = {
 				page: currentPage.value,
 				pageSize: pageSize.value,
+				keyWord: searchKeyWord,
 				columnFilters: filters.length > 0 ? filters : undefined,
 				columnSorts: columnSorts.length > 0 ? columnSorts : undefined
 			}

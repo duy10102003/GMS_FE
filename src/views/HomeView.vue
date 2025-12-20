@@ -85,7 +85,9 @@
 			<div class="hero-content">
 				<h1>Trải nghiệm Dịch vụ Ô tô Cao cấp cùng GaragePro</h1>
 				<p>Mua bán, sửa chữa, bảo dưỡng – tất cả trong một nền tảng chuyên nghiệp và tận tâm.</p>
-				<router-link to="/booking/Guest" class="btn-cta">Đặt lịch ngay</router-link>
+				<a href="#booking" class="btn-cta" data-bs-toggle="modal" data-bs-target="#bookingModal">
+					Đặt lịch ngay
+				</a>
 			</div>
 		</section>
 
@@ -356,138 +358,11 @@
 					</div>
 
 					<div class="modal-body">
-						<!-- Alert Messages -->
-						<div id="alertSuccess" class="alert alert-success alert-dismissible fade show d-none"
-							role="alert">
-							<i class="fas fa-check-circle me-2"></i>
-							<strong>Thành công!</strong>
-							Yêu cầu của bạn đã được gửi. Chúng tôi sẽ liên hệ lại trong thời gian sớm nhất.
-							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-						</div>
-
-						<div id="alertError" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
-							<i class="fas fa-exclamation-triangle me-2"></i>
-							<strong>Lỗi!</strong>
-							<span id="errorMessage">Có lỗi xảy ra, vui lòng thử lại.</span>
-							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-						</div>
-
-						<!-- Contact Form -->
-						<form id="contactForm" novalidate>
-							<div class="row g-3">
-								<div class="col-md-6">
-									<label for="fullName" class="form-label">
-										Họ và tên
-										<span class="text-danger">*</span>
-									</label>
-									<input type="text" class="form-control" id="fullName" name="fullName"
-										placeholder="Nguyễn Văn A" required minlength="2" maxlength="100"
-										autocomplete="name" />
-									<div class="invalid-feedback">Vui lòng nhập họ tên (từ 2 ký tự)</div>
-								</div>
-
-								<div class="col-md-6">
-									<label for="phone" class="form-label">
-										Số điện thoại
-										<span class="text-danger">*</span>
-									</label>
-									<input type="tel" class="form-control" id="phone" name="phone"
-										placeholder="0912345678" required pattern="^(0|\+84)[0-9]{9,10}$"
-										autocomplete="tel" />
-									<div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
-								</div>
-
-								<div class="col-md-6">
-									<label for="email" class="form-label">
-										Email
-										<span class="text-danger">*</span>
-									</label>
-									<input type="email" class="form-control" id="email" name="email"
-										placeholder="example@email.com" required autocomplete="email" />
-									<div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
-								</div>
-
-								<div class="col-md-6">
-									<label for="serviceType" class="form-label">
-										Loại dịch vụ
-										<span class="text-danger">*</span>
-									</label>
-									<select class="form-select" id="serviceType" name="serviceType" required>
-										<option value="">-- Chọn loại dịch vụ --</option>
-										<option value="maintenance">Bảo dưỡng định kỳ</option>
-										<option value="repair">Sửa chữa</option>
-										<option value="inspection">Kiểm tra tổng quát</option>
-										<option value="tire">Thay lốp xe</option>
-										<option value="oil">Thay dầu động cơ</option>
-										<option value="brake">Hệ thống phanh</option>
-										<option value="battery">Ắc quy - Bình điện</option>
-										<option value="other">Dịch vụ khác</option>
-									</select>
-									<div class="invalid-feedback">Vui lòng chọn loại dịch vụ</div>
-								</div>
-
-								<div class="col-md-6 position-relative" id="carSearchWrapper">
-									<label for="carSearch" class="form-label">Hãng xe</label>
-									<input type="text" class="form-control" id="carSearch" name="carBrand"
-										placeholder="Toyota, Honda, Mazda..." maxlength="50" autocomplete="off" />
-									<ul class="list-group position-absolute w-100 shadow-sm mt-2" id="carDropdown"></ul>
-									<small class="text-muted">Tùy chọn</small>
-								</div>
-
-								<div class="col-md-6">
-									<label for="preferredDate" class="form-label">Ngày mong muốn</label>
-									<input type="date" class="form-control" id="preferredDate" name="preferredDate" />
-									<small class="text-muted">Tùy chọn</small>
-								</div>
-
-								<div class="col-12">
-									<label for="message" class="form-label">
-										Nội dung yêu cầu
-										<span class="text-danger">*</span>
-									</label>
-									<textarea class="form-control" id="message" name="message" rows="4"
-										placeholder="Mô tả chi tiết vấn đề của xe hoặc dịch vụ bạn cần..." required
-										minlength="10" maxlength="1000"></textarea>
-									<div class="invalid-feedback">Vui lòng nhập nội dung yêu cầu (từ 10 ký tự)</div>
-									<small class="text-muted">
-										<span id="charCount">0</span>
-										/1000 ký tự
-									</small>
-								</div>
-
-								<div class="col-12">
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" id="agreeTerms" required />
-										<label class="form-check-label" for="agreeTerms">
-											Tôi đồng ý với
-											<a href="#" target="_blank">điều khoản sử dụng</a>
-											và
-											<a href="#" target="_blank">chính sách bảo mật</a>
-											<span class="text-danger">*</span>
-										</label>
-										<div class="invalid-feedback">Bạn cần đồng ý với điều khoản để tiếp tục</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="text-end mt-4">
-								<button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-									<i class="fas fa-times me-2"></i>
-									Hủy
-								</button>
-								<button type="submit" class="btn btn-garagepro fw-semibold px-4" id="submitBtn">
-									<span id="btnText">
-										<i class="fas fa-paper-plane me-2"></i>
-										Gửi yêu cầu
-									</span>
-									<span id="loadingSpinner" class="d-none">
-										<span class="spinner-border spinner-border-sm me-2" role="status"
-											aria-hidden="true"></span>
-										Đang gửi...
-									</span>
-								</button>
-							</div>
-						</form>
+						<GuestBookingForm
+							variant="modal"
+							:on-cancel="handleBookingCancel"
+							:on-success="handleBookingSuccess"
+						/>
 					</div>
 				</div>
 			</div>
@@ -545,6 +420,7 @@
 import { initHomeInteractions } from '@/assets/js/home'
 import '@/assets/style/home.css'
 import { GmsToast } from '@/components'
+import GuestBookingForm from '@/components/booking/GuestBookingForm.vue'
 import { setToastInstance, useToast } from '@/composables/useToast'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -608,6 +484,16 @@ const cleanupModalState = () => {
 	document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
 }
 
+const handleBookingCancel = () => {
+	hideModal('bookingModal')
+	cleanupModalState()
+}
+
+const handleBookingSuccess = () => {
+	hideModal('bookingModal')
+	cleanupModalState()
+}
+
 	const sendOtp = async () => {
 	localError.value = ''
 
@@ -661,3 +547,4 @@ onBeforeUnmount(() => {
 		router.push({ name: 'home' })
 	}
 </script>
+

@@ -47,15 +47,31 @@ const router = createRouter({
 					component: () => import('../views/manager/PartsReportView.vue')
 				},
 				{
+					path: '/manager/warranties',
+					name: 'managerWarranties',
+					component: () => import('../views/manager/WarrantyListView.vue')
+				},
+				{
+					path: 'warranties/:id',
+					name: 'managerWarrantyDetail',
+					component: () => import('../views/manager/WarrantyDetailView.vue'),
+					props: true
+				},
+				{
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
 				},				
 				{
-					path: 'mechanic-roles/:id/mechanics',
+					path: 'mechanic-roles/:id/:roleName/mechanics',
 					name: 'managerMechanicRoleMechanics',
 					component: () => import('../views/manager/MechanicRoleMechanicsView.vue'),
 					props: true
+				},
+				{
+					path: 'invoices',
+					name: 'customerInvoicesManagerView',
+					component: () => import('../views/staff/InvoicesView.vue')
 				}
 			]
 		},
@@ -159,6 +175,21 @@ const router = createRouter({
 					path: '/customer/service-tickets/:id',
 					name: 'customerServiceTicketDetail',
 					component: () => import('../views/customer/CustomerServiceTicketDetail.vue')
+				},
+				{
+					path: 'invoices',
+					name: 'customerInvoices',
+					component: () => import('../views/customer/InvoiceListView.vue')
+				},
+				{
+					path: 'invoices/:id',
+					name: 'customerInvoiceDetail',
+					component: () => import('../views/customer/InvoiceDetailView.vue')
+				},
+				{
+					path: 'warranties',
+					name: 'customerWarranties',
+					component: () => import('../views/customer/WarrantyListView.vue')
 				}
 			]
 		},
@@ -227,6 +258,11 @@ const router = createRouter({
 			path: '/verify-otp',
 			name: 'verifyOtp',
 			component: () => import('../views/VerifyOtpView.vue')
+		},
+		{
+			path: '/payment-success',
+			name: 'paymentSuccess',
+			component: () => import('../views/PaymentSuccessView.vue')
 		},
 		{
 			path: '/booking/Guest',

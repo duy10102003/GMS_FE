@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="booking-list">
     <TheSideBar
       :collapsed="sidebarCollapsed"
@@ -135,7 +135,14 @@
                   <td>{{ formatDate(item.bookingTime || item.createdDate) }}</td>
                   <td class="actions">
                     <GmsButton size="small" variant="info" @click="viewDetail(item)">Xem</GmsButton>
-                    <GmsButton size="small" variant="primary" @click="editBooking(item)">Sửa</GmsButton>
+                    <GmsButton
+                      v-if="![1, 2, 'REJECT', 'CONFIRMED'].includes(item.status ?? item.bookingStatus)"
+                      size="small"
+                      variant="primary"
+                      @click="editBooking(item)"
+                    >
+                      Sửa
+                    </GmsButton>
                     <GmsButton size="small" variant="danger" @click="deleteBooking(item)">Xóa</GmsButton>
                   </td>
                 </tr>
@@ -196,8 +203,8 @@
             <select v-model="filterModal.value">
               <option value="">Tất cả</option>
               <option value="PENDING">Chờ xử lý</option>
-              <option value="IN_PROGRESS">Đang thực hiện</option>
-              <option value="COMPLETED">Đã hoàn thành</option>
+              <option value="CONFIRMED">Đã xác nhận</option>
+              <option value="REJECT">Từ chối</option>
             </select>
           </template>
           <template v-else>
@@ -279,15 +286,15 @@ const formatDate = (date) => {
 
 const statusLabel = (status) => {
   if (status === 0 || status === 'PENDING') return 'Chờ xử lý'
-  if (status === 1 || status === 'IN_PROGRESS') return 'Đang thực hiện'
-  if (status === 2 || status === 'COMPLETED') return 'Đã hoàn thành'
+  if (status === 2 || status === 'CONFIRMED') return 'Xác nhận'
+  if (status === 1 || status === 'REJECT') return 'Từ chối'
   return 'Không rõ'
 }
 
 const statusClass = (status) => {
   if (status === 0 || status === 'PENDING') return 'pending'
-  if (status === 1 || status === 'IN_PROGRESS') return 'progress'
-  if (status === 2 || status === 'COMPLETED') return 'done'
+  if (status === 2 || status === 'CONFIRMED') return 'confirmed'
+  if (status === 1 || status === 'REJECT') return 'reject'
   return 'unknown'
 }
 
@@ -295,6 +302,11 @@ const applyFilter = () => {
   const q = searchText.value.trim().toLowerCase()
   const from = dateFrom.value ? new Date(dateFrom.value) : null
   const to = dateTo.value ? new Date(dateTo.value) : null
+  if (from && to && to < from) {
+    toast.error('Ngày "Đến ngày" phải lớn hơn hoặc bằng "Từ ngày"')
+    dateTo.value = ''
+    return
+  }
 
   filteredBookings.value = bookings.value.filter((b) => {
     const d = b.bookingTime || b.createdDate
@@ -378,12 +390,32 @@ const viewDetail = (item) => {
   router.push(`/customer/booking/${id}`)
 }
 const editBooking = (item) => {
+  const status = item.status ?? item.bookingStatus
+  if (status === 1 || status === 2 || status === 'REJECT' || status === 'CONFIRMED') {
+    toast.error('Booking đang thực hiện hoặc đã hoàn thành, không thể sửa')
+    return
+  }
   const id = item.bookingId || item.id
   if (!id) return
   router.push(`/customer/booking/${id}/edit`)
 }
 const deleteBooking = (item) => {
-  console.log('delete', item)
+  const id = item.bookingId || item.id
+  if (!id) return
+  const confirmed = window.confirm('Bạn có chắc muốn xóa booking này?')
+  if (!confirmed) return
+  loading.value = true
+  bookingService.delete(id)
+    .then(() => {
+      toast.success('Xóa booking thành công')
+      return loadBookings()
+    })
+    .catch((err) => {
+      toast.error('Không thể xóa booking', err?.message || 'Đã xảy ra lỗi')
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
 const openFilter = (field, label, currentValue, type = 'text') => {
@@ -538,8 +570,9 @@ const loadBookings = async () => {
     const res = await bookingService.getPaging({
       page: 1,
       pageSize: 200,
-      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
-      filters: [{ columnName: 'CustomerEmail', value: email }]
+      customerEmail: email,
+      columnSorts: [{ columnName: 'BookingId', sortDirection: 'DESC' }],
+      filters: []
     })
     const items = res?.data?.items || res?.items || []
     bookings.value = items
@@ -759,11 +792,11 @@ onMounted(async () => {
   background: #fef3c7;
   color: #92400e;
 }
-.status.progress {
+.status.reject {
   background: #e0f2fe;
   color: #1d4ed8;
 }
-.status.done {
+.status.confirmed {
   background: #dcfce7;
   color: #166534;
 }

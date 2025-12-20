@@ -60,7 +60,8 @@ export const API_ENDPOINTS = {
 	MECHANIC: {
 		TICKETS: '/mechanic/tickets',
 		HISTORY: '/mechanic/history',
-		SHIFT: '/mechanic/shift'
+		SHIFT: '/mechanic/shift',
+		REPORT_SUMMARY: (mechanicId) => `/MechanicReport/${mechanicId}/summary`
 	},
 
 	// Booking

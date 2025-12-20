@@ -441,20 +441,20 @@
 	const loadInvoices = async () => {
 		try {
 			loading.value = true
-
+			const searchKeyWord = searchQuery.value && searchQuery.value.trim() ? searchQuery.value.trim() : ''
 			// Build column filters
 			const filters = [...columnFilters.value]
 
 			// Search filter - chỉ tìm theo mã hóa đơn, mã phiếu, tên khách hàng
-			if (searchQuery.value && searchQuery.value.trim()) {
-				const searchValue = searchQuery.value.trim()
-				// Tìm theo mã hóa đơn hoặc mã phiếu
-				filters.push({
-					columnName: 'ServiceTicketCode',
-					operator: 'contains',
-					value: searchValue
-				})
-			}
+			// if (searchQuery.value && searchQuery.value.trim()) {
+			// 	const searchValue = searchQuery.value.trim()
+			// 	// Tìm theo mã hóa đơn hoặc mã phiếu
+			// 	filters.push({
+			// 		columnName: 'ServiceTicketCode',
+			// 		operator: 'contains',
+			// 		value: searchValue
+			// 	})
+			// }
 
 			// Build sort
 			const columnSorts = []
@@ -480,6 +480,7 @@
 			const params = {
 				page: currentPage.value,
 				pageSize: pageSize.value,
+				keyWord: searchKeyWord,
 				columnFilters: filters.length > 0 ? filters : undefined,
 				columnSorts: columnSorts.length > 0 ? columnSorts : undefined
 				// Không truyền customerId để lấy tất cả

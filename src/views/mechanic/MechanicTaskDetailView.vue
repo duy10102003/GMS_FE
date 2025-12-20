@@ -182,10 +182,11 @@
 							<div class="item-info">
 								<strong>{{ part.partName }}</strong>
 								<span class="item-meta">{{ formatPrice(part.price) }}</span>
+								<span class="text-muted small">(Tồn kho: {{ part.stockQuantity }} )</span>
 							</div>
 							<div class="item-actions">
-								<GmsInput v-model.number="part.quantity" type="number" :min="1" style="width: 100px; margin-right: 0.5rem" />
-								<GmsButton variant="danger" size="small" icon="fa-delete" @click="removePart(index)" />
+								<GmsInput v-model.number="part.quantity" type="number" :min="1" :max="part.stockQuantity" @update:modelValue="(val) => onQuantityChange(part, val)" style="width: 100px; margin-right: 0.5rem" />
+								<GmsButton variant="danger" size="small" icon="fa-times" @click="removePart(index)" />
 							</div>
 						</div>
 					</div>
@@ -385,6 +386,7 @@
 					partId: p.part?.partId || p.partId,
 					partName: p.part?.partName || '',
 					quantity: p.quantity || 1,
+					stockQuantity: p.part?.partQuantity || 0,
 					price: p.part?.partPrice || 0
 				}))
 			}
@@ -441,6 +443,21 @@
 		}
 	}
 
+	const onQuantityChange = (part, value) => {
+		if (value > part.stockQuantity) {
+			toast.error(`Số lượng vượt tồn kho (${part.stockQuantity})`)
+			part.quantity = part.stockQuantity
+			return
+		}
+
+		if (value < 1) {
+			part.quantity = 1
+			return
+		}
+
+		part.quantity = value
+	}
+
 	const addPart = (part) => {
 		if (!part || !part.partId) return
 
@@ -454,6 +471,7 @@
 			partId: part.partId,
 			partName: part.partName,
 			quantity: 1,
+			stockQuantity: part.partQuantity || 0,
 			price: part.inventoryPrice || 0
 		})
 

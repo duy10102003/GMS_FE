@@ -10,12 +10,12 @@
       />
 
       <main class="page">
-        <div class="page-head">
+        <!-- <div class="page-head">
           <div></div>
           <GmsButton variant="primary" icon="fa-plus" @click="$router.push('/booking/Guest')">
             Đặt lịch mới
           </GmsButton>
-        </div>
+        </div> -->
 
         <div class="filters">
           <div class="filter-item">
@@ -111,15 +111,26 @@
                   <td>{{ item.vehicleName || '-' }}</td>
                   <td>{{ item.customerPhone || '-' }}</td>
                   <td>
-                    <span class="status" :class="statusClass(item.status ?? item.bookingStatus)">
-                      {{ statusLabel(item.status ?? item.bookingStatus) }}
+                    <span class="status" >
+                    <select
+                      
+                      :value="item.status ?? item.bookingStatus ?? ''"
+                      :disabled="!canChangeStatus(item) || updatingId === (item.bookingId || item.id)"
+                      @change="(e) => changeStatus(item, e.target.value)"
+                    >
+                      <option :value="0">Chờ xử lý</option>
+                      <option :value="1">Từ chối</option>
+                      <option :value="2">Xác nhận</option>
+                    </select>
                     </span>
                   </td>
                   <td>{{ formatDate(item.bookingTime || item.createdDate) }}</td>
                   <td class="actions">
                     <GmsButton size="small" variant="info" @click="viewDetail(item)">Xem</GmsButton>
-                    <GmsButton size="small" variant="success" @click="createService(item)">Tạo service</GmsButton>
-                    <select
+                    <GmsButton 
+                    v-if="canCreateService(item)"
+                    size="small" variant="success" @click="createService(item)" >Tạo service</GmsButton>
+                    <!-- <select
                       :value="item.status ?? item.bookingStatus ?? ''"
                       :disabled="updatingId === (item.bookingId || item.id)"
                       @change="(e) => changeStatus(item, e.target.value)"
@@ -127,7 +138,7 @@
                       <option :value="0">Chờ xử lý</option>
                       <option :value="1">Đang thực hiện</option>
                       <option :value="2">Đã hoàn thành</option>
-                    </select>
+                    </select> -->
                   </td>
                 </tr>
               </tbody>
@@ -181,8 +192,8 @@
             <select v-model="filterModal.value">
               <option value="">Tất cả</option>
               <option value="PENDING">Chờ xử lý</option>
-              <option value="IN_PROGRESS">Đang thực hiện</option>
-              <option value="COMPLETED">Đã hoàn thành</option>
+              <option value="REJECT">Từ chối</option>
+              <option value="CONFIRMED">Xác nhận</option>
             </select>
           </template>
           <template v-else>
@@ -195,6 +206,8 @@
         </div>
       </div>
     </div>
+
+    <GmsToast ref="toastRef" />
   </div>
 </template>
 
@@ -202,13 +215,14 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { TheHeader, TheSideBar } from '@/layout'
-import { GmsButton } from '@/components'
+import { GmsButton, GmsToast } from '@/components'
 import bookingService from '@/services/booking'
 import customerService from '@/services/customer'
 import authService from '@/services/auth'
-import { useToast } from '@/composables/useToast'
+import { setToastInstance, useToast } from '@/composables/useToast'
 
 const router = useRouter()
+const toastRef = ref(null)
 const toast = useToast()
 const notifications = ref([])
 const sidebarCollapsed = ref(false)
@@ -265,15 +279,15 @@ const formatDate = (date) => {
 
 const statusLabel = (status) => {
   if (status === 0 || status === 'PENDING') return 'Chờ xử lý'
-  if (status === 1 || status === 'IN_PROGRESS') return 'Đang thực hiện'
-  if (status === 2 || status === 'COMPLETED') return 'Đã hoàn thành'
+  if (status === 1 || status === 'REJECT') return 'Từ chối'
+  if (status === 2 || status === 'CONFIRMED') return 'Xác nhận'
   return 'Không rõ'
 }
 
 const statusClass = (status) => {
   if (status === 0 || status === 'PENDING') return 'pending'
-  if (status === 1 || status === 'IN_PROGRESS') return 'progress'
-  if (status === 2 || status === 'COMPLETED') return 'done'
+  if (status === 1 || status === 'REJECT') return 'reject'
+  if (status === 2 || status === 'CONFIRMED') return 'confirmed'
   return 'unknown'
 }
 
@@ -327,7 +341,16 @@ const applyFilter = () => {
   })
   page.value = 1
 }
-
+const canCreateService = (item) => {
+  // if(!item.bookingTime) return false
+  const now = new Date()
+  const bookingTime = new Date(item.bookingTime)
+  return bookingTime < now && (item.status === 2 || item.bookingStatus === 'CONFIRMED')
+}
+const canChangeStatus = (item) => {
+  const status = item.status ?? item.bookingStatus
+  return status === 0 || status === 'PENDING'
+}
 const pagedBookings = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return filteredBookings.value.slice(start, start + pageSize.value)
@@ -373,6 +396,12 @@ const changeStatus = async (item, newStatus) => {
   if (!id) return
   const prevStatus = item.status ?? item.bookingStatus
   if (newStatus === prevStatus) return
+  const confirmed = window.confirm('Bạn có chắc chắn muốn thay đổi trạng thái booking này không?')
+  if(!confirmed) {
+    item.status = prevStatus
+    item.bookingStatus = prevStatus
+    return
+  } 
   try {
     const statusVal = Number.isNaN(Number(newStatus)) ? newStatus : Number(newStatus)
     updatingId.value = id
@@ -539,7 +568,12 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-onMounted(loadBookings)
+onMounted(() => {
+  if (toastRef.value) {
+    setToastInstance(toastRef.value)
+  }
+  loadBookings()
+})
 </script>
 
 <style scoped>
@@ -867,3 +901,5 @@ onMounted(loadBookings)
   }
 }
 </style>
+
+

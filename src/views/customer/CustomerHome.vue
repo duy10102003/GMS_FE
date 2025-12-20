@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="dashboard-customer">
     <TheSideBar @logout="handleLogout" />
     <div class="dashboard-customer-body">
@@ -21,22 +21,27 @@
             <p class="stat-title">Chờ xử lý</p>
             <strong>{{ stats.pending }}</strong>
           </div>
-          <div class="stat-card stat-completed">
-            <p class="stat-title">Đã hoàn thành</p>
-            <strong>{{ stats.completed }}</strong>
+          <div class="stat-card stat-confirmed">
+            <p class="stat-title">Đã xác nhận</p>
+            <strong>{{ stats.confirmed }}</strong>
           </div>
-          <div class="stat-card stat-inprogress">
-            <p class="stat-title">Đang thực hiện</p>
-            <strong>{{ stats.inProgress }}</strong>
+          <div class="stat-card stat-reject">
+            <p class="stat-title">Từ chối</p>
+            <strong>{{ stats.reject }}</strong>
           </div>
         </div>
 
         <div class="content-card">
           <div class="table-head-row">
             <h3>Lịch gần nhất</h3>
-            <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
-              Đặt lịch mới
-            </GmsButton>
+            <div>
+              <GmsButton variant="primary" size="small" icon="" @click="$router.push('/customer/booking/all')" style="margin-right: 8px">
+                Xem tất cả
+              </GmsButton>
+              <GmsButton variant="primary" size="small" icon="fa-plus" @click="$router.push('/booking/Guest')">
+                Đặt lịch mới
+              </GmsButton>
+            </div>
           </div>
 
           <div v-if="loading" class="loading-state">
@@ -76,7 +81,12 @@
                     <GmsButton variant="info" size="small" @click="viewDetail(booking)">
                       Xem chi tiết
                     </GmsButton>
-                    <GmsButton variant="primary" size="small" @click="editBooking(booking)">
+                    <GmsButton
+                      v-if="![1, 2, 'REJECT', 'CONFIRMED'].includes(booking.status ?? booking.bookingStatus)"
+                      variant="primary"
+                      size="small"
+                      @click="editBooking(booking)"
+                    >
                       Sửa
                     </GmsButton>
                     <GmsButton variant="danger" size="small" @click="deleteBooking(booking)">
@@ -96,9 +106,6 @@
             </GmsButton>
           </div>
 
-          <div class="table-footer" v-if="bookings.length > 0">
-            <a href="#" @click.prevent="$router.push('/customer/booking/all')">Xem tất cả →</a>
-          </div>
         </div>
       </main>
     </div>
@@ -122,8 +129,8 @@ const bookings = ref([])
 const stats = ref({
   total: 0,
   pending: 0,
-  completed: 0,
-  inProgress: 0
+  confirmed: 0,
+  reject: 0
 })
 const userEmail = ref(
   (authService.getCurrentUser()?.email || authService.getCurrentUser()?.username || '').toLowerCase()
@@ -140,15 +147,15 @@ const formatDate = (date) => {
 
 const statusClass = (status) => {
   if (status === 0 || status === 'PENDING') return 'pending'
-  if (status === 1 || status === 'IN_PROGRESS') return 'in-progress'
-  if (status === 2 || status === 'COMPLETED') return 'completed'
+  if (status === 1 || status === 'REJECT') return 'reject'
+  if (status === 2 || status === 'CONFIRMED') return 'confirmed'
   return 'unknown'
 }
 
 const statusLabel = (status) => {
   if (status === 0 || status === 'PENDING') return 'Chờ xử lý'
-  if (status === 1 || status === 'IN_PROGRESS') return 'Đang thực hiện'
-  if (status === 2 || status === 'COMPLETED') return 'Đã hoàn thành'
+  if (status === 1 || status === 'REJECT') return 'Từ chối'
+  if (status === 2 || status === 'CONFIRMED') return 'Xác nhận'
   return status || 'Chưa rõ'
 }
 
@@ -159,6 +166,11 @@ const viewDetail = (booking) => {
 }
 
 const editBooking = (booking) => {
+  const status = booking.status ?? booking.bookingStatus
+  if (status === 1 || status === 2 || status === 'REJECT' || status === 'CONFIRMED') {
+    toast.error('Booking đang thực hiện hoặc xác nhận, không thể sửa')
+    return
+  }
   const id = booking.bookingId || booking.id
   if (!id) return
   router.push(`/customer/booking/${id}/edit`)
@@ -188,13 +200,9 @@ const loadBookings = async () => {
     const params = {
       page: 1,
       pageSize: 50,
+      customerEmail: email,
       columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
-      filters: email
-        ? [
-            { columnName: 'CustomerEmail', value: email },
-            { columnName: 'Email', value: email }
-          ]
-        : []
+      filters: []
     }
     loading.value = true
 
@@ -212,8 +220,8 @@ const loadBookings = async () => {
     
     stats.value.total = sorted.length
     stats.value.pending = sorted.filter((b) => (b.status ?? b.bookingStatus) === 0 || (b.status ?? b.bookingStatus) === 'PENDING').length
-    stats.value.completed = sorted.filter((b) => (b.status ?? b.bookingStatus) === 2 || (b.status ?? b.bookingStatus) === 'COMPLETED').length
-    stats.value.inProgress = sorted.filter((b) => (b.status ?? b.bookingStatus) === 1 || (b.status ?? b.bookingStatus) === 'IN_PROGRESS').length
+    stats.value.confirmed = sorted.filter((b) => (b.status ?? b.bookingStatus) === 2 || (b.status ?? b.bookingStatus) === 'CONFIRMED').length
+    stats.value.reject = sorted.filter((b) => (b.status ?? b.bookingStatus) === 1 || (b.status ?? b.bookingStatus) === 'REJECT').length
 
     bookings.value = sorted.slice(0, 5)
   } catch (error) {
@@ -248,7 +256,7 @@ onMounted(loadBookings)
 
 .main-content {
   padding: 0.5rem;
-  padding-top: 4.5rem; /* chừa khoảng cho header cố định */
+  padding-top: 4.5rem;
 }
 
 .header-row {
@@ -309,12 +317,12 @@ onMounted(loadBookings)
   border-color: #93c5fd;
 }
 
-.stat-completed {
+.stat-confirmed {
   background: linear-gradient(135deg, #dcfce7, #bbf7d0);
   border-color: #86efac;
 }
 
-.stat-inprogress {
+.stat-reject {
   background: linear-gradient(135deg, #fce7f3, #fbcfe8);
   border-color: #f9a8d4;
 }
@@ -395,12 +403,12 @@ onMounted(loadBookings)
   color: #92400e;
 }
 
-.status-pill.in-progress {
+.status-pill.reject {
   background: #e0f2fe;
   color: #1d4ed8;
 }
 
-.status-pill.completed {
+.status-pill.confirmed {
   background: #dcfce7;
   color: #166534;
 }

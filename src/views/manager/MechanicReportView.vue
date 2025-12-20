@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="mechanic-report-page">
     <TheSideBar @logout="handleLogout" />
     <div class="page-shell">
@@ -29,11 +29,11 @@
           </div>
           <div class="filter-item">
             <label>Từ ngày</label>
-            <input type="date" v-model="filters.fromDate" @change="applyFilters" />
+            <input type="date" v-model="filters.fromDate" @change="handleDateChange" />
           </div>
             <div class="filter-item">
             <label>Đến ngày</label>
-            <input type="date" v-model="filters.toDate" @change="applyFilters" />
+            <input type="date" v-model="filters.toDate" @change="handleDateChange" />
           </div>
         </div>
 
@@ -209,14 +209,9 @@
                       </div>
                     </div>
                   </td>
-                  <!-- <td>{{ row.mechanicRoleName || row.roleName || row.role || '-' }}</td> -->
                   <td>{{ formatNumber(metrics[row.userId || row.id]?.pending || 0) }}</td>
                   <td>{{ formatNumber(metrics[row.userId || row.id]?.inProgress || 0) }}</td>
                   <td>{{ formatNumber(metrics[row.userId || row.id]?.completed || 0) }}</td>
-                  <!-- <td>
-                    <span class="pill ghost" v-if="!metrics[row.userId || row.id]">Chưa có công việc -> cần API khác?</span>
-                    <span class="muted" v-else>Lấy từ /TechnicalTask/paging</span>
-                  </td> -->
                 </tr>
               </tbody>
             </table>
@@ -243,14 +238,6 @@
             </div>
           </div>
         </div>
-
-        <!-- <div class="panel warning-panel">
-          <p class="eyebrow">Dữ liệu chưa có API</p>
-          <ul>
-            <li>Ca làm, OT, SLA, thời gian xử lý TB, trend theo ngày/ca.</li>
-            <li>Cần API tổng hợp KPI theo thợ (đếm theo trạng thái, SLA, OT, chart theo ngày/ca) để bổ sung.</li>
-          </ul>
-        </div> -->
       </main>
     </div>
   </div>
@@ -282,6 +269,7 @@ const filters = ref({
 
 const mechanics = ref([])
 const metrics = ref({})
+const tasks = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -402,9 +390,26 @@ const formatNumber = (value) => {
   return new Intl.NumberFormat('en-US').format(Number(value || 0))
 }
 
-const applyFilters = async () => {
+const rebuildMetrics = () => {
+  const metricsMap = {}
+  tasks.value.forEach((t) => {
+    const userId = t.assignedTo || t.assigned_to || t.assigned_to_technical || t.assignedToTechnical
+    if (!userId) return
+    if (!metricsMap[userId]) metricsMap[userId] = { pending: 0, inProgress: 0, completed: 0 }
+    if (t.status === TASK_STATUS.PENDING) metricsMap[userId].pending += 1
+    else if (t.status === TASK_STATUS.IN_PROGRESS) metricsMap[userId].inProgress += 1
+    else if (t.status === TASK_STATUS.COMPLETED) metricsMap[userId].completed += 1
+  })
+  metrics.value = metricsMap
   currentPage.value = 1
-  await loadData()
+}
+
+const applyFilters = () => {
+  currentPage.value = 1
+}
+
+const handleDateChange = () => {
+  loadData()
 }
 
 const changePage = (page) => {
@@ -452,66 +457,69 @@ const parseTotal = (res) => {
 const buildTaskFilters = () => {
   const columnFilters = []
   if (filters.value.fromDate) {
-    columnFilters.push({
-      columnName: 'assigned_at', // đổi sang ConfirmedAt nếu backend dùng cột này
-      operator: 'greater_or_equal',
-      value: filters.value.fromDate
+    ;['assigned_date','assigned_at','CreatedDate'].forEach((col) => {
+      columnFilters.push({
+        columnName: col,
+        operator: 'greater_or_equal',
+        value: filters.value.fromDate
+      })
     })
   }
   if (filters.value.toDate) {
-    columnFilters.push({
-      columnName: 'assigned_at',
-      operator: 'less_or_equal',
-      value: filters.value.toDate
+    ;['assigned_date','assigned_at','CreatedDate'].forEach((col) => {
+      columnFilters.push({
+        columnName: col,
+        operator: 'less_or_equal',
+        value: filters.value.toDate
+      })
     })
   }
   return columnFilters
 }
 
-const fetchTaskCount = async (userId, status) => {
-  try {
-    const res = await technicalTaskService.getPaging({
-      page: 1,
-      pageSize: 1,
-      assignedToTechnical: userId,
-      taskStatus: status,
-      columnFilters: buildTaskFilters()
-    })
-    return parseTotal(res) || 0
-  } catch (error) {
-    return 0
-  }
-}
+const normalizeTask = (item = {}) => ({
+  assignedTo: item.assignedToTechnical || item.assigned_to_technical || item.assignedTo || item.assigned_to,
+  status: item.taskStatus ?? item.status,
+  assignedAt:
+    item.assignedDate ||
+    item.assigned_date ||
+    item.assigned_at ||
+    item.createdDate ||
+    item.created_at ||
+    item.createdAt ||
+    item.confirmed_at ||
+    item.confirmedAt,
+  createdAt:
+    item.createdDate ||
+    item.created_at ||
+    item.createdAt ||
+    item.assignedDate ||
+    item.assigned_date ||
+    item.assigned_at
+})
 
-const buildMetricsForMechanic = async (userId) => {
-  if (!userId) return { pending: 0, inProgress: 0, completed: 0 }
-  const [pending, inProgress, completed] = await Promise.all([
-    fetchTaskCount(userId, TASK_STATUS.PENDING),
-    fetchTaskCount(userId, TASK_STATUS.IN_PROGRESS),
-    fetchTaskCount(userId, TASK_STATUS.COMPLETED)
-  ])
-  return { pending, inProgress, completed }
-}
-
-const loadData = async () => {
+const loadData = async (skipRefresh = false) => {
   try {
     loading.value = true
-    const res = await userService.getTechnicalStaff()
-    const items = res?.data ?? []
-    mechanics.value = Array.isArray(items) ? items : []
+    const resMechanics = await userService.getTechnicalStaff()
+    const mechanicsData = resMechanics?.data ?? []
+    mechanics.value = Array.isArray(mechanicsData) ? mechanicsData : []
 
-    const entries = await Promise.all(
-      mechanics.value.map(async (m) => {
-        const userId = m.userId || m.id
-        const metric = await buildMetricsForMechanic(userId)
-        return [userId, metric]
-      })
-    )
-    metrics.value = Object.fromEntries(entries)
+    const resTasks = await technicalTaskService.getPaging({
+      page: 1,
+      pageSize: 1000,
+      columnSorts: [{ columnName: 'CreatedDate', sortDirection: 'DESC' }],
+      columnFilters: buildTaskFilters()
+    })
+    const taskItems = resTasks?.data?.items || resTasks?.data?.data || resTasks?.data || []
+    tasks.value = Array.isArray(taskItems) ? taskItems.map(normalizeTask) : []
+
+    rebuildMetrics()
     lastRefreshed.value = new Date()
   } catch (error) {
     metrics.value = {}
     mechanics.value = []
+    tasks.value = []
   } finally {
     loading.value = false
   }
