@@ -485,7 +485,7 @@
 
 	const canComplete = computed(() => {
 		if (!serviceTicket.value) return false
-		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.IN_PROGRESS || serviceTicket.value.serviceTicketStatus === 4
+		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.IN_PROGRESS || serviceTicket.value.serviceTicketStatus === 2
 	})
 
 	const canCancel = computed(() => {
