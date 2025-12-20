@@ -26,7 +26,7 @@ class PartCategoryService {
 		return { data: Array.isArray(payload) ? payload : payload.items || payload }
 	}
 
-	async getPaging({ page = 1, pageSize = 10, sortKey = 'partCategoryId', sortOrder = 'DESC', search = '' } = {}) {
+	async getPaging({ page = 1, pageSize = 10, sortKey = 'Id', sortOrder = 'DESC', search = '' } = {}) {
 		const params = {
 			page: Math.max(0, page - 1),
 			size: pageSize,

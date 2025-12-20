@@ -193,41 +193,34 @@ export const MANAGER_MENU = [
 ]
 
 export const STOCKER_MENU = [
-	{
-		key: 'dashboard',
-		label: 'Dashboard',
-		icon: 'fa-gauge',
-		path: '/stocker/dashboard',
-		permission: PERMISSIONS.VIEW_INVENTORY
-	},
-	{
-		key: 'inventory',
-		label: 'Kho hàng',
-		icon: 'fa-warehouse',
-		path: '/stocker/price-requests',
-		permission: PERMISSIONS.VIEW_INVENTORY
-	},
-	{
-		key: 'part-categories',
-		label: 'Danh mục phụ tùng',
-		icon: 'fa-list',
-		path: '/stocker/part-categories',
-		permission: PERMISSIONS.MANAGE_PARTS
-	},
-	{
-		key: 'parts',
-		label: 'Quản lý phụ tùng',
-		icon: 'fa-cogs',
-		path: '/stocker/parts',
-		permission: PERMISSIONS.MANAGE_PARTS
-	},
-	{
-		key: 'restock-requests',
-		label: 'Yêu cầu nhập kho',
-		icon: 'fa-shopping-cart',
-		path: '/stocker/restock-requests',
-		permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
-	}
+  {
+    key: 'dashboard',
+    label: 'Dashboard',
+    icon: 'fa-gauge',
+    path: '/stocker/dashboard',
+    permission: PERMISSIONS.VIEW_INVENTORY
+  },
+  {
+    key: 'part-categories',
+    label: 'Danh mục phụ tùng',
+    icon: 'fa-list',
+    path: '/stocker/part-categories-v2',
+    permission: PERMISSIONS.MANAGE_PARTS
+  },
+  {
+    key: 'parts',
+    label: 'Quản lý phụ tùng',
+    icon: 'fa-cogs',
+    path: '/stocker/parts',
+    permission: PERMISSIONS.MANAGE_PARTS
+  },
+  {
+    key: 'restock-requests',
+    label: 'Yêu cầu nhập kho',
+    icon: 'fa-shopping-cart',
+    path: '/stocker/price-requests',
+    permission: PERMISSIONS.CREATE_RESTOCK_REQUEST
+  }
 ]
 
 export const MECHANIC_MENU = [

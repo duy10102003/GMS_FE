@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { requireAuth } from './guardsV2'
+import authService from '../services/auth'
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -269,6 +270,51 @@ const router = createRouter({
 			component: () => import('../views/customer/BookingCreateView.vue')
 		}
 	]
+})
+
+// Global router guard để hiển thị toast khi truy cập route không có quyền
+router.beforeEach((to, from, next) => {
+	// Chỉ kiểm tra các route có meta.role hoặc là protected route
+	if (to.meta?.role || to.path.startsWith('/manager') || to.path.startsWith('/staff') || 
+	    to.path.startsWith('/customer') || to.path.startsWith('/stocker') || to.path.startsWith('/mechanic')) {
+		
+		// Kiểm tra authentication
+		if (!authService.isAuthenticated()) {
+			// Delay để đảm bảo toast instance đã được khởi tạo
+			setTimeout(() => {
+				try {
+					const { useToast } = require('../composables/useToast')
+					const toast = useToast()
+					toast.error('Bạn không có quyền truy cập', 'Vui lòng đăng nhập')
+				} catch (error) {
+					console.warn('Toast not available:', error)
+				}
+			}, 100)
+			
+			return next('/home')
+		}
+		
+		// Kiểm tra role nếu route có yêu cầu role
+		if (to.meta?.role) {
+			const userRole = authService.getCurrentRole()
+			if (userRole !== to.meta.role) {
+				// Delay để đảm bảo toast instance đã được khởi tạo
+				setTimeout(() => {
+					try {
+						const { useToast } = require('../composables/useToast')
+						const toast = useToast()
+						toast.error('Bạn không có quyền truy cập', 'Không đủ quyền')
+					} catch (error) {
+						console.warn('Toast not available:', error)
+					}
+				}, 100)
+				
+				return next('/home')
+			}
+		}
+	}
+	
+	next()
 })
 
 export default router

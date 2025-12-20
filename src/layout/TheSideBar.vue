@@ -173,8 +173,9 @@ const handleMenuClick = (item) => {
 }
 
 const handleLogout = async () => {
-  await authStore.logout()
-  router.push({ name: 'home' })
+  // Dùng authService để đảm bảo gọi đúng API và clear session
+  // authService.logout() sẽ tự động redirect và reload trang
+  await authService.logout(true)
 }
 
 // Get menu items - use props if provided, otherwise get from role

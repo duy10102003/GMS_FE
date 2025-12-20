@@ -68,23 +68,38 @@ export const useAuthStore = defineStore('auth', {
 		// Step 3: Call backend logout
 		async logoutCall() {
 			try {
-				await api.post('/auth/logout')
+				const token = this.accessToken || localStorage.getItem('accessToken')
+				if (token) {
+					// Gọi API logout đến Spring Boot (port 8888)
+					const { API_BASE_URL_SPRINGBOOT } = await import('../constant/api')
+					await fetch(`${API_BASE_URL_SPRINGBOOT}/auth/logout`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': `Bearer ${token}`
+						}
+					})
+				}
 			} catch (err) {
-				console.log('Logout API error:', err.response?.data)
+				console.warn('Logout API error (but continuing with FE cleanup):', err)
 			}
 		},
 
 		// Step 4: FE logout
 		async logout() {
+			// Gọi API logout ở BE trước
 			await this.logoutCall()
 
+			// Clear state
 			this.accessToken = null
 			this.refreshToken = null
 			this.user = null
 
+			// Clear localStorage
 			localStorage.removeItem('accessToken')
 			localStorage.removeItem('refreshToken')
 			localStorage.removeItem('user')
+			localStorage.removeItem('token')
 		}
 	}
 })
