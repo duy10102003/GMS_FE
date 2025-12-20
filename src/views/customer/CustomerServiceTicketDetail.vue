@@ -10,6 +10,7 @@
 					<GmsButton variant="outline" icon="fa-arrow-left" @click="$router.back()">Quay lại</GmsButton>
 					<div class="header-actions">
 						<GmsButton v-if="canConfirm" variant="primary" size="small" icon="fa-check" @click="handleConfirm">Xác nhận</GmsButton>
+						<GmsButton v-if="canCancel" variant="danger" icon="fa-times" @click="openCancelDialog">Hủy phiếu</GmsButton>
 					</div>
 				</div>
 
@@ -446,6 +447,12 @@
 
 		return serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.ADJUSTED_BY_TECHNICAL || serviceTicket.value.serviceTicketStatus === SERVICE_TICKET_STATUS.PENDING_TECHNICAL_CONFIRMATION
 	})
+
+	const canCancel = computed(() => {
+		if (!serviceTicket.value) return false
+		return serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.IN_PROGRESS && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CLOSED && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.COMPLETED_PAYMENT && serviceTicket.value.serviceTicketStatus !== SERVICE_TICKET_STATUS.CANCELLED && serviceTicket.value.serviceTicketStatus !== 3 && serviceTicket.value.serviceTicketStatus !== 4 && serviceTicket.value.serviceTicketStatus !== 5
+	})
+
 	const handleConfirm = async () => {
 		if (!serviceTicket.value) return
 
