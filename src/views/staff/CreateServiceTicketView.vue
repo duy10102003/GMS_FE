@@ -52,7 +52,7 @@
 									<GmsInput v-model="newCustomer.customerPhone" label="Số điện thoại *" type="tel" placeholder="0912345678" />
 								</div>
 								<div class="col-md-4">
-									<GmsInput v-model="newCustomer.customerEmail" label="Email" type="email" placeholder="email@example.com" />
+									<GmsInput v-model="newCustomer.customerEmail" label="Email" type="text" placeholder="email@example.com" />
 								</div>
 							</div>
 						</div>
@@ -115,7 +115,7 @@
 							</h5>
 							<div class="mb-3">
 								<label class="form-label">Mô tả vấn đề</label>
-								<textarea v-model="formData.initialIssue" class="form-control" rows="4" maxlength="255" placeholder="Nhập mô tả vấn đề của xe..." required></textarea>
+								<textarea v-model="formData.initialIssue" class="form-control" rows="4" maxlength="255" placeholder="Nhập mô tả vấn đề của xe..."></textarea>
 							</div>
 						</div>
 
@@ -562,13 +562,40 @@
 		formData.value.assignDescription = ''
 	}
 
+	const isValidPhoneNumber = (phone) => {
+		if (!phone) return false
+		return /^(0[3|5|7|8|9])[0-9]{8}$/.test(phone.trim())
+	}
+
+	const isValidEmail = (email) => {
+		if (!email) return false
+		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+	}
+
 	const handleSubmit = async () => {
 		// Validation - Không bắt buộc chọn customer, có thể tạo mới khi nhập thông tin
 		// Nếu không chọn customer, phải nhập thông tin mới
 		if (!selectedCustomer.value) {
-			if (!newCustomer.value.customerName?.trim() || !newCustomer.value.customerPhone?.trim()) {
-				toast.error('Vui lòng chọn khách hàng hoặc nhập đầy đủ thông tin khách hàng mới (Tên và Số điện thoại)')
+			if (!newCustomer.value.customerName?.trim()) {
+				toast.error('Vui lòng nhập tên khách hàng')
 				return
+			}
+
+			if (!newCustomer.value.customerPhone?.trim()) {
+				toast.error('Vui lòng nhập số điện thoại')
+				return
+			}
+
+			if (!isValidPhoneNumber(newCustomer.value.customerPhone)) {
+				toast.error('Số điện thoại không đúng định dạng (VD: 0912345678)')
+				return
+			}
+
+			if (newCustomer.value.customerEmail?.trim()) {
+				if (!isValidEmail(newCustomer.value.customerEmail)) {
+					toast.error('Email không đúng định dạng')
+					return
+				}
 			}
 		}
 
