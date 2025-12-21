@@ -316,7 +316,7 @@
 			<form @submit.prevent="handleCreateInvoice">
 				<div class="mb-3">
 					<label class="form-label">Thuế VAT (VNĐ)</label>
-					<GmsInput v-model.number="invoiceForm.taxAmount" type="number" placeholder="0" :min="0" />
+					<GmsInput v-model.number="invoiceForm.taxAmount" type="number" placeholder="0" :min="0" :readonly="true" />
 				</div>
 				<div class="mb-3">
 					<label class="form-label">Giảm giá (VNĐ)</label>
