@@ -7,7 +7,7 @@
 
 
 
-        <div class="content-wrapper" :style="{ marginLeft: sidebarCollapsed ? '80px' : '260px' }">
+        <div class="content-wrapper" :style="contentWrapperStyle">
 
             <TheHeader title="Quản lý phụ tùng" :show-search="false" :notifications="notifications"
                 @logout="handleLogout" />
@@ -343,7 +343,7 @@
 
                                 <span>Tên phụ tùng</span>
 
-                                <input v-model.trim="formData.partName" type="text" maxlength="100"
+                                <input v-model.trim="formData.partName" type="text" maxlength="101"
                                     placeholder="VD: Má phanh" required />
 
                             </label>
@@ -354,7 +354,7 @@
 
                                 <span>Danh mục</span>
 
-                <select v-model.number="formData.partCategoryId" class="category-select" required>
+                            <select v-model.number="formData.partCategoryId" class="category-select" required>
 
                                     <option value="">-- Chọn danh mục --</option>
 
@@ -365,7 +365,7 @@
 
                                     </option>
 
-                                </select>
+                            </select>
 
                             </label>
 
@@ -386,7 +386,7 @@
 
                                 <span>Bảo hành (tháng)</span>
 
-                                <input v-model.number="formData.warrantyMonth" type="number" min="-2" max="120" placeholder="0" />
+                                <input v-model.number="formData.warrantyMonth" type="number" min="-999999" max="120" placeholder="0" />
 
                             </label>
 
@@ -728,6 +728,15 @@ const notifications = ref([])
 
 const menuItems = ref([])
 
+const contentWrapperStyle = computed(() => {
+    const left = sidebarCollapsed.value ? 80 : 260
+    const leftPx = `${left}px`
+    return {
+        marginLeft: leftPx,
+        width: `calc(100% - ${leftPx})`,
+        maxWidth: `calc(100vw - ${leftPx})`
+    }
+})
 
 
 const filters = reactive({
@@ -1432,6 +1441,30 @@ const getFilterLabel = (filter) => {
 
 
 
+const buildSearchPayload = () => {
+
+    const activeSortColumn = tableColumns.find((column) => column.key === sortConfig.columnKey)
+
+    const sortKey = activeSortColumn?.key || 'partId'
+
+    return {
+
+        page: Math.max(0, currentPage.value - 1),
+
+        pageSize: pagination.size,
+
+        sortBy: sortKey,
+
+        direction: sortConfig.direction || 'DESC',
+
+        keyword: filters.keyword?.trim() || '',
+
+        zeroBased: true
+
+    }
+
+}
+
 const buildPagingPayload = () => {
 
     const dynamicFilters = [...columnFilters.value]
@@ -1480,15 +1513,35 @@ const buildPagingPayload = () => {
 
     ]
 
+    const mergedColumnFilters = Array.isArray(dynamicFilters) ? [...dynamicFilters] : []
+
+    if (Array.isArray(columnFilters) && columnFilters.length) {
+
+        columnFilters.forEach((f) => {
+
+            mergedColumnFilters.push({
+
+                columnName: f.columnName,
+
+                operator: f.operator,
+
+                value: f.value
+
+            })
+
+        })
+
+    }
+
 
 
 	return {
 
-		page: currentPage.value,
+		page: Math.max(0, currentPage.value - 1),
 
 		pageSize: pagination.size,
 
-		columnFilters: dynamicFilters,
+		columnFilters: mergedColumnFilters,
 
 		columnSorts,
 
@@ -1626,17 +1679,18 @@ const loadParts = async () => {
 
 
 
-        const payload = buildPagingPayload()
+        const usePagingSearch = Boolean(filters.keyword?.trim()) &&
+            columnFilters.value.length === 0 &&
+            statusQuickFilter.value === 'ALL'
 
+        const payload = usePagingSearch ? buildSearchPayload() : buildPagingPayload()
 
+        const response = usePagingSearch
+            ? await partService.getPaging(payload)
+            : await partService.filter(payload)
 
-        const response = await partService.getPaging(payload)
-
-
-
-        const dataset = response?.data || {}
-
-
+        const raw = response?.data || {}
+        const dataset = raw?.data || raw
 
         const rawItems = Array.isArray(dataset) ? dataset : dataset.items || dataset.content || []
 
@@ -1654,7 +1708,7 @@ const loadParts = async () => {
 
 
 
-        const serverPage = dataset.page ?? dataset.currentPage ?? dataset.number ?? (payload.page - 1)
+        const serverPage = dataset.page ?? dataset.currentPage ?? dataset.number ?? payload.page
 
 
 
@@ -1946,6 +2000,16 @@ onMounted(async () => {
     min-height: 100vh;
 
     background: #f7f8fa;
+
+}
+
+
+
+.content-wrapper {
+
+    min-height: 100vh;
+
+    overflow-x: hidden;
 
 }
 
@@ -2282,6 +2346,14 @@ onMounted(async () => {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 
     gap: 1rem;
+
+}
+
+
+
+.table-card {
+
+    overflow-x: auto;
 
 }
 

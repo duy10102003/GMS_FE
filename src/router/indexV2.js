@@ -37,6 +37,11 @@ const router = createRouter({
 					component: () => import('../views/manager/ManagerSetPriceView.vue')
 				},
 				{
+					path: 'inventory/parts',
+					name: 'managerInventoryParts',
+					component: () => import('../views/manager/ManagerPartsView.vue')
+				},
+				{
 					path: 'report/mechanics',
 					name: 'managerMechanicReport',
 					component: () => import('../views/manager/MechanicReportView.vue')
@@ -61,7 +66,7 @@ const router = createRouter({
 					path: 'mechanic-roles',
 					name: 'managerMechanicRoles',
 					component: () => import('../views/manager/MechanicRolesView.vue')
-				},				
+				},
 				{
 					path: 'mechanic-roles/:id/:roleName/mechanics',
 					name: 'managerMechanicRoleMechanics',

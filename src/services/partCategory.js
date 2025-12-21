@@ -20,6 +20,11 @@ class PartCategoryService {
 		return await wrap(apiSpringbootV2.post(`${RESOURCE}/paging`, payload))
 	}
 
+	async filter(payload = {}) {
+		// Advanced paging with columnFilters/columnSorts
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}/filter`, payload))
+	}
+
 	async getAll() {
 		const response = await this.getSelect()
 		const payload = response?.data?.data || response?.data || []
