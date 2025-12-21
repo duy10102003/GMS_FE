@@ -235,16 +235,6 @@
               </label>
 
               <label class="field">
-                <span>Số điện thoại</span>
-                <input
-                  v-model.trim="formData.partCategoryPhone"
-                  type="text"
-                  maxlength="11"
-                  placeholder="VD: 09012345671"
-                />
-              </label>
-
-              <label class="field">
                 <span>Trạng thái</span>
                 <select v-model="formData.status">
                   <option value="ACTIVE">ACTIVE</option>
@@ -371,10 +361,6 @@
                 <dt>Mô tả</dt>
                 <dd>{{ viewingCategory.partCategoryDescription || viewingCategory.partCategoryDiscription || '--' }}</dd>
               </div>
-              <div class="full-row">
-                <dt>Số điện thoại</dt>
-                <dd>{{ viewingCategory.partCategoryPhone || '--' }}</dd>
-              </div>
             </dl>
             <div class="modal-actions" style="justify-content: flex-end">
               <button type="button" class="btn primary" @click="closeViewModal">Đóng</button>
@@ -465,7 +451,6 @@ const tableColumns = [
     sortable: false,
     valueGetter: (item) => item.partCategoryDescription || item.partCategoryDiscription || '--'
   },
-  { key: 'partCategoryPhone', backendKey: 'partCategoryPhone', label: 'Số điện thoại', filterable: true, sortable: false },
   { key: 'status', backendKey: 'status', label: 'Trạng thái', sortable: false, filterable: true },
   { key: 'actions', label: 'Hành động', sortable: false, filterable: false }
 ]
@@ -484,8 +469,8 @@ const filterForm = reactive({
 })
 
 const operatorLabels = {
-  equals: 'Bằng',
-  not_equals: 'Không bằng',
+  equals: '=',
+  not_equals: '≠',
   contains: 'Chứa',
   not_contains: 'Không chứa',
   starts_with: 'Bắt đầu bằng',
@@ -494,8 +479,8 @@ const operatorLabels = {
   not_empty: 'Không rỗng',
   greater_than: '>',
   less_than: '<',
-  greater_or_equal: '>=',
-  less_or_equal: '<='
+  greater_or_equal: '≥',
+  less_or_equal: '≤'
 }
 
 const operatorNeedsValue = (operator) => !['empty', 'not_empty'].includes(operator)
@@ -622,7 +607,6 @@ const formData = reactive({
   partCategoryCode: '',
   partCategoryName: '',
   partCategoryDiscription: '',
-  partCategoryPhone: '',
   status: 'ACTIVE'
 })
 
@@ -639,7 +623,6 @@ const resetForm = () => {
   formData.partCategoryCode = ''
   formData.partCategoryName = ''
   formData.partCategoryDiscription = ''
-  formData.partCategoryPhone = ''
   formData.status = 'ACTIVE'
   formError.value = ''
   formSuccess.value = ''
@@ -652,7 +635,6 @@ const openEditModal = (item) => {
   formData.partCategoryCode = item.partCategoryCode || ''
   formData.partCategoryName = item.partCategoryName || ''
   formData.partCategoryDiscription = item.partCategoryDescription || item.partCategoryDiscription || ''
-  formData.partCategoryPhone = item.partCategoryPhone || ''
   formData.status = item.status || 'ACTIVE'
   formError.value = ''
   formSuccess.value = ''
@@ -685,7 +667,7 @@ const closeViewModal = () => {
 
 const buildPagingPayload = () => {
   const payload = {
-    page: Math.max(0, currentPage.value - 1),
+    page: Math.max(1, currentPage.value),
     size: pagination.size
   }
 
@@ -694,13 +676,35 @@ const buildPagingPayload = () => {
   // Đảm bảo sortBy là 'Id' (chữ I viết hoa) khi sort theo ID
   payload.sortBy = sortByValue === 'partCategoryId' || sortByValue === 'Id' ? 'Id' : sortByValue
   payload.direction = sortConfig.direction || 'DESC'
+  payload.columnSorts = [
+    {
+      columnName: payload.sortBy,
+      sortDirection: payload.direction
+    }
+  ]
 
   if (filters.keyword && filters.keyword.trim()) {
     payload.keyword = filters.keyword.trim()
   }
 
+  if (columnFilters.value.length) {
+    payload.columnFilters = columnFilters.value.map((f) => ({
+      columnName: f.columnName,
+      operator: f.operator,
+      value: f.value
+    }))
+  }
+
   return payload
 }
+
+const buildSearchPayload = () => ({
+  page: Math.max(0, currentPage.value - 1),
+  size: pagination.size,
+  sortBy: 'partCategoryId',
+  sortDirection: sortConfig.direction || 'DESC',
+  keyword: filters.keyword?.trim() || ''
+})
 
 const loadCategories = async () => {
   try {
@@ -709,8 +713,11 @@ const loadCategories = async () => {
     // Clear categories trước khi load để tránh hiển thị dữ liệu cũ
     categories.value = []
 
-    const requestPayload = buildPagingPayload()
-    const response = await partCategoryService.getList(requestPayload)
+    const usePagingSearch = Boolean(filters.keyword?.trim()) && columnFilters.value.length === 0
+    const requestPayload = usePagingSearch ? buildSearchPayload() : buildPagingPayload()
+    const response = usePagingSearch
+      ? await partCategoryService.paging(requestPayload)
+      : await partCategoryService.filter(requestPayload)
 
     // Response structure: response = { data: { success: true, data: { items: [...], totalItems, page, size }, message } }
     const rawData = response?.data || {}
@@ -738,19 +745,21 @@ const loadCategories = async () => {
 
     // Parse pagination info từ payload
     const totalFromPayload = payload?.totalItems ?? payload?.total ?? payload?.totalElements ?? payload?.totalRecords ?? items.length
-    const pageFromPayload = payload?.page ?? payload?.currentPage ?? payload?.number ?? requestPayload.page ?? 0
+    const pageFromPayload = payload?.page ?? payload?.currentPage ?? payload?.number ?? requestPayload.page ?? (usePagingSearch ? 0 : 1)
     const sizeFromPayload = payload?.size ?? payload?.pageSize ?? requestPayload.size ?? 10
+
+    const normalizedPage = Number.isFinite(Number(pageFromPayload)) ? Number(pageFromPayload) : (usePagingSearch ? 0 : 1)
 
     pagination.totalItems = Number.isFinite(Number(totalFromPayload)) && Number(totalFromPayload) >= 0
       ? Number(totalFromPayload)
       : items.length
-    pagination.page = Number.isFinite(Number(pageFromPayload)) && Number(pageFromPayload) >= 0
-      ? Number(pageFromPayload)
-      : 0
+    pagination.page = usePagingSearch ? normalizedPage : (normalizedPage > 0 ? normalizedPage - 1 : normalizedPage)
     pagination.size = Number.isFinite(Number(sizeFromPayload)) && Number(sizeFromPayload) > 0
       ? Number(sizeFromPayload)
       : 10
-    currentPage.value = pagination.totalItems === 0 ? 1 : Number(pagination.page) + 1
+    currentPage.value = pagination.totalItems === 0
+      ? 1
+      : (usePagingSearch ? normalizedPage + 1 : (normalizedPage > 0 ? normalizedPage : normalizedPage + 1))
 
     // Đảm bảo Vue đã update DOM trước khi tắt loading
     await nextTick()
@@ -810,7 +819,6 @@ const handleSubmit = async () => {
       partCategoryName: formData.partCategoryName?.trim() || null,
       partCategoryDescription: descriptionValue,
       partCategoryDiscription: descriptionValue,
-      partCategoryPhone: formData.partCategoryPhone?.trim() || null,
       status: formData.status || 'ACTIVE'
     }
 
@@ -1364,6 +1372,3 @@ onMounted(async () => {
   margin-top: 0.75rem;
 }
 </style>
-
-
-

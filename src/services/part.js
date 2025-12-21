@@ -66,6 +66,18 @@ class PartService {
 		})
 	}
 
+	async filter(payload = {}) {
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}/filter`, payload))
+	}
+
+	async listWithPriceInfo(payload = {}) {
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}/list-with-price-info`, payload))
+	}
+
+	async getImportedAvailableFilter(payload = {}) {
+		return await wrap(apiSpringbootV2.post(`${RESOURCE}/imported-available/filter`, payload))
+	}
+
 	async getImportedAvailable(params = {}) {
 		const query = {
 			page: Number(params.page) ?? 0,
@@ -78,6 +90,10 @@ class PartService {
 		}
 
 		return await wrap(apiSpringbootV2.get(`${RESOURCE}/imported-available`, query))
+	}
+
+	async getStockOutFilter(payload = {}) {
+		return await wrap(apiSpringbootV2.post('/part-stock-out/filter', payload))
 	}
 
 	async getStockOutList(params = {}) {
@@ -187,6 +203,39 @@ class PartService {
 			params.excludeId = excludeId
 		}
 		return await wrap(apiSpringbootV2.get(`${RESOURCE}/check-code`, params))
+	}
+
+	/**
+	 * Get price history for a part
+	 * GET /api/parts/{id}/price-history
+	 */
+	async getPriceHistory(id) {
+		if (!id) {
+			throw new Error('Missing part id')
+		}
+		return await wrap(apiSpringbootV2.get(`${RESOURCE}/${id}/price-history`))
+	}
+
+	/**
+	 * Update effective dates for parts in a stock-out
+	 * PUT /api/part-stock-out/{id}/update-effective-dates
+	 */
+	async updateEffectiveDates(stockOutId, payload = {}) {
+		if (!stockOutId) {
+			throw new Error('Missing stock-out id')
+		}
+		return await wrap(apiSpringbootV2.put(`/part-stock-out/${stockOutId}/update-effective-dates`, payload))
+	}
+
+	/**
+	 * Confirm scheduled price (change status from SCHEDULED to ACTIVE)
+	 * PUT /api/parts/{id}/confirm-scheduled-price
+	 */
+	async confirmScheduledPrice(partId) {
+		if (!partId) {
+			throw new Error('Missing part id')
+		}
+		return await wrap(apiSpringbootV2.put(`${RESOURCE}/${partId}/confirm-scheduled-price`))
 	}
 }
 

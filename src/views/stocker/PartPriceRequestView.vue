@@ -77,8 +77,28 @@
 							</p>
 						</div>
 					</div>
+					<div v-if="stockOutColumnFilters.length" class="active-filters">
+						<span class="filter-label">Đang áp dụng:</span>
+						<div class="filter-tags">
+							<span v-for="filter in stockOutColumnFilters" :key="filter.columnName" class="filter-tag">
+								{{ getStockOutFilterLabel(filter) }}
+								<button type="button" class="tag-close" aria-label="Xóa lọc" @click="removeStockOutFilter(filter)">
+									&times;
+								</button>
+							</span>
+						</div>
+						<button type="button" class="btn ghost sm" @click="clearStockOutFilters">Xóa tất cả</button>
+					</div>
 					<div class="table-wrapper">
-						<GmsTable :data="filteredRequests" :columns="tableColumns" :loading="loading" :pagination="false" :scrollable="true">
+						<GmsTable
+							:data="filteredRequests"
+							:columns="tableColumns"
+							:loading="loading"
+							:pagination="false"
+							:scrollable="true"
+							@filter-click="openStockOutFilterModal"
+							@sort="handleStockOutSort"
+						>
 							<template #cell-code="{ row }">
 								<div>
 									<strong>{{ row.code }}</strong>
@@ -181,7 +201,21 @@
 						<h3>Danh sách phụ tùng</h3>
 						<p>{{ partModalPagination.totalItems }} phụ tùng khả dụng</p>
 					</div>
-					<GmsInput v-model="partSearchQuery" placeholder="Nhập tên hoặc mã phụ tùng..." prefix-icon="fa-search" @input="filterParts" />
+					<div class="part-header-actions">
+						<GmsInput v-model="partSearchQuery" placeholder="Nhập tên hoặc mã phụ tùng..." prefix-icon="fa-search" @input="filterParts" />
+					</div>
+				</div>
+				<div v-if="partColumnFilters.length" class="active-filters">
+					<span class="filter-label">Đang áp dụng:</span>
+					<div class="filter-tags">
+						<span v-for="filter in partColumnFilters" :key="filter.columnName" class="filter-tag">
+							{{ getPartFilterLabel(filter) }}
+							<button type="button" class="tag-close" aria-label="Xóa lọc" @click="removePartFilter(filter)">
+								&times;
+							</button>
+						</span>
+					</div>
+					<button type="button" class="btn ghost sm" @click="clearPartFilters">Xóa tất cả</button>
 				</div>
 
 				<div class="part-selection-body">
@@ -190,12 +224,48 @@
 							<table class="part-table">
 								<thead>
 									<tr>
-										<th>ID</th>
-										<th>Mã phụ tùng</th>
-										<th>Tên phụ tùng</th>
-										<th>Danh mục</th>
-										<th>Status</th>
-										<th>Hành động</th>
+										<th>
+											<div class="th-content">
+												<span>ID</span>
+											</div>
+										</th>
+										<th>
+											<div class="th-content">
+												<span>Mã phụ tùng</span>
+												<button type="button" class="icon-btn" @click.stop="openPartFilterModal({ key: 'partCode', label: 'Mã phụ tùng' })">
+													<i class="fas fa-filter"></i>
+												</button>
+											</div>
+										</th>
+										<th>
+											<div class="th-content">
+												<span>Tên phụ tùng</span>
+												<button type="button" class="icon-btn" @click.stop="openPartFilterModal({ key: 'partName', label: 'Tên phụ tùng' })">
+													<i class="fas fa-filter"></i>
+												</button>
+											</div>
+										</th>
+										<th>
+											<div class="th-content">
+												<span>Danh mục</span>
+												<button type="button" class="icon-btn" @click.stop="openPartFilterModal({ key: 'partCategoryName', label: 'Danh mục' })">
+													<i class="fas fa-filter"></i>
+												</button>
+											</div>
+										</th>
+										<th>
+											<div class="th-content">
+												<span>Status</span>
+												<button type="button" class="icon-btn" @click.stop="openPartFilterModal({ key: 'status', label: 'Trạng thái' })">
+													<i class="fas fa-filter"></i>
+												</button>
+											</div>
+										</th>
+										<th>
+											<div class="th-content">
+												<span>Hành động</span>
+											</div>
+										</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -397,6 +467,88 @@
 			</div>
 		</GmsDialog>
 
+		<teleport to="body">
+			<div v-if="showStockOutFilterModal" class="modal-overlay" @click.self="closeStockOutFilterModal">
+				<div class="modal-container filter-modal" @click.stop>
+					<div class="modal-header">
+						<h3>Lọc {{ currentStockOutFilterColumn?.label || 'cột' }}</h3>
+						<button class="close-btn" @click="closeStockOutFilterModal" aria-label="Đóng">
+							&times;
+						</button>
+					</div>
+					<div class="modal-body">
+						<form class="filter-form" @submit.prevent="applyStockOutFilter">
+							<label class="field">
+								<span>Toán tử</span>
+								<select v-model="stockOutFilterForm.operator">
+									<option value="equals">Bằng</option>
+									<option value="not_equals">Không bằng</option>
+									<option value="contains">Chứa</option>
+									<option value="not_contains">Không chứa</option>
+									<option value="starts_with">Bắt đầu bằng</option>
+									<option value="ends_with">Kết thúc bằng</option>
+									<option value="empty">Rỗng</option>
+									<option value="not_empty">Không rỗng</option>
+								</select>
+							</label>
+
+							<label v-if="operatorNeedsValue(stockOutFilterForm.operator)" class="field">
+								<span>Giá trị</span>
+								<input v-model.trim="stockOutFilterForm.value" type="text" placeholder="Nhập giá trị..." />
+							</label>
+
+							<div class="modal-actions filter-modal-actions">
+								<button type="button" class="btn ghost" @click="clearStockOutFilters">Xóa lọc</button>
+								<button type="submit" class="btn primary">Áp dụng</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</teleport>
+
+		<teleport to="body">
+			<div v-if="showPartFilterModal" class="modal-overlay" @click.self="closePartFilterModal">
+				<div class="modal-container filter-modal" @click.stop>
+					<div class="modal-header">
+						<h3>Lọc {{ currentPartFilterColumn?.label || 'cột' }}</h3>
+						<button class="close-btn" @click="closePartFilterModal" aria-label="Đóng">
+							&times;
+						</button>
+					</div>
+					<div class="modal-body">
+						<form class="filter-form" @submit.prevent="applyPartFilter">
+							<label class="field">
+								<span>Toán tử</span>
+								<select v-model="partFilterForm.operator">
+									<option value="equals">Bằng</option>
+									<option value="not_equals">Không bằng</option>
+									<option value="contains">Chứa</option>
+									<option value="not_contains">Không chứa</option>
+									<option value="starts_with">Bắt đầu bằng</option>
+									<option value="ends_with">Kết thúc bằng</option>
+									<option value="greater_or_equal">>=</option>
+									<option value="less_or_equal"><=</option>
+									<option value="empty">Rỗng</option>
+									<option value="not_empty">Không rỗng</option>
+								</select>
+							</label>
+
+							<label v-if="operatorNeedsValue(partFilterForm.operator)" class="field">
+								<span>Giá trị</span>
+								<input v-model.trim="partFilterForm.value" type="text" placeholder="Nhập giá trị..." />
+							</label>
+
+							<div class="modal-actions filter-modal-actions">
+								<button type="button" class="btn ghost" @click="clearPartFilters">Xóa lọc</button>
+								<button type="submit" class="btn primary">Áp dụng</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</teleport>
+
 		<!-- Toast -->
 		<GmsToast ref="toastRef" />
 	</div>
@@ -435,6 +587,30 @@
 	})
 	const partModalLoading = ref(false)
 	const creatingRequest = ref(false)
+	const showStockOutFilterModal = ref(false)
+	const showPartFilterModal = ref(false)
+	const stockOutColumnFilters = ref([])
+	const partColumnFilters = ref([])
+	const stockOutAdvancedActive = ref(false)
+	const partAdvancedActive = ref(false)
+	const currentStockOutFilterColumn = ref(null)
+	const currentPartFilterColumn = ref(null)
+	const stockOutFilterForm = reactive({
+		operator: 'contains',
+		value: ''
+	})
+	const partFilterForm = reactive({
+		operator: 'contains',
+		value: ''
+	})
+	const stockOutSort = reactive({
+		columnName: 'partStockOutId',
+		sortDirection: 'desc'
+	})
+	const partSort = reactive({
+		columnName: 'partId',
+		sortDirection: 'desc'
+	})
 
 	// Mock data
 	const priceRequests = ref([])
@@ -517,6 +693,46 @@
 	})
 
 	const paginatedParts = computed(() => parts.value)
+	const operatorNeedsValue = (operator) => !['empty', 'not_empty'].includes(operator)
+	const operatorLabels = {
+		equals: '=',
+		not_equals: '≠',
+		contains: 'Chứa',
+		not_contains: 'Không chứa',
+		starts_with: 'Bắt đầu bằng',
+		ends_with: 'Kết thúc bằng',
+		empty: 'Rỗng',
+		not_empty: 'Không rỗng',
+		greater_or_equal: '>=',
+		less_or_equal: '<='
+	}
+	const stockOutColumnMap = {
+		code: { columnName: 'partStockOutCode', label: 'Mã yêu cầu' },
+		requestedBy: { columnName: 'requestedByName', label: 'Người tạo' },
+		confirmedBy: { columnName: 'confirmedByName', label: 'Người xác nhận' },
+		requestDate: { columnName: 'requestedDate', label: 'Ngày tạo' },
+		confirmedDate: { columnName: 'confirmedDate', label: 'Ngày xác nhận' },
+		status: { columnName: 'status', label: 'Trạng thái' },
+		note: { columnName: 'note', label: 'Ghi chú' }
+	}
+	const partColumnMap = {
+		partCode: { columnName: 'partCode', label: 'Mã phụ tùng' },
+		partName: { columnName: 'partName', label: 'Tên phụ tùng' },
+		partCategoryName: { columnName: 'partCategoryName', label: 'Danh mục' },
+		warrantyMonth: { columnName: 'warrantyMonth', label: 'Bảo hành' },
+		status: { columnName: 'status', label: 'Trạng thái' }
+	}
+	const normalizePageToZeroBased = (pageValue, fallbackZeroBased, assumeOneBased = false) => {
+		const pageNum = Number(pageValue)
+		if (!Number.isFinite(pageNum)) return fallbackZeroBased
+		if (assumeOneBased) {
+			return Math.max(0, pageNum - 1)
+		}
+		if (pageNum >= 1 && fallbackZeroBased === 0) {
+			return pageNum - 1
+		}
+		return pageNum
+	}
 
 	const totalPartPages = computed(() => {
 		const total = partModalPagination.totalItems || parts.value.length || 0
@@ -625,6 +841,141 @@
 		loadPartStockOuts()
 	}
 
+	const handleStockOutSort = ({ key, order }) => {
+		const map = stockOutColumnMap[key] || { columnName: 'partStockOutId' }
+		stockOutSort.columnName = map.columnName
+		stockOutSort.sortDirection = order || 'desc'
+		if (stockOutAdvancedActive.value || stockOutColumnFilters.value.length > 0) {
+			pagination.page = 1
+			loadPartStockOuts()
+		}
+	}
+
+	const openStockOutFilterModal = (column) => {
+		const map = stockOutColumnMap[column?.key] || null
+		if (!map) return
+		currentStockOutFilterColumn.value = { ...map }
+		const existing = stockOutColumnFilters.value.find((f) => f.columnName === map.columnName)
+		stockOutFilterForm.operator = existing?.operator || 'contains'
+		stockOutFilterForm.value = existing?.value ?? ''
+		showStockOutFilterModal.value = true
+	}
+
+	const closeStockOutFilterModal = () => {
+		showStockOutFilterModal.value = false
+		currentStockOutFilterColumn.value = null
+		stockOutFilterForm.operator = 'contains'
+		stockOutFilterForm.value = ''
+	}
+
+	const applyStockOutFilter = () => {
+		if (!currentStockOutFilterColumn.value) return
+		if (operatorNeedsValue(stockOutFilterForm.operator) && !stockOutFilterForm.value) {
+			toast.error('Vui l?ng nh?p gi? tr? l?c')
+			return
+		}
+		const columnName = currentStockOutFilterColumn.value.columnName
+		stockOutColumnFilters.value = [
+			...stockOutColumnFilters.value.filter((f) => f.columnName !== columnName),
+			{
+				columnName,
+				operator: stockOutFilterForm.operator,
+				value: operatorNeedsValue(stockOutFilterForm.operator)
+					? stockOutFilterForm.value?.toString().trim() || ''
+					: ''
+			}
+		]
+		stockOutAdvancedActive.value = true
+		pagination.page = 1
+		loadPartStockOuts()
+		closeStockOutFilterModal()
+	}
+
+	const clearStockOutFilters = () => {
+		stockOutColumnFilters.value = []
+		stockOutAdvancedActive.value = false
+		pagination.page = 1
+		loadPartStockOuts()
+		closeStockOutFilterModal()
+	}
+
+	const removeStockOutFilter = (filter) => {
+		stockOutColumnFilters.value = stockOutColumnFilters.value.filter((f) => f.columnName !== filter.columnName)
+		stockOutAdvancedActive.value = stockOutColumnFilters.value.length > 0
+		pagination.page = 1
+		loadPartStockOuts()
+	}
+
+	const getStockOutFilterLabel = (filter) => {
+		const label = Object.values(stockOutColumnMap).find((col) => col.columnName === filter.columnName)?.label || filter.columnName
+		const operatorLabel = operatorLabels[filter.operator] || filter.operator
+		const valueText = operatorNeedsValue(filter.operator) && filter.value ? ` ${filter.value}` : ''
+		return `${label}: ${operatorLabel}${valueText}`
+	}
+
+	const openPartFilterModal = (column) => {
+		const map = partColumnMap[column?.key] || null
+		if (!map) return
+		currentPartFilterColumn.value = { ...map }
+		const existing = partColumnFilters.value.find((f) => f.columnName === map.columnName)
+		partFilterForm.operator = existing?.operator || 'contains'
+		partFilterForm.value = existing?.value ?? ''
+		showPartFilterModal.value = true
+	}
+
+	const closePartFilterModal = () => {
+		showPartFilterModal.value = false
+		currentPartFilterColumn.value = null
+		partFilterForm.operator = 'contains'
+		partFilterForm.value = ''
+	}
+
+	const applyPartFilter = () => {
+		if (!currentPartFilterColumn.value) return
+		if (operatorNeedsValue(partFilterForm.operator) && !partFilterForm.value) {
+			toast.error('Vui l?ng nh?p gi? tr? l?c')
+			return
+		}
+		const columnName = currentPartFilterColumn.value.columnName
+		partColumnFilters.value = [
+			...partColumnFilters.value.filter((f) => f.columnName !== columnName),
+			{
+				columnName,
+				operator: partFilterForm.operator,
+				value: operatorNeedsValue(partFilterForm.operator) ? partFilterForm.value?.toString().trim() || '' : ''
+			}
+		]
+		partAdvancedActive.value = true
+		currentPartPage.value = 1
+		partModalPagination.page = 0
+		loadAvailableParts()
+		closePartFilterModal()
+	}
+
+	const clearPartFilters = () => {
+		partColumnFilters.value = []
+		partAdvancedActive.value = false
+		currentPartPage.value = 1
+		partModalPagination.page = 0
+		loadAvailableParts()
+		closePartFilterModal()
+	}
+
+	const removePartFilter = (filter) => {
+		partColumnFilters.value = partColumnFilters.value.filter((f) => f.columnName !== filter.columnName)
+		partAdvancedActive.value = partColumnFilters.value.length > 0
+		currentPartPage.value = 1
+		partModalPagination.page = 0
+		loadAvailableParts()
+	}
+
+	const getPartFilterLabel = (filter) => {
+		const label = Object.values(partColumnMap).find((col) => col.columnName === filter.columnName)?.label || filter.columnName
+		const operatorLabel = operatorLabels[filter.operator] || filter.operator
+		const valueText = operatorNeedsValue(filter.operator) && filter.value ? ` ${filter.value}` : ''
+		return `${label}: ${operatorLabel}${valueText}`
+	}
+
 	const normalizeStockOutItem = (item = {}) => {
 		const quantity = Number(item.quantity ?? item.partQuantity ?? item.orderQty ?? 0)
 		const unitPrice = Number(
@@ -672,11 +1023,52 @@
 	const loadPartStockOuts = async () => {
 		try {
 			loading.value = true
+			const useAdvanced = stockOutAdvancedActive.value || stockOutColumnFilters.value.length > 0
 			const params = {
 				page: Math.max(0, pagination.page - 1),
 				size: pagination.size,
 				direction: 'DESC'
 			}
+			if (useAdvanced) {
+				const columnFilters = [...stockOutColumnFilters.value]
+				if (searchQuery.value?.trim()) {
+					columnFilters.push({
+						columnName: 'partStockOutCode',
+						operator: 'contains',
+						value: searchQuery.value.trim()
+					})
+				}
+				if (activeStatusTab.value && activeStatusTab.value !== 'ALL') {
+					columnFilters.push({
+						columnName: 'status',
+						operator: 'equals',
+						value: activeStatusTab.value
+					})
+				}
+				const payload = {
+					page: params.page,
+					pageSize: params.size,
+					columnFilters,
+					columnSorts: [
+						{
+							columnName: stockOutSort.columnName,
+							sortDirection: stockOutSort.sortDirection
+						}
+					]
+				}
+				const response = await partService.getStockOutFilter(payload)
+				const dataPayload = response?.data?.data || response?.data || {}
+				const items = Array.isArray(dataPayload) ? dataPayload : dataPayload.items || []
+				priceRequests.value = items.map((item) => normalizeStockOutRequest(item))
+				const total = dataPayload.totalItems ?? dataPayload.total ?? items.length
+				const serverPage = dataPayload.page ?? dataPayload.currentPage ?? params.page ?? 0
+				const normalizedPage = normalizePageToZeroBased(serverPage, params.page, true)
+				pagination.totalItems = Number(total) || 0
+				pagination.size = dataPayload.size ?? params.size ?? pagination.size
+				pagination.page = pagination.totalItems === 0 ? 1 : normalizedPage + 1
+				return
+			}
+
 			if (searchQuery.value?.trim()) {
 				params.keyword = searchQuery.value.trim()
 			}
@@ -761,10 +1153,45 @@
 		if (!showPartModal.value) return
 		try {
 			partModalLoading.value = true
+			const useAdvanced = partAdvancedActive.value || partColumnFilters.value.length > 0
 			const params = {
 				page: partModalPagination.page,
 				size: partModalPagination.size,
 				direction: 'DESC'
+			}
+			if (useAdvanced) {
+				const columnFilters = [...partColumnFilters.value]
+				const keyword = partSearchQuery.value?.trim()
+				if (keyword) {
+					columnFilters.push({
+						columnName: 'partName',
+						operator: 'contains',
+						value: keyword
+					})
+				}
+				const payload = {
+					page: Math.max(1, currentPartPage.value),
+					pageSize: partModalPagination.size,
+					columnFilters,
+					columnSorts: [
+						{
+							columnName: partSort.columnName,
+							sortDirection: partSort.sortDirection
+						}
+					]
+				}
+				const response = await partService.getImportedAvailableFilter(payload)
+				const dataPayload = response?.data?.data || response?.data || {}
+				const items = Array.isArray(dataPayload) ? dataPayload : dataPayload.items || []
+				parts.value = items.map(normalizePartFromApi)
+				const total = dataPayload.totalItems ?? dataPayload.total ?? items.length
+				partModalPagination.totalItems = Number(total) || items.length
+				const serverPage = dataPayload.page ?? dataPayload.currentPage ?? payload.page ?? 1
+				const normalizedPage = normalizePageToZeroBased(serverPage, payload.page - 1, true)
+				partModalPagination.page = normalizedPage
+				partModalPagination.size = dataPayload.size ?? payload.pageSize ?? partModalPagination.size
+				currentPartPage.value = partModalPagination.page + 1
+				return
 			}
 			const keyword = partSearchQuery.value?.trim()
 			if (keyword) {
@@ -783,13 +1210,13 @@
 		} catch (error) {
 			parts.value = []
 			partModalPagination.totalItems = 0
-			toast.error(error?.message || 'Không thể tải danh sách phụ tùng đủ điều kiện')
+			toast.error(error?.message || 'Khong the tai danh sach phu tung du dieu kien')
 		} finally {
 			partModalLoading.value = false
 		}
 	}
 
-	const isPartSelected = (id) => {
+const isPartSelected = (id) => {
 		return selectedParts.value.some((s) => s.id === id)
 	}
 
@@ -813,14 +1240,29 @@
 	}
 
 	const prevPartPage = () => {
-		if (partModalPagination.page <= 0 || partModalLoading.value) return
+		if (partModalLoading.value) return
+		if (partAdvancedActive.value || partColumnFilters.value.length > 0) {
+			if (currentPartPage.value <= 1) return
+			currentPartPage.value -= 1
+			partModalPagination.page = Math.max(0, currentPartPage.value - 1)
+			loadAvailableParts()
+			return
+		}
+		if (partModalPagination.page <= 0) return
 		partModalPagination.page -= 1
 		currentPartPage.value = partModalPagination.page + 1
 		loadAvailableParts()
 	}
 
 	const nextPartPage = () => {
-		if (currentPartPage.value >= totalPartPages.value || partModalLoading.value) return
+		if (partModalLoading.value) return
+		if (currentPartPage.value >= totalPartPages.value) return
+		if (partAdvancedActive.value || partColumnFilters.value.length > 0) {
+			currentPartPage.value += 1
+			partModalPagination.page = currentPartPage.value - 1
+			loadAvailableParts()
+			return
+		}
 		partModalPagination.page += 1
 		currentPartPage.value = partModalPagination.page + 1
 		loadAvailableParts()
@@ -1149,6 +1591,86 @@
 		margin-bottom: 1rem;
 	}
 
+	.part-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.active-filters {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		background: #f9fafb;
+		border: 1px solid #e5e7eb;
+		border-radius: 10px;
+		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.filter-label {
+		font-weight: 600;
+		color: #374151;
+	}
+
+	.filter-tags {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		flex: 1;
+	}
+
+	.filter-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		background: #fff;
+		border: 1px solid #e5e7eb;
+		border-radius: 999px;
+		padding: 0.35rem 0.7rem;
+		font-size: 0.85rem;
+		color: #1f2937;
+	}
+
+	.tag-close {
+		background: transparent;
+		border: none;
+		color: #9ca3af;
+		cursor: pointer;
+		font-size: 1rem;
+		line-height: 1;
+		padding: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.tag-close:hover {
+		color: #ef4444;
+	}
+
+	.th-content {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.icon-btn {
+		border: 1px solid #e5e7eb;
+		background: #fff;
+		padding: 0.2rem 0.35rem;
+		border-radius: 6px;
+		cursor: pointer;
+		color: #6b7280;
+		transition: all 0.2s ease;
+	}
+
+	.icon-btn:hover {
+		color: #111827;
+		border-color: #cbd5f5;
+	}
+
 	.table-header h2 {
 		margin: 0;
 		font-size: 1.25rem;
@@ -1163,6 +1685,75 @@
 
 	.table-header .table-subtitle {
 		color: #6b7280;
+	}
+
+	.modal-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(4px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+	}
+
+	.modal-container {
+		background: #fff;
+		border-radius: 16px;
+		width: min(90vw, 420px);
+		max-height: 90vh;
+		overflow: hidden;
+		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	}
+
+	.modal-header {
+		padding: 1.25rem 1.25rem 1rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-bottom: 1px solid #f0f1f5;
+	}
+
+	.modal-header h3 {
+		margin: 0;
+	}
+
+	.close-btn {
+		width: 36px;
+		height: 36px;
+		border: none;
+		background: transparent;
+		font-size: 2rem;
+		color: #9ca3af;
+		cursor: pointer;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: color 0.2s;
+	}
+
+	.close-btn:hover {
+		color: #ef4444;
+	}
+
+	.modal-body {
+		padding: 1.25rem;
+		max-height: calc(90vh - 140px);
+		overflow-y: auto;
+	}
+
+	.filter-form .field + .field {
+		margin-top: 1rem;
+	}
+
+	.filter-modal-actions {
+		justify-content: space-between;
+		align-items: center;
+		border-top: none;
+		padding-top: 0;
+		margin-top: 1rem;
 	}
 
 	.table-empty {
